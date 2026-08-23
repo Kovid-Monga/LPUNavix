@@ -9,9 +9,9 @@ class KartTrackingController {
     this.activeKartMarkers = {};
     this.selectedKartId = null;
     this.pollInterval = null;
-    this.apiUrl = window.location.protocol.startsWith("http")
-      ? "/api/locations"
-      : "http://localhost:3000/api/locations";
+    // Relative URL works because FastAPI serves both the frontend and
+    // the /api/* endpoints on the same port (3000 locally, or via ngrok).
+    this.apiUrl = "/api/locations";
   }
 
   init() {
@@ -143,12 +143,22 @@ class KartTrackingController {
 
   focusKart(kart) {
     this.selectedKartId = kart.id;
-    if (window.CampusMap) {
-      window.CampusMap.flyToLocation(kart.lat, kart.lng, 17.5);
+    if (window.CampusMap && window.CampusMap.map) {
+      // Fly directly using Leaflet map to avoid the strict boundary
+      // polygon check in flyToLocation() that can block kart coords.
+      window.CampusMap.map.flyTo([kart.lat, kart.lng], 17.5, {
+        animate: true,
+        duration: 1.2
+      });
       if (this.activeKartMarkers[kart.id]) {
         this.activeKartMarkers[kart.id].openPopup();
       }
     }
+  }
+
+  // Alias used by ui.js when switching to the Karts panel
+  renderKartsOnMap() {
+    this.refreshKarts();
   }
 }
 

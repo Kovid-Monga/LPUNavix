@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LPUNavix - Interactive Campus Navigation & AI Assistant</title>
+  <link rel="icon" type="image/png" href="LPUNavix.png" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <!-- Modular Application Styles -->
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/sidebar.css" />
+  <link rel="stylesheet" href="css/topbar.css" />
+  <link rel="stylesheet" href="css/map.css" />
+  <link rel="stylesheet" href="css/panels.css" />
+  <link rel="stylesheet" href="css/mobile.css" />
+</head>
+
+<body>
+
+  <div id="app-container">
+
+    <!-- ========================================================================
+       Left Sidebar Navigation
+       ======================================================================== -->
+    <aside class="app-sidebar">
+      <!-- Brand Logo -->
+      <div class="sidebar-brand" onclick="window.UIController.switchView('home')">
+        <img src="LPUNavix.png" alt="LPUNavix Logo" class="brand-logo-img" />
+        <div class="brand-text-block">
+          <div class="brand-title">LPUNavix</div>
+          <div class="brand-subtitle">Campus Navigation</div>
+        </div>
+      </div>
+
+      <!-- Navigation Items -->
+      <nav class="sidebar-nav">
+        <button class="nav-item-btn active" data-view="home" title="Home Dashboard">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+          <span>Home</span>
+        </button>
+
+        <button class="nav-item-btn" data-view="map" title="Interactive Map">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+            <line x1="8" y1="2" x2="8" y2="18"></line>
+            <line x1="16" y1="6" x2="16" y2="22"></line>
+          </svg>
+          <span>Map</span>
+        </button>
+
+        <button class="nav-item-btn" data-view="directions" title="Walking Directions">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+          </svg>
+          <span>Directions</span>
+        </button>
+
+        <button class="nav-item-btn" data-view="karts" title="Live Kart Tracking">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="1" y="3" width="15" height="13"></rect>
+            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+            <circle cx="5.5" cy="18.5" r="2.5"></circle>
+            <circle cx="18.5" cy="18.5" r="2.5"></circle>
+          </svg>
+          <span>Karts</span>
+        </button>
+
+        <button class="nav-item-btn" data-view="assistant" title="AI Campus Assistant">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="10" rx="2"></rect>
+            <circle cx="12" cy="5" r="2"></circle>
+            <path d="M12 7v4"></path>
+            <line x1="8" y1="16" x2="8.01" y2="16"></line>
+            <line x1="16" y1="16" x2="16.01" y2="16"></line>
+          </svg>
+          <span>Assistant</span>
+        </button>
+
+        <button class="nav-item-btn" data-view="alerts" title="Campus Status & Reroutes">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+          <span>Alerts</span>
+        </button>
+        
+        <button class="nav-item-btn" data-view="saved" title="Saved Places">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <span>Saved</span>
+        </button>
+      </nav>
+
+      <!-- Sidebar Footer (Theme Toggle) -->
+      <div class="sidebar-footer">
+        <button id="theme-toggle-btn" class="theme-toggle-btn" title="Toggle Light / Dark Mode">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+      </div>
+    </aside>
+
+    <!-- ========================================================================
+       Main Viewport (Map, Topbar, Drawers)
+       ======================================================================== -->
+    <main id="main-viewport">
+
+      <!-- Mobile Top Header Bar -->
+      <header class="mobile-app-header">
+        <div class="mobile-header-left">
+          <button id="mobile-menu-btn" class="mobile-header-btn" title="Open Menu" onclick="window.UIController.toggleMobileMenu()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+          </button>
+          <div class="mobile-header-brand" onclick="window.UIController.switchView('home')">
+            <img src="LPUNavix.png" alt="LPUNavix" class="mobile-brand-logo" />
+            <span class="mobile-brand-title">LPU<span>Navix</span></span>
+          </div>
+        </div>
+        <div class="mobile-header-right">
+          <button class="mobile-header-btn" title="Campus Alerts" onclick="window.UIController.switchView('alerts')">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+            <span class="notif-badge"></span>
+          </button>
+          <button class="mobile-header-btn" title="Settings" onclick="window.UIController.switchView('settings')">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Topbar: Search & Filter Chips -->
+      <header class="app-topbar">
+        <div class="topbar-main-row">
+          <!-- Search Input with Auto-Suggest -->
+          <div class="search-container">
+            <div class="search-input-wrapper">
+              <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input id="global-search-input" class="search-input" type="text"
+                placeholder="Search by building, department, hostel, venue..." autocomplete="off" />
+              <button id="search-clear-btn" class="search-clear-btn" title="Clear">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+
+            <!-- Auto-suggest dropdown -->
+            <div id="search-suggestions" class="search-suggestions-panel"></div>
+          </div>
+
+          <!-- Right Quick Actions -->
+          <div class="topbar-actions">
+            <button class="topbar-btn" title="Notifications" onclick="window.UIController.switchView('alerts')">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+              <span class="notif-badge"></span>
+            </button>
+            <div class="user-avatar-btn" title="Student Profile">
+              <div class="user-avatar-img">JD</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Category Filter Chips -->
+        <div class="category-chips-row">
+          <button class="chip-btn active" data-category="all">All</button>
+          <button class="chip-btn" data-category="academics">Academics</button>
+          <button class="chip-btn" data-category="hostels">Hostels</button>
+          <button class="chip-btn" data-category="food">Food</button>
+          <button class="chip-btn" data-category="parking">Parking</button>
+          <button class="chip-btn" data-category="offices">Offices</button>
+          <button class="chip-btn" data-category="healthcare">Healthcare</button>
+          <button class="chip-btn" data-category="others">Others</button>
+        </div>
+      </header>
+
+      <!-- Floating Live Weather Widget -->
+      <div class="floating-weather-card">
+        <svg class="weather-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"></circle>
+          <line x1="12" y1="1" x2="12" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="23"></line>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+          <line x1="1" y1="12" x2="3" y2="12"></line>
+          <line x1="21" y1="12" x2="23" y2="12"></line>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <div>
+          <div class="weather-temp">28°C</div>
+          <div class="weather-desc">Mostly sunshine</div>
+        </div>
+      </div>
+
+      <!-- Leaflet Map Container -->
+      <div id="map"></div>
+
+      <!-- Floating Map Layer & Path Visibility Filter Card (Interactive Checkboxes) -->
+      <div class="map-layer-toggle-card" id="map-layer-toggle-card">
+        <div class="layer-card-header">
+          <div class="layer-card-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+            <span>Campus Paths</span>
+          </div>
+          <div class="layer-card-presets">
+            <button type="button" class="preset-pill-btn active" id="preset-all" onclick="window.UIController.setPathPreset('all')">All</button>
+            <button type="button" class="preset-pill-btn" id="preset-none" onclick="window.UIController.setPathPreset('none')">None</button>
+          </div>
+        </div>
+
+        <div class="layer-toggle-items">
+          <label class="layer-checkbox-row">
+            <input type="checkbox" id="toggle-roads-chk" checked onchange="window.UIController.onPathToggle('roads', this.checked)" />
+            <div class="legend-preview legend-preview-road"></div>
+            <span class="layer-chk-label">Vehicle Roads</span>
+          </label>
+
+          <label class="layer-checkbox-row">
+            <input type="checkbox" id="toggle-footpaths-chk" checked onchange="window.UIController.onPathToggle('footpaths', this.checked)" />
+            <div class="legend-preview legend-preview-footpath"></div>
+            <span class="layer-chk-label">Footpaths</span>
+          </label>
+
+          <label class="layer-checkbox-row">
+            <input type="checkbox" id="toggle-boundary-chk" checked onchange="window.UIController.onPathToggle('boundary', this.checked)" />
+            <div class="legend-preview legend-preview-boundary"></div>
+            <span class="layer-chk-label">Campus Boundary</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Floating Map Controls (Zoom, Satellite Toggle, Recenter) -->
+      <div class="map-floating-controls">
+        <div class="map-ctrl-group">
+          <button id="ctrl-zoom-in" class="map-ctrl-btn" title="Zoom In">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </button>
+          <button id="ctrl-zoom-out" class="map-ctrl-btn" title="Zoom Out">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </button>
+        </div>
+
+        <button id="ctrl-layer-toggle" class="map-ctrl-btn" title="Toggle Satellite Layer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+            <polyline points="2 17 12 22 22 17"></polyline>
+            <polyline points="2 12 12 17 22 12"></polyline>
+          </svg>
+        </button>
+
+        <button id="ctrl-recenter" class="map-ctrl-btn" title="Recenter Campus">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="22" y1="12" x2="18" y2="12"></line>
+            <line x1="6" y1="12" x2="2" y2="12"></line>
+            <line x1="12" y1="6" x2="12" y2="2"></line>
+            <line x1="12" y1="22" x2="12" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- ======================================================================
+         PANEL 2: Directions & Turn-by-Turn Guide
+         ====================================================================== -->
+      <div id="directions-panel" class="side-panel-drawer">
+        <div class="panel-header">
+          <div class="panel-title-wrapper">
+            <div class="panel-header-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+              </svg>
+            </div>
+            <div>
+              <div class="panel-title-text">Directions</div>
+              <div class="panel-subtitle-text">Campus Navigation Guide</div>
+            </div>
+          </div>
+          <button class="panel-close-btn" title="Close Panel">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+
+        <div class="panel-content">
+          <!-- Origin & Destination Card -->
+          <div class="directions-inputs-card">
+            <div class="input-location-row">
+              <span class="location-dot-icon dot-origin"></span>
+              <input id="direction-origin-input" class="input-location-field" type="text" value="Main Gate" />
+            </div>
+            <div class="input-location-row">
+              <span class="location-dot-icon dot-dest"></span>
+              <input id="direction-dest-input" class="input-location-field" type="text" value="Block 18" />
+            </div>
+            <button id="swap-directions-btn" class="swap-locations-btn" title="Swap locations">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <line x1="7" y1="17" x2="17" y2="17"></line>
+                <polyline points="13 21 17 17 13 13"></polyline>
+                <line x1="17" y1="7" x2="7" y2="7"></line>
+                <polyline points="11 3 7 7 11 11"></polyline>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Mode Selectors -->
+          <div class="travel-modes-row">
+            <button class="mode-tab-btn active" data-mode="walking">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="5" r="2"></circle>
+                <path d="M10 22l4-8-2-4 3-2"></path>
+                <path d="M7 13l3-2 3 2"></path>
+              </svg>
+              <span>8 min</span>
+            </button>
+            <button class="mode-tab-btn" data-mode="bicycle">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="5.5" cy="17.5" r="3.5"></circle>
+                <circle cx="18.5" cy="17.5" r="3.5"></circle>
+                <path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5L9 6H5"></path>
+                <path d="M12 17.5V14l3.5-3.5 2 2"></path>
+              </svg>
+              <span>5 min</span>
+            </button>
+            <button class="mode-tab-btn" data-mode="kart">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="1" y="3" width="15" height="13"></rect>
+                <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+                <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                <circle cx="18.5" cy="18.5" r="2.5"></circle>
+              </svg>
+              <span>3 min</span>
+            </button>
+          </div>
+
+          <!-- Summary Card -->
+          <div class="route-summary-card">
+            <div>
+              <div class="route-summary-title">Best Route (Walking)</div>
+              <div class="route-summary-stats">650 m • 8 min</div>
+            </div>
+            <button id="start-nav-btn" class="btn-start-nav">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+              Start
+            </button>
+          </div>
+
+          <!-- Steps List -->
+          <div id="turn-steps-list" class="steps-list"></div>
+        </div>
+      </div>
+
+      <!-- ======================================================================
+         PANEL 3: AI Campus Assistant (RAG Chat)
+         ====================================================================== -->
+      <div id="assistant-panel" class="side-panel-drawer">
+        <div class="panel-header">
+          <div class="panel-title-wrapper">
+            <div class="panel-header-icon"
+              style="background:linear-gradient(135deg,#3b82f6 0%,#2563eb 100%);color:#fff;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="10" rx="2"></rect>
+                <circle cx="12" cy="5" r="2"></circle>
+                <path d="M12 7v4"></path>
+              </svg>
+            </div>
+            <div>
+              <div class="panel-title-text">LPUNavix AI</div>
+              <div class="panel-subtitle-text">Campus Guide & Navigation</div>
+            </div>
+          </div>
+          <button class="panel-close-btn" title="Close Assistant">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+
+        <div class="panel-content" style="padding-bottom:8px;">
+          <!-- Chat Message Stream -->
+          <div id="chat-messages-stream" class="chat-messages-stream"></div>
+
+          <!-- Quick Prompt Suggestion Chips -->
+          <div class="quick-prompts-row">
+            <button class="prompt-chip-btn">Nearest food court to Hostel 8?</button>
+            <button class="prompt-chip-btn">How to reach DSR office?</button>
+            <button class="prompt-chip-btn">Which kart goes to Block 18?</button>
+          </div>
+        </div>
+
+        <!-- Chat Input Field -->
+        <div class="chat-input-bar">
+          <input id="chat-input-field" class="chat-input-field" type="text"
+            placeholder="Ask me anything about campus..." />
+          <button id="send-chat-btn" class="btn-send-chat" title="Send Message">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ======================================================================
+         PANEL 4: Live Kart Tracking
+         ====================================================================== -->
+      <div id="karts-panel" class="side-panel-drawer">
+        <div class="panel-header">
+          <div class="panel-title-wrapper">
+            <div class="panel-header-icon" style="background:#dcfce7;color:#15803d;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="1" y="3" width="15" height="13"></rect>
+                <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+                <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                <circle cx="18.5" cy="18.5" r="2.5"></circle>
+              </svg>
+            </div>
+            <div>
+              <div class="panel-title-text">Live Kart Tracking</div>
+              <div class="karts-header-badge">
+                <span class="badge badge-live">Live</span>
+                <span class="panel-subtitle-text">5 Active Shuttles</span>
+              </div>
+            </div>
+          </div>
+          <button class="panel-close-btn" title="Close Karts Panel">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+
+        <div class="panel-content">
+          <div id="karts-list-container" class="karts-list"></div>
+          <button class="btn-secondary" style="width:100%;margin-top:8px;">View All Stops</button>
+        </div>
+      </div>
+
+      <!-- ======================================================================
+         PANEL 5: Location Detail Card / Sheet
+         ====================================================================== -->
+      <div id="details-panel" class="side-panel-drawer">
+        <div class="panel-header">
+          <div class="panel-title-wrapper">
+            <div class="panel-header-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+            </div>
+            <div>
+              <div class="panel-title-text">Location Details</div>
+              <div class="panel-subtitle-text">Campus Information</div>
+            </div>
+          </div>
+          <button class="panel-close-btn" title="Close Details">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+
+        <div class="panel-content">
+          <!-- Banner Photo -->
+          <div class="location-hero-banner">
+            <img id="detail-hero-img" class="location-hero-img" src="" alt="Location Banner" />
+            <div class="location-hero-overlay">
+              <h3 id="detail-title" class="loc-title">Placement Cell</h3>
+              <span id="detail-floor" class="loc-floor-badge">Block 31, 2nd Floor</span>
+            </div>
+          </div>
+
+          <p id="detail-desc" class="loc-desc">
+            Handles placements, internships, industry connect programs, and MNC recruitment drives.
+          </p>
+
+          <!-- Quick Action Buttons -->
+          <div class="loc-actions-row">
+            <button id="detail-get-directions-btn" class="btn-primary">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+              </svg>
+              Directions
+            </button>
+            <button class="btn-secondary" title="Save Place">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+              </svg>
+              Save
+            </button>
+            <button class="btn-secondary" title="Share Location">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="18" cy="5" r="3"></circle>
+                <circle cx="6" cy="12" r="3"></circle>
+                <circle cx="18" cy="19" r="3"></circle>
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+              </svg>
+              Share
+            </button>
+          </div>
+
+          <!-- Meta Information -->
+          <div class="loc-details-meta">
+            <div class="meta-row">
+              <span class="meta-label">Opening Hours</span>
+              <span id="detail-hours" class="meta-value">09:00 AM - 05:30 PM</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">Contact</span>
+              <span id="detail-phone" class="meta-value">01824-500031</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======================================================================
+         PANEL 6: Campus Status & Smart Rerouting Alert
+         ====================================================================== -->
+      <div id="alerts-panel" class="side-panel-drawer">
+        <div class="panel-header">
+          <div class="panel-title-wrapper">
+            <div class="panel-header-icon" style="background:#fee2e2;color:#dc2626;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
+                </path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+            </div>
+            <div>
+              <div class="panel-title-text">Campus Status</div>
+              <div class="panel-subtitle-text">Real-time Road Updates & Reroutes</div>
+            </div>
+          </div>
+          <button class="panel-close-btn" title="Close Alerts">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+
+        <div class="panel-content">
+          <!-- Alert Warning Card -->
+          <div class="campus-alert-banner">
+            <svg class="alert-banner-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2.5">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <div class="alert-banner-text">
+              <h4>Path Closed for Maintenance</h4>
+              <p>We've found an alternative smart route avoiding construction near Central Boulevard.</p>
+            </div>
+          </div>
+
+          <div class="route-comparison-card">
+            <div>
+              <div style="font-weight:800;font-size:14px;color:var(--text-primary);">New Route (Walking)</div>
+              <div style="font-size:12px;color:var(--color-primary);font-weight:600;">560 m • 7 min</div>
+            </div>
+            <span class="badge badge-live">Optimized</span>
+          </div>
+
+          <div class="steps-list">
+            <div class="step-item">
+              <div class="step-icon-wrapper"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2.5">
+                  <line x1="12" y1="19" x2="12" y2="5"></line>
+                  <polyline points="5 12 12 5 19 12"></polyline>
+                </svg></div>
+              <div class="step-instruction">
+                <div class="step-main-text">Start from Main Gate</div>
+                <div class="step-distance">100 m</div>
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="step-icon-wrapper"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2.5">
+                  <polyline points="15 14 20 9 15 4"></polyline>
+                  <path d="M4 20v-7a4 4 0 0 1 4-4h12"></path>
+                </svg></div>
+              <div class="step-instruction">
+                <div class="step-main-text">Turn right towards Central Avenue (Detour)</div>
+                <div class="step-distance">120 m</div>
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="step-icon-wrapper"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2.5">
+                  <line x1="12" y1="19" x2="12" y2="5"></line>
+                  <polyline points="5 12 12 5 19 12"></polyline>
+                </svg></div>
+              <div class="step-instruction">
+                <div class="step-main-text">Continue straight past University Library</div>
+                <div class="step-distance">200 m</div>
+              </div>
+            </div>
+            <div class="step-item destination">
+              <div class="step-icon-wrapper"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2.5">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg></div>
+              <div class="step-instruction">
+                <div class="step-main-text">You have arrived at Block 11</div>
+                <div class="step-distance">Destination</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      <!-- ======================================================================
+         PANEL 7: Settings & Preferences (Mobile & Desktop)
+         ====================================================================== -->
+      <div id="settings-panel" class="side-panel-drawer">
+        <div class="mobile-sheet-drag-handle"></div>
+        <div class="panel-header">
+          <div class="panel-title-wrapper">
+            <div class="panel-header-icon" style="background:var(--bg-pill);color:var(--text-primary);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            </div>
+            <div>
+              <div class="panel-title-text">Settings</div>
+              <div class="panel-subtitle-text">Preferences & Map Options</div>
+            </div>
+          </div>
+          <button class="panel-close-btn" title="Close Settings">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+
+        <div class="panel-content">
+          <!-- General Settings -->
+          <div style="font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:-6px;">General</div>
+          
+          <div class="loc-details-meta">
+            <div class="meta-row">
+              <span class="meta-label">Dark Mode</span>
+              <button class="preset-pill-btn" onclick="window.UIController.toggleTheme()">Toggle Theme</button>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">Map Satellite Layer</span>
+              <button class="preset-pill-btn" onclick="window.CampusMap && window.CampusMap.toggleLayerMode()">Switch Map View</button>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">Distance Units</span>
+              <span class="meta-value">Metric (m, km)</span>
+            </div>
+          </div>
+
+          <!-- Navigation Settings -->
+          <div style="font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:-6px;">Navigation</div>
+          
+          <div class="loc-details-meta">
+            <div class="meta-row">
+              <span class="meta-label">Default Mode</span>
+              <span class="meta-value">Walking</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">Voice Guidance</span>
+              <span class="badge badge-live" style="font-size:10px;">Enabled</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">Campus Auto-Reroute</span>
+              <span class="badge badge-live" style="font-size:10px;">Active</span>
+            </div>
+          </div>
+
+          <!-- About LPUNavix -->
+          <div style="font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:-6px;">About</div>
+          
+          <div class="loc-details-meta">
+            <div class="meta-row">
+              <span class="meta-label">Application</span>
+              <span class="meta-value">LPUNavix Campus 2.0</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">Campus</span>
+              <span class="meta-value">Lovely Professional University</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======================================================================
+         Active Navigation Mini Floating ETA Bar
+         ====================================================================== -->
+      <div id="mobile-nav-eta-bar" class="mobile-nav-eta-bar">
+        <div class="eta-stats-left">
+          <div class="eta-duration-text" id="eta-duration-val">6 min</div>
+          <div>
+            <div class="eta-distance-text" id="eta-distance-val">450 m remaining</div>
+            <div class="eta-time-text" id="eta-target-time">Arriving at Block 18</div>
+          </div>
+        </div>
+        <button class="eta-close-btn" title="End Navigation" onclick="window.UIController.endActiveNavigation()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <!-- ======================================================================
+         AI Campus Assistant Floating Action Button (FAB)
+         ====================================================================== -->
+      <button id="mobile-assistant-fab" class="mobile-assistant-fab" title="AI Campus Assistant" onclick="window.UIController.toggleAssistant()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="10" rx="2"></rect>
+          <circle cx="12" cy="5" r="2"></circle>
+          <path d="M12 7v4"></path>
+          <line x1="8" y1="16" x2="8.01" y2="16"></line>
+          <line x1="16" y1="16" x2="16.01" y2="16"></line>
+        </svg>
+        <span class="fab-badge-sparkle"></span>
+      </button>
+
+      <!-- ======================================================================
+         Mobile Bottom Navigation Bar (Lower Panel - with Karts)
+         ====================================================================== -->
+      <nav class="mobile-bottom-nav">
+        <button class="mobile-nav-item active" data-view="home" title="Home">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+          <span>Home</span>
+        </button>
+
+        <button class="mobile-nav-item" data-view="map" title="Map">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+            <line x1="8" y1="2" x2="8" y2="18"></line>
+            <line x1="16" y1="6" x2="16" y2="22"></line>
+          </svg>
+          <span>Map</span>
+        </button>
+
+        <button class="mobile-nav-item" data-view="directions" title="Directions">
+          <div class="mobile-nav-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+            </svg>
+          </div>
+          <span>Directions</span>
+        </button>
+
+        <button class="mobile-nav-item" data-view="karts" title="Karts">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="1" y="3" width="15" height="13"></rect>
+            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+            <circle cx="5.5" cy="18.5" r="2.5"></circle>
+            <circle cx="18.5" cy="18.5" r="2.5"></circle>
+          </svg>
+          <span>Karts</span>
+        </button>
+
+        <button class="mobile-nav-item" data-view="settings" title="Profile / Settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <span>Profile</span>
+        </button>
+      </nav>
+
+      <!-- ======================================================================
+         Bottom Feature Highlights Bar (Matching Mockup Footer)
+         ====================================================================== -->
+      <footer class="app-feature-bar">
+        <div class="feature-pill" onclick="document.getElementById('global-search-input').focus()">
+          <div class="feature-pill-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+              <circle cx="12" cy="10" r="3"></circle>
+            </svg>
+          </div>
+          <div>
+            <div class="feature-pill-title">Find Anything</div>
+            <div class="feature-pill-sub">Buildings, hostels, venues</div>
+          </div>
+        </div>
+
+        <div class="feature-pill" onclick="window.UIController.switchView('directions')">
+          <div class="feature-pill-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+            </svg>
+          </div>
+          <div>
+            <div class="feature-pill-title">Easy Navigation</div>
+            <div class="feature-pill-sub">Turn-by-turn guidance</div>
+          </div>
+        </div>
+
+        <div class="feature-pill" onclick="window.UIController.switchView('assistant')">
+          <div class="feature-pill-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <rect x="3" y="11" width="18" height="10" rx="2"></rect>
+              <circle cx="12" cy="5" r="2"></circle>
+            </svg>
+          </div>
+          <div>
+            <div class="feature-pill-title">AI Assistant</div>
+            <div class="feature-pill-sub">Ask campus questions</div>
+          </div>
+        </div>
+
+        <div class="feature-pill" onclick="window.UIController.switchView('karts')">
+          <div class="feature-pill-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <rect x="1" y="3" width="15" height="13"></rect>
+              <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+            </svg>
+          </div>
+          <div>
+            <div class="feature-pill-title">Live Tracking</div>
+            <div class="feature-pill-sub">Real-time campus karts</div>
+          </div>
+        </div>
+
+        <div class="feature-pill" onclick="window.CampusMap && window.CampusMap.recenterCampus()">
+          <div class="feature-pill-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="12" cy="12" r="10"></circle>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+          </div>
+          <div>
+            <div class="feature-pill-title">You Are Here</div>
+            <div class="feature-pill-sub">Live position orient</div>
+          </div>
+        </div>
+
+        <div class="feature-pill">
+          <div class="feature-pill-icon" style="background:#fee2e2;color:#dc2626;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path
+                d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+              </path>
+            </svg>
+          </div>
+          <div>
+            <div class="feature-pill-title">Made for LPU</div>
+            <div class="feature-pill-sub">Tailored for campus</div>
+          </div>
+        </div>
+      </footer>
+
+    </main>
+  </div>
+
+  <!-- Core Scripts -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.js"></script>
+  <script src="js/boundary.js"></script>
+  <script src="js/roads_data.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/directions.js"></script>
+  <script src="js/assistant.js"></script>
+  <script src="js/karts.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+
+</html>

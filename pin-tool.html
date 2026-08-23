@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LPU Campus — Coordinate Picker Tool</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #f1f5f9; height: 100vh; display: flex; flex-direction: column; }
+
+    #header {
+      padding: 12px 20px;
+      background: #1e293b;
+      border-bottom: 1px solid #334155;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    #header h1 { font-size: 15px; font-weight: 700; color: #f1f5f9; }
+    #header p  { font-size: 12px; color: #94a3b8; }
+
+    #map { flex: 1; cursor: crosshair; }
+
+    #info-box {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1e293b;
+      border: 1px solid #3b82f6;
+      border-radius: 14px;
+      padding: 14px 20px;
+      min-width: 360px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      z-index: 9999;
+      display: flex;
+      gap: 14px;
+      align-items: center;
+    }
+
+    #coords-display {
+      flex: 1;
+    }
+    #coords-display .label { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+    #coords-display .value { font-size: 17px; font-weight: 800; color: #38bdf8; font-family: 'Courier New', monospace; }
+
+    .copy-btn {
+      background: #3b82f6;
+      border: none;
+      color: white;
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+    .copy-btn:hover { background: #2563eb; }
+    .copy-btn.copied { background: #22c55e; }
+
+    #pin-list {
+      position: fixed;
+      top: 72px;
+      right: 16px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      width: 260px;
+      max-height: 60vh;
+      overflow-y: auto;
+      z-index: 9999;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+    #pin-list h2 { font-size: 12px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; padding: 12px 14px 8px; border-bottom: 1px solid #334155; }
+    .pin-item {
+      padding: 8px 14px;
+      border-bottom: 1px solid #1e293b;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.15s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .pin-item:hover { background: #0f172a; }
+    .pin-item .pin-coords { color: #38bdf8; font-family: 'Courier New', monospace; font-size: 11px; }
+    .pin-item .pin-label { color: #94a3b8; font-size: 11px; }
+    .pin-item .remove-pin { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 14px; padding: 0 2px; }
+    #clear-all-btn {
+      width: 100%;
+      padding: 8px;
+      background: none;
+      border: none;
+      border-top: 1px solid #334155;
+      color: #ef4444;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    #clear-all-btn:hover { background: #1a0a0a; }
+    #pin-empty { padding: 12px 14px; color: #475569; font-size: 12px; text-align: center; }
+
+    #hint { font-size: 11px; color: #64748b; padding: 4px 8px; background: #0f172a; border-radius: 6px; }
+  </style>
+</head>
+<body>
+
+<div id="header">
+  <div>
+    <h1>📍 LPU Campus — Coordinate Picker</h1>
+    <p>Click anywhere on the map to get the latitude &amp; longitude</p>
+  </div>
+  <span id="hint">💡 Click to pin → Copy coordinates → Paste into data.js</span>
+</div>
+
+<div id="map"></div>
+
+<!-- Bottom Info Box -->
+<div id="info-box">
+  <div id="coords-display">
+    <div class="label">Last Pinned Coordinates</div>
+    <div class="value" id="lat-lng-value">Click anywhere on the map...</div>
+  </div>
+  <button class="copy-btn" id="copy-lat-btn" onclick="copyCoord('lat')">Copy lat</button>
+  <button class="copy-btn" id="copy-lng-btn" onclick="copyCoord('lng')">Copy lng</button>
+  <button class="copy-btn" id="copy-both-btn" onclick="copyCoord('both')">Copy Both</button>
+</div>
+
+<!-- Pin History List -->
+<div id="pin-list">
+  <h2>📌 Pinned Points</h2>
+  <div id="pin-empty">No pins yet. Click on the map.</div>
+  <button id="clear-all-btn" onclick="clearAllPins()" style="display:none;">✕ Clear All Pins</button>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  // ─── Map Setup ─────────────────────────────────────────────────────────────
+  const LPU_CENTER = [31.2536, 75.7037];
+
+  const map = L.map('map', {
+    center: LPU_CENTER,
+    zoom: 16,
+    minZoom: 14
+  });
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors',
+    maxZoom: 22
+  }).addTo(map);
+
+  // ─── State ──────────────────────────────────────────────────────────────────
+  let lastLat = null;
+  let lastLng = null;
+  let pins = [];
+  let pinMarkers = [];
+
+  // ─── Custom pin icon ────────────────────────────────────────────────────────
+  function makePinIcon(index) {
+    return L.divIcon({
+      className: '',
+      html: `<div style="
+        background:#3b82f6;
+        color:white;
+        font-size:11px;
+        font-weight:800;
+        padding:3px 7px;
+        border-radius:20px;
+        border:2px solid white;
+        box-shadow:0 2px 8px rgba(0,0,0,0.4);
+        white-space:nowrap;
+      ">#${index + 1}</div>`,
+      iconAnchor: [14, 10]
+    });
+  }
+
+  // ─── Click Handler ──────────────────────────────────────────────────────────
+  map.on('click', function(e) {
+    const lat = e.latlng.lat.toFixed(6);
+    const lng = e.latlng.lng.toFixed(6);
+    lastLat = lat;
+    lastLng = lng;
+
+    // Update info box
+    document.getElementById('lat-lng-value').textContent = `lat: ${lat},  lng: ${lng}`;
+
+    // Reset copy buttons
+    ['copy-lat-btn','copy-lng-btn','copy-both-btn'].forEach(id => {
+      document.getElementById(id).classList.remove('copied');
+      document.getElementById(id).textContent = id.includes('lat') ? 'Copy lat' : (id.includes('lng') ? 'Copy lng' : 'Copy Both');
+    });
+
+    // Add to pin list
+    const idx = pins.length;
+    pins.push({ lat, lng });
+
+    // Add marker on map
+    const marker = L.marker([lat, lng], { icon: makePinIcon(idx) }).addTo(map);
+    marker.bindTooltip(`#${idx+1} | lat: ${lat}, lng: ${lng}`, { permanent: false, direction: 'top' });
+    pinMarkers.push(marker);
+
+    renderPinList();
+  });
+
+  // ─── Copy Function ──────────────────────────────────────────────────────────
+  function copyCoord(which) {
+    if (!lastLat) return;
+    let text = '';
+    if (which === 'lat')  text = lastLat;
+    if (which === 'lng')  text = lastLng;
+    if (which === 'both') text = `lat: ${lastLat},\n    lng: ${lastLng},`;
+
+    navigator.clipboard.writeText(text).then(() => {
+      const ids = { lat: 'copy-lat-btn', lng: 'copy-lng-btn', both: 'copy-both-btn' };
+      const labels = { lat: '✓ Copied!', lng: '✓ Copied!', both: '✓ Copied!' };
+      const btn = document.getElementById(ids[which]);
+      btn.textContent = labels[which];
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        btn.textContent = which === 'lat' ? 'Copy lat' : (which === 'lng' ? 'Copy lng' : 'Copy Both');
+      }, 2000);
+    });
+  }
+
+  // ─── Pin History List ────────────────────────────────────────────────────────
+  function renderPinList() {
+    const container = document.getElementById('pin-empty');
+    const clearBtn = document.getElementById('clear-all-btn');
+    const list = document.getElementById('pin-list');
+
+    // Remove old items
+    list.querySelectorAll('.pin-item').forEach(el => el.remove());
+
+    if (pins.length === 0) {
+      container.style.display = '';
+      clearBtn.style.display = 'none';
+      return;
+    }
+
+    container.style.display = 'none';
+    clearBtn.style.display = '';
+
+    pins.forEach((p, i) => {
+      const item = document.createElement('div');
+      item.className = 'pin-item';
+      item.innerHTML = `
+        <div>
+          <div class="pin-label">Pin #${i + 1}</div>
+          <div class="pin-coords">${p.lat}, ${p.lng}</div>
+        </div>
+        <div style="display:flex;gap:4px;align-items:center;">
+          <button onclick="copyPin(${i})" style="background:#1e40af;border:none;color:white;font-size:10px;padding:3px 7px;border-radius:5px;cursor:pointer;">Copy</button>
+          <button class="remove-pin" onclick="removePin(${i})">✕</button>
+        </div>
+      `;
+      // Insert before the clear button
+      list.insertBefore(item, clearBtn);
+    });
+  }
+
+  function copyPin(idx) {
+    const p = pins[idx];
+    navigator.clipboard.writeText(`lat: ${p.lat},\n    lng: ${p.lng},`);
+  }
+
+  function removePin(idx) {
+    pins.splice(idx, 1);
+    const marker = pinMarkers.splice(idx, 1)[0];
+    map.removeLayer(marker);
+    // Re-index remaining markers
+    pinMarkers.forEach((m, i) => m.setIcon(makePinIcon(i)));
+    renderPinList();
+  }
+
+  function clearAllPins() {
+    pins = [];
+    pinMarkers.forEach(m => map.removeLayer(m));
+    pinMarkers = [];
+    lastLat = null;
+    lastLng = null;
+    document.getElementById('lat-lng-value').textContent = 'Click anywhere on the map...';
+    renderPinList();
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,424 @@
+/* ==========================================================================
+   Map & Custom Leaflet Markers Styles
+   ========================================================================== */
+
+#map {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  background-color: #e5e7eb;
+}
+
+/* Custom Floating Map Action Controls (Zoom +, Zoom -, Satellite, Recenter) */
+.map-floating-controls {
+  position: absolute;
+  bottom: 80px;
+  right: calc(380px + 36px);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: right var(--transition-normal);
+}
+
+body.assistant-collapsed .map-floating-controls {
+  right: 24px;
+}
+
+/* Floating Map Layer & Path Visibility Filter Card */
+.map-layer-toggle-card {
+  position: absolute;
+  bottom: 145px;
+  left: 24px;
+  z-index: 1000;
+  background-color: var(--bg-surface-translucent);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: 12px 14px;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: auto;
+  min-width: 175px;
+}
+
+.layer-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.layer-card-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.layer-card-presets {
+  display: flex;
+  gap: 4px;
+}
+
+.preset-pill-btn {
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  background: var(--bg-pill);
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+}
+
+.preset-pill-btn:hover {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.preset-pill-btn.active {
+  background: var(--color-primary);
+  color: #ffffff;
+}
+
+.layer-toggle-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.layer-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.layer-checkbox-row input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+.layer-chk-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.legend-preview {
+  width: 28px;
+  height: 8px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.legend-preview-boundary {
+  background: #32eb25;
+  height: 4px;
+}
+
+.legend-preview-road {
+  background: #334155;
+  border: 1px solid #ffffff;
+  height: 8px;
+}
+
+.legend-preview-road::after {
+  content: '';
+  width: 100%;
+  height: 1px;
+  background: #ffffff;
+  border-top: 1px dashed #ffffff;
+  position: absolute;
+}
+
+.legend-preview-footpath {
+  background: #7c82ff;
+  border: 1px solid #ffffff;
+  height: 6px;
+}
+
+/* Outside Area Dimming Mask & Spotlight Effects */
+.lpu-outside-mask-layer {
+  transition: fill-opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), fill 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.lpu-boundary-perimeter {
+  filter: drop-shadow(0 0 6px rgba(50, 235, 37, 0.65));
+  transition: opacity 0.3s ease;
+}
+
+.map-ctrl-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background-color: var(--bg-surface-translucent);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  transition: all var(--transition-fast);
+}
+
+.map-ctrl-btn:hover {
+  background-color: var(--bg-surface);
+  color: var(--color-primary);
+  transform: scale(1.08);
+  box-shadow: var(--shadow-lg);
+}
+
+.map-ctrl-btn.active {
+  background-color: var(--color-primary);
+  color: #ffffff;
+}
+
+.map-ctrl-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.map-ctrl-group {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-surface-translucent);
+  backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.map-ctrl-group .map-ctrl-btn {
+  border-radius: 0;
+  box-shadow: none;
+  border: none;
+}
+
+.map-ctrl-group .map-ctrl-btn:first-child {
+  border-bottom: 1px solid var(--border-light);
+}
+
+/* ==========================================================================
+   Custom Leaflet Marker Pins
+   ========================================================================== */
+
+.custom-campus-pin {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-surface);
+  border-radius: var(--radius-full);
+  padding: 4px 10px 4px 5px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
+  border: 1.5px solid rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--transition-bounce);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  transform: translate(-50%, -100%);
+}
+
+.custom-campus-pin:hover {
+  transform: translate(-50%, -110%) scale(1.1);
+  z-index: 1100 !important;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22);
+}
+
+.pin-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 11px;
+}
+
+.pin-label {
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--text-primary);
+}
+
+/* Category Specific Pin Themes */
+.pin-academic .pin-icon {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+}
+
+.pin-hostel .pin-icon {
+  background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+}
+
+.pin-food .pin-icon {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+}
+
+.pin-office .pin-icon {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.pin-library .pin-icon {
+  background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+}
+
+.pin-gate .pin-icon {
+  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+}
+
+/* Destination Target Pin (Red Drop Pin) */
+.destination-marker-pin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translate(-50%, -100%);
+  cursor: pointer;
+}
+
+.dest-pin-badge {
+  background: #dc2626;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  margin-bottom: 2px;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.4);
+}
+
+.dest-pin-circle {
+  width: 32px;
+  height: 32px;
+  background: #ef4444;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  border: 3px solid #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
+}
+
+.dest-pin-circle svg {
+  transform: rotate(45deg);
+  color: #fff;
+  width: 16px;
+  height: 16px;
+}
+
+/* You Are Here Pulsing Marker */
+.user-location-marker {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  transform: translate(-50%, -50%);
+}
+
+.user-location-dot {
+  width: 18px;
+  height: 18px;
+  background: #2563eb;
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.5);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+
+.user-location-pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 48px;
+  height: 48px;
+  background: rgba(37, 99, 235, 0.25);
+  border-radius: 50%;
+  animation: pulseGlow 2s infinite ease-out;
+  z-index: 1;
+}
+
+.user-location-tag {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #2563eb;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 11px;
+  padding: 3px 9px;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.35);
+}
+
+/* Live Kart Marker on Map */
+.kart-marker {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: #10b981;
+  color: #ffffff;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  border: 2px solid #ffffff;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+  font-weight: 700;
+  font-size: 11px;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  transition: all var(--transition-bounce);
+}
+
+.kart-marker:hover {
+  transform: translate(-50%, -50%) scale(1.15);
+  background: #059669;
+}
+
+.kart-marker svg {
+  width: 14px;
+  height: 14px;
+}

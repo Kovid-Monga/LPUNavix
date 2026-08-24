@@ -9,12 +9,14 @@ Run it with:
     uvicorn main:app --host 0.0.0.0 --port 3000
 """
 
+import json
 import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Optional
+from urllib.parse import parse_qs
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -39,8 +41,12 @@ ACTIVE_WINDOW_SECONDS = 30
 
 class LocationUpdate(BaseModel):
     id: str
-    lat: float
-    lng: float
+    # Accept both the website format (lat/lng) and common GPS-app names.
+    lat: Optional[float] = None
+    lng: Optional[float] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    lon: Optional[float] = None
     timestamp: Optional[str] = None
 
 
@@ -51,13 +57,44 @@ class KartStatus(BaseModel):
     timestamp: str
 
 
-# -------- The sender / GPS logger POSTs here every few seconds --------
-@app.post("/api/location")
-def receive_location(update: LocationUpdate):
-    karts[update.id] = {
-        "lat": update.lat,
-        "lng": update.lng,
-        "timestamp": update.timestamp or datetime.now(timezone.utc).isoformat(),
+# -------- Senders and Traccar Client post location updates here --------
+@app.api_route("/api/location", methods=["GET", "POST"])
+async def receive_location(request: Request):
+    data = dict(request.query_params)
+
+    if request.method == "POST":
+        raw_body = await request.body()
+        if raw_body:
+            content_type = request.headers.get("content-type", "")
+            try:
+                if "application/json" in content_type:
+                    data.update(json.loads(raw_body))
+                else:
+                    form_data = parse_qs(raw_body.decode("utf-8"), keep_blank_values=True)
+                    data.update({key: values[-1] for key, values in form_data.items()})
+            except (UnicodeDecodeError, json.JSONDecodeError, ValueError):
+                raise HTTPException(status_code=422, detail="Invalid location request body.")
+
+    kart_id = data.get("id") or data.get("deviceId")
+    lat_value = data.get("lat") or data.get("latitude")
+    lng_value = data.get("lng") or data.get("lon") or data.get("longitude")
+
+    if not kart_id or lat_value is None or lng_value is None:
+        raise HTTPException(
+            status_code=422,
+            detail="Location must include id, lat, and lon/lng coordinates.",
+        )
+
+    try:
+        lat = float(lat_value)
+        lng = float(lng_value)
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=422, detail="Latitude and longitude must be numbers.")
+
+    karts[str(kart_id)] = {
+        "lat": lat,
+        "lng": lng,
+        "timestamp": data.get("timestamp") or datetime.now(timezone.utc).isoformat(),
         "last_seen": time.time(),
     }
     return {"status": "ok"}

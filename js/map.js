@@ -74,10 +74,10 @@ class CampusMapController {
     this.map = L.map("map", {
       center: CAMPUS_CENTER,
       zoom: 15.25,
-      minZoom: 14.8,                   // 🔒 Prevents zooming out to other cities/states
+      // minZoom: 14.8,                 // Temporarily disabled for testing outside LPU
       maxZoom: 19.5,                   // Deep building & block zoom
-      maxBounds: lpuBounds.pad(2.0),   // Generous pan boundary: allows free exploration of all campus corners without getting stuck
-      maxBoundsViscosity: 0.3,         // Soft barrier so panning feels natural and never freezes
+      // maxBounds: lpuBounds.pad(2.0), // Temporarily disabled for testing outside LPU
+      // maxBoundsViscosity: 0.3,       // Temporarily disabled with maxBounds
       zoomSnap: 0.25,                  // Smooth fractional zooming
       zoomDelta: 0.5,
       wheelPxPerZoomLevel: 100,
@@ -513,7 +513,8 @@ class CampusMapController {
   }
 
   flyToLocation(lat, lng, zoom = 17) {
-    if (!isPointInPolygon([lat, lng], LPU_BOUNDARY)) return;
+    // Temporarily allow testing locations outside the LPU boundary.
+    // if (!isPointInPolygon([lat, lng], LPU_BOUNDARY)) return;
     this.map.flyTo([lat, lng], zoom, {
       animate: true,
       duration: 1.2

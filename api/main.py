@@ -6,7 +6,7 @@ and serves the complete LPUNavix Smart Campus Navigation frontend.
 
 Run it with:
     pip install -r requirements.txt
-    uvicorn main:app --host 0.0.0.0 --port 3000
+    uvicorn api.main:app --host 0.0.0.0 --port 3000
 """
 
 import json
@@ -112,12 +112,8 @@ def get_active_locations():
     return active
 
 
-# Serves LPUNavix navigation frontend directly from the current directory.
+# Serves LPUNavix navigation frontend from the project root.
 # Registered LAST so it doesn't swallow the /api/... routes defined above.
-STATIC_DIR = Path(__file__).resolve().parent
+STATIC_DIR = Path(__file__).resolve().parent.parent
 app.mount("/", StaticFiles(directory=str(STATIC_DIR), html=True), name="static")
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=3000, reload=True)
 

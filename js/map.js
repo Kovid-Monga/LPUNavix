@@ -88,7 +88,8 @@ class CampusMapController {
       zoomControl: false,
       attributionControl: false,
       rotate: true,
-      touchRotate: true
+      touchRotate: true,
+      rotateControl: false
     });
 
     // Initial comfortable framing
@@ -129,18 +130,10 @@ class CampusMapController {
     // Render Campus Road & Footpath Network from local cached dataset
     this.renderCampusRoadNetwork();
 
-    // Keep zoom-dependent roads in sync while the map is being manipulated.
-    const scheduleRoadRender = () => {
-      if (this._roadRenderFrame) return;
-      this._roadRenderFrame = requestAnimationFrame(() => {
-        this._roadRenderFrame = null;
-        this.renderCampusRoadNetwork();
-        this.renderCampusBoundary();
-      });
-    };
-
-    this.map.on('zoom move rotate', scheduleRoadRender);
-    this.map.on('zoomend moveend', scheduleRoadRender);
+    // Dynamic Zoom Level Adjustment to prevent road congestion when zooming out
+    this.map.on('zoomend', () => {
+      this.renderCampusRoadNetwork();
+    });
 
     // Render Campus Locations
     this.renderLocationMarkers();

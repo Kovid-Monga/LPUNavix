@@ -70,7 +70,7 @@
     pointer-events: auto;
     cursor: pointer;
     transition: transform var(--transition-fast);
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.65));
+    filter: none;
   }
 
   .mobile-brand-pill:active {
@@ -82,8 +82,7 @@
     height: 32px;
     border-radius: 50%;
     object-fit: contain;
-    background: transparent !important;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+    filter: none;
   }
 
   .mobile-brand-info {
@@ -97,7 +96,7 @@
     color: #ffffff;
     letter-spacing: -0.2px;
     line-height: 1.1;
-    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8), 0 2px 8px rgba(0, 0, 0, 0.5);
+    text-shadow: none;
   }
 
   .mobile-brand-title span {
@@ -111,7 +110,7 @@
     letter-spacing: -0.1px;
     line-height: 1;
     margin-top: 2px;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 2px 6px rgba(0, 0, 0, 0.5);
+    text-shadow: none;
   }
 
   /* Top-Right Circular Action Buttons (Notifications & Settings) */

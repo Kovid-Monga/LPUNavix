@@ -31,6 +31,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
+
 # In-memory store of the latest known location for each kart.
 # Shape: { "kart-1": {"lat": .., "lng": .., "timestamp": .., "last_seen": ..} }
 karts = {}

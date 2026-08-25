@@ -57,6 +57,8 @@ class CampusMapController {
     this.boundaryLayer = null;
     this.outsideMaskLayer = null;
     this.userLocationMarker = null;
+    this.locationWatchId = null;
+    this.currentUserCoords = null;
     this.currentTheme = "light";
     this.currentLayerMode = "satellite";
     this.showRoads = true;
@@ -118,8 +120,8 @@ class CampusMapController {
     // Render Original LPU Campus Boundary (Solid Blue) & Outside Dimming Mask
     this.renderCampusBoundary();
 
-    // Render "You Are Here" Marker at Main Gate
-    this.renderUserLocation([31.2519, 75.6984]);
+    // Directly start live GPS location tracking on opening (no random/hardcoded point)
+    this.startLocationTracking();
 
     // Render Campus Road & Footpath Network from local cached dataset
     this.renderCampusRoadNetwork();
@@ -190,14 +192,14 @@ class CampusMapController {
 
   renderUserLocation(coords) {
     if (this.userLocationMarker) {
-      this.map.removeLayer(this.userLocationMarker);
+      this.userLocationMarker.setLatLng(coords);
+      return;
     }
 
     const iconHtml = `
       <div class="user-location-marker">
         <div class="user-location-pulse"></div>
         <div class="user-location-dot"></div>
-        <div class="user-location-tag">You are here</div>
       </div>
     `;
 
@@ -209,6 +211,44 @@ class CampusMapController {
     });
 
     this.userLocationMarker = L.marker(coords, { icon: userIcon, zIndexOffset: 2000 }).addTo(this.map);
+  }
+
+  startLocationTracking() {
+    if (!navigator.geolocation) {
+      console.warn("Geolocation is not supported by this browser.");
+      return;
+    }
+
+    if (this.locationWatchId !== null) {
+      navigator.geolocation.clearWatch(this.locationWatchId);
+      this.locationWatchId = null;
+    }
+
+    this.locationWatchId = navigator.geolocation.watchPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        this.currentUserCoords = [lat, lng];
+
+        // Directly render/update the real GPS marker at the user's coordinates
+        this.renderUserLocation([lat, lng]);
+      },
+      (error) => {
+        console.warn("Geolocation watchPosition error:", error.message);
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 3000,
+        timeout: 12000
+      }
+    );
+  }
+
+  stopLocationTracking() {
+    if (this.locationWatchId !== null) {
+      navigator.geolocation.clearWatch(this.locationWatchId);
+      this.locationWatchId = null;
+    }
   }
 
   renderCampusRoadNetwork() {
@@ -519,6 +559,47 @@ class CampusMapController {
       animate: true,
       duration: 1.2
     });
+  }
+
+  locateUser() {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser.");
+      return;
+    }
+
+    if (this.currentUserCoords && this.map) {
+      this.map.flyTo(this.currentUserCoords, 17, {
+        animate: true,
+        duration: 1.2
+      });
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        this.currentUserCoords = [lat, lng];
+
+        this.renderUserLocation([lat, lng]);
+
+        if (this.map) {
+          this.map.flyTo([lat, lng], 17, {
+            animate: true,
+            duration: 1.2
+          });
+        }
+      },
+      (error) => {
+        console.warn("Geolocation error:", error);
+        alert("Unable to retrieve your current location. Please ensure browser location permissions are allowed.");
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
   }
 
   recenterCampus() {

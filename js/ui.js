@@ -297,14 +297,14 @@ class UIController {
     const q = query.toLowerCase();
 
     // 1. Search in CAMPUS_GROUPS (Departments, Food Courts, Complexes)
-    const matchingGroups = Array.isArray(CAMPUS_GROUPS) ? CAMPUS_GROUPS.filter(g => 
+    const matchingGroups = Array.isArray(CAMPUS_GROUPS) ? CAMPUS_GROUPS.filter(g =>
       g.name.toLowerCase().includes(q) ||
       (Array.isArray(g.tags) && g.tags.some(t => t.toLowerCase().includes(q))) ||
       (g.desc && g.desc.toLowerCase().includes(q))
     ) : [];
 
     // 2. Search in individual CAMPUS_LOCATIONS (Blocks, Labs, Shops)
-    const matchingLocations = Array.isArray(CAMPUS_LOCATIONS) ? CAMPUS_LOCATIONS.filter(loc => 
+    const matchingLocations = Array.isArray(CAMPUS_LOCATIONS) ? CAMPUS_LOCATIONS.filter(loc =>
       loc.name.toLowerCase().includes(q) ||
       (loc.groupName && loc.groupName.toLowerCase().includes(q)) ||
       (Array.isArray(loc.facilities) && loc.facilities.some(f => f.toLowerCase().includes(q))) ||
@@ -414,7 +414,7 @@ class UIController {
     }
 
     // Get child member locations
-    const childLocations = group.blocks 
+    const childLocations = group.blocks
       ? CAMPUS_LOCATIONS.filter(l => group.blocks.includes(l.id))
       : (group.shops ? CAMPUS_LOCATIONS.filter(l => l.groupId === group.id) : []);
 
@@ -559,7 +559,13 @@ class UIController {
 
     if (recenterBtn) {
       recenterBtn.addEventListener("click", () => {
-        if (window.CampusMap) window.CampusMap.recenterCampus();
+        if (window.CampusMap) {
+          if (typeof window.CampusMap.locateUser === "function") {
+            window.CampusMap.locateUser();
+          } else {
+            window.CampusMap.recenterCampus();
+          }
+        }
       });
     }
 

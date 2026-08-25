@@ -16,6 +16,7 @@ class UIController {
     this.bindMobileNavEvents();
     this.bindSearchAndFilters();
     this.bindFloatingMapControls();
+    this.toggleAssistant(false);
 
     const layerBtn = document.getElementById("ctrl-layer-toggle");
     if (layerBtn) layerBtn.classList.add("active");
@@ -79,6 +80,16 @@ class UIController {
     this.switchView("settings");
   }
 
+  toggleLayersCard(forceState = null) {
+    const card = document.getElementById("map-layer-toggle-card");
+    if (!card) return;
+    if (forceState !== null) {
+      card.classList.toggle("collapsed", !forceState);
+    } else {
+      card.classList.toggle("collapsed");
+    }
+  }
+
   /* ==========================================================================
      Path Visibility Filters (Roads & Footpaths)
      ========================================================================== */
@@ -128,14 +139,28 @@ class UIController {
     const panel = document.getElementById("assistant-panel");
     if (!panel) return;
 
-    const isCollapsed = forceState !== null ? !forceState : !panel.classList.contains("collapsed");
-    panel.classList.toggle("collapsed", isCollapsed);
-    document.body.classList.toggle("assistant-collapsed", isCollapsed);
+    const isMobile = window.innerWidth <= 768;
+
+    if (isMobile) {
+      // Mobile: use active/inactive pattern (same as Campus Status, Directions, Karts)
+      const isOpen = forceState !== null ? forceState : !panel.classList.contains("active");
+      // Close all other drawers first
+      document.querySelectorAll(".side-panel-drawer:not(#assistant-panel)").forEach(p => p.classList.remove("active"));
+      panel.classList.toggle("active", isOpen);
+      panel.classList.toggle("collapsed", !isOpen);
+      document.body.classList.toggle("assistant-collapsed", !isOpen);
+    } else {
+      // Desktop: use collapsed/slide-right pattern
+      const isCollapsed = forceState !== null ? !forceState : !panel.classList.contains("collapsed");
+      panel.classList.toggle("collapsed", isCollapsed);
+      document.body.classList.toggle("assistant-collapsed", isCollapsed);
+    }
 
     // Update assistant nav button active state
     const assistantNavBtn = document.querySelector('.nav-item-btn[data-view="assistant"]');
     if (assistantNavBtn) {
-      assistantNavBtn.classList.toggle("active", !isCollapsed);
+      const isNowOpen = panel.classList.contains("active") || !panel.classList.contains("collapsed");
+      assistantNavBtn.classList.toggle("active", isNowOpen);
     }
   }
 
@@ -540,23 +565,36 @@ class UIController {
      Floating Map Action Controls (Zoom +, Zoom -, Satellite Toggle, Recenter)
      ========================================================================== */
   bindFloatingMapControls() {
+    const compassBtn = document.getElementById("ctrl-compass");
     const zoomInBtn = document.getElementById("ctrl-zoom-in");
     const zoomOutBtn = document.getElementById("ctrl-zoom-out");
     const recenterBtn = document.getElementById("ctrl-recenter");
     const layerBtn = document.getElementById("ctrl-layer-toggle");
 
+    // 1. Compass Button (resets orientation to North, does NOT recenter/locateUser)
+    if (compassBtn) {
+      compassBtn.addEventListener("click", () => {
+        if (window.CampusMap && typeof window.CampusMap.resetOrientation === "function") {
+          window.CampusMap.resetOrientation();
+        }
+      });
+    }
+
+    // 2. Zoom In (+)
     if (zoomInBtn) {
       zoomInBtn.addEventListener("click", () => {
         if (window.CampusMap) window.CampusMap.zoomIn();
       });
     }
 
+    // 3. Zoom Out (−)
     if (zoomOutBtn) {
       zoomOutBtn.addEventListener("click", () => {
         if (window.CampusMap) window.CampusMap.zoomOut();
       });
     }
 
+    // 4. My Location / Recenter
     if (recenterBtn) {
       recenterBtn.addEventListener("click", () => {
         if (window.CampusMap) {
@@ -569,6 +607,7 @@ class UIController {
       });
     }
 
+    // Desktop layer toggle button (if present)
     if (layerBtn) {
       layerBtn.addEventListener("click", () => {
         if (!window.CampusMap) return;
@@ -583,6 +622,81 @@ class UIController {
         }
       });
     }
+
+    // Init filter panel interactions
+    this.initFilterPanel();
+  }
+
+  /* ==========================================================================
+     Search Filter Panel
+     ========================================================================== */
+  initFilterPanel() {
+    // Single-select chip groups (click toggles active within its own group)
+    document.querySelectorAll(".filter-chip").forEach(chip => {
+      chip.addEventListener("click", () => {
+        const group = chip.closest(".filter-chip-group");
+        if (group) {
+          group.querySelectorAll(".filter-chip").forEach(c => c.classList.remove("active"));
+        }
+        chip.classList.add("active");
+      });
+    });
+
+    // Close button
+    const filterPanel = document.getElementById("search-filter-panel");
+    if (filterPanel) {
+      const closeBtn = filterPanel.querySelector(".panel-close-btn");
+      if (closeBtn) {
+        closeBtn.addEventListener("click", () => this.closeLeftPanels());
+      }
+    }
+
+    // Reset button
+    const resetBtn = document.getElementById("filter-reset-btn");
+    if (resetBtn) {
+      resetBtn.addEventListener("click", () => {
+        // Reset every group's first chip to active
+        document.querySelectorAll(".filter-chip-group").forEach(group => {
+          group.querySelectorAll(".filter-chip").forEach((c, i) => c.classList.toggle("active", i === 0));
+        });
+        const openNow = document.getElementById("filter-open-now");
+        const hasLoc  = document.getElementById("filter-has-location");
+        if (openNow) openNow.checked = false;
+        if (hasLoc)  hasLoc.checked  = true;
+        this._showFilterBadge(false);
+      });
+    }
+  }
+
+  applySearchFilters() {
+    // Read active selections
+    const category = document.querySelector("#filter-category-group .filter-chip.active")?.dataset.value || "all";
+    const type      = document.querySelector("#filter-type-group .filter-chip.active")?.dataset.value || "all";
+    const distance  = document.querySelector("#filter-distance-group .filter-chip.active")?.dataset.value || "far";
+    const openNow   = document.getElementById("filter-open-now")?.checked || false;
+
+    // Highlight the filter button if any filter is non-default
+    const isFiltered = category !== "all" || type !== "all" || distance !== "far" || openNow;
+    this._showFilterBadge(isFiltered);
+
+    // Sync category chips row with filter panel selection (if a known category was chosen)
+    if (["all","academics","hostels","food","parking","others"].includes(category)) {
+      document.querySelectorAll(".category-chips-row .chip-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.category === category);
+      });
+      // Trigger the existing chip click to fire any search handler
+      const matchingChip = document.querySelector(`.category-chips-row .chip-btn[data-category="${category}"]`);
+      if (matchingChip) matchingChip.click();
+    }
+
+    // Close the panel
+    this.closeLeftPanels();
+  }
+
+  _showFilterBadge(show) {
+    const btn = document.getElementById("search-filter-btn");
+    if (!btn) return;
+    btn.classList.toggle("has-active-filter", show);
   }
 }
 

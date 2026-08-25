@@ -91,6 +91,31 @@
   --glass-border: 1px solid rgba(255, 255, 255, 0.09);
 }
 
+[data-theme="dark"] .side-panel-drawer {
+  background-color: var(--bg-surface-translucent);
+}
+
+[data-theme="dark"] .panel-header {
+  background: var(--bg-surface);
+}
+
+[data-theme="dark"] .filter-chip {
+  background: var(--bg-card);
+  border-color: var(--border-light);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .filter-checkbox-box {
+  background: var(--bg-card);
+  border-color: var(--text-muted);
+}
+
+[data-theme="dark"] .btn-secondary {
+  background: var(--bg-pill);
+  color: var(--text-primary);
+  border-color: var(--border-light);
+}
+
 /* ==========================================================================
    Reset & Base Styles
    ========================================================================== */

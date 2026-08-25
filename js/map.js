@@ -86,13 +86,16 @@ class CampusMapController {
       inertia: true,
       inertiaDeceleration: 3000,
       zoomControl: false,
-      attributionControl: false
+      attributionControl: false,
+      rotate: true,
+      touchRotate: true
     });
 
     // Initial comfortable framing
-    this.map.fitBounds(lpuBounds.pad(0.12), { 
-      paddingTopLeft: [70, 70],
-      paddingBottomRight: [390, 70]
+    const isMobile = window.innerWidth <= 768;
+    this.map.fitBounds(lpuBounds.pad(isMobile ? 0.04 : 0.12), { 
+      paddingTopLeft: isMobile ? [95, 10] : [70, 70],
+      paddingBottomRight: isMobile ? [10, 85] : [390, 70]
     });
 
     // 1. Google Maps Satellite
@@ -126,10 +129,18 @@ class CampusMapController {
     // Render Campus Road & Footpath Network from local cached dataset
     this.renderCampusRoadNetwork();
 
-    // Dynamic Zoom Level Adjustment to prevent road congestion when zooming out
-    this.map.on('zoomend', () => {
-      this.renderCampusRoadNetwork();
-    });
+    // Keep zoom-dependent roads in sync while the map is being manipulated.
+    const scheduleRoadRender = () => {
+      if (this._roadRenderFrame) return;
+      this._roadRenderFrame = requestAnimationFrame(() => {
+        this._roadRenderFrame = null;
+        this.renderCampusRoadNetwork();
+        this.renderCampusBoundary();
+      });
+    };
+
+    this.map.on('zoom move rotate', scheduleRoadRender);
+    this.map.on('zoomend moveend', scheduleRoadRender);
 
     // Render Campus Locations
     this.renderLocationMarkers();
@@ -198,6 +209,7 @@ class CampusMapController {
 
     const iconHtml = `
       <div class="user-location-marker">
+        <div class="user-location-tag">You are here</div>
         <div class="user-location-pulse"></div>
         <div class="user-location-dot"></div>
       </div>
@@ -603,17 +615,18 @@ class CampusMapController {
   }
 
   recenterCampus() {
-    const isAssistantOpen = !document.body.classList.contains("assistant-collapsed") && window.innerWidth > 768;
+    const isMobile = window.innerWidth <= 768;
+    const isAssistantOpen = !document.body.classList.contains("assistant-collapsed") && !isMobile;
     if (typeof LPU_BOUNDARY !== "undefined" && Array.isArray(LPU_BOUNDARY) && LPU_BOUNDARY.length > 0) {
       const bounds = L.latLngBounds(LPU_BOUNDARY);
-      this.map.fitBounds(bounds.pad(0.12), {
-        paddingTopLeft: [70, 70],
-        paddingBottomRight: [isAssistantOpen ? 390 : 70, 70],
+      this.map.fitBounds(bounds.pad(isMobile ? 0.04 : 0.12), {
+        paddingTopLeft: isMobile ? [95, 10] : [70, 70],
+        paddingBottomRight: isMobile ? [10, 85] : [isAssistantOpen ? 390 : 70, 70],
         animate: true,
         duration: 1
       });
     } else {
-      this.map.flyTo(CAMPUS_CENTER, 15.5, { animate: true, duration: 1 });
+      this.map.flyTo(CAMPUS_CENTER, isMobile ? 15.8 : 15.5, { animate: true, duration: 1 });
     }
   }
 
@@ -623,6 +636,38 @@ class CampusMapController {
 
   zoomOut() {
     this.map.zoomOut();
+  }
+
+  resetOrientation() {
+    if (this.map && typeof this.map.setBearing === "function") {
+      if (this._bearingAnimationFrame) {
+        cancelAnimationFrame(this._bearingAnimationFrame);
+      }
+
+      const startBearing = this.map.getBearing ? this.map.getBearing() : 0;
+      const shortestBearing = ((startBearing + 180) % 360) - 180;
+      const duration = 500;
+      const startedAt = performance.now();
+
+      const animateBearing = (now) => {
+        const progress = Math.min((now - startedAt) / duration, 1);
+        const easedProgress = 1 - Math.pow(1 - progress, 3);
+        this.map.setBearing(shortestBearing * (1 - easedProgress));
+
+        if (progress < 1) {
+          this._bearingAnimationFrame = requestAnimationFrame(animateBearing);
+        } else {
+          this._bearingAnimationFrame = null;
+        }
+      };
+
+      this._bearingAnimationFrame = requestAnimationFrame(animateBearing);
+    }
+    const dial = document.querySelector("#ctrl-compass .compass-dial");
+    if (dial) {
+      dial.style.transition = "transform 0.5s cubic-bezier(0.22, 1, 0.36, 1)";
+      dial.style.transform = "rotate(0deg)";
+    }
   }
 }
 

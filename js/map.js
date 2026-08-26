@@ -141,8 +141,14 @@ class CampusMapController {
         if (this.outsideMaskLayer) this.outsideMaskLayer.redraw();
       });
     };
-    this.map.on('zoom', scheduleRoadRender);
-    this.map.on('zoomend', scheduleRoadRender);
+    this.map.on('zoom', () => {
+      scheduleRoadRender();
+      this.updateMarkerLabelVisibility();
+    });
+    this.map.on('zoomend', () => {
+      scheduleRoadRender();
+      this.updateMarkerLabelVisibility();
+    });
 
     const refreshMapSize = () => {
       requestAnimationFrame(() => this.map.invalidateSize({ pan: false }));
@@ -155,6 +161,17 @@ class CampusMapController {
     this.renderLocationMarkers();
 
     return this;
+  }
+
+  updateMarkerLabelVisibility() {
+    if (!this.map) return;
+    const zoom = this.map.getZoom();
+    const showLabels = zoom >= 15.0;
+    const mapContainer = this.map.getContainer();
+    if (mapContainer) {
+      mapContainer.classList.toggle("show-poi-labels", showLabels);
+      mapContainer.classList.toggle("hide-poi-labels", !showLabels);
+    }
   }
 
   setBaseLayer(layerName) {
@@ -479,20 +496,28 @@ class CampusMapController {
       : lpuOnly.filter(loc => loc.category === filterCategory);
 
     filtered.forEach(loc => {
-      let iconSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>`;
-      let pinClass = `pin-${loc.category}`;
+      let iconSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>`;
+      let pinClass = `pin-${loc.category || 'others'}`;
 
       if (loc.category === "food") {
-        iconSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>`;
+        iconSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>`;
       } else if (loc.category === "academics") {
-        iconSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>`;
+        iconSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>`;
       } else if (loc.category === "hostels") {
-        iconSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>`;
+        iconSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>`;
+      } else if (loc.category === "parking") {
+        iconSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 17V7h4a3 3 0 0 1 0 6H9"/></svg>`;
+      } else if (loc.category === "offices") {
+        iconSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>`;
+      } else if (loc.category === "healthcare") {
+        iconSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M2 12h20"/></svg>`;
       }
 
       const customHtml = `
-        <div class="custom-campus-pin ${pinClass}" data-id="${loc.id}">
-          <div class="pin-icon">${iconSvg}</div>
+        <div class="custom-campus-pin ${pinClass}" data-id="${loc.id}" title="${loc.name}">
+          <div class="pin-circle">
+            <div class="pin-icon">${iconSvg}</div>
+          </div>
           <span class="pin-label">${loc.name}</span>
         </div>
       `;
@@ -500,8 +525,8 @@ class CampusMapController {
       const pinIcon = L.divIcon({
         className: "campus-pin-wrapper",
         html: customHtml,
-        iconSize: [120, 36],
-        iconAnchor: [60, 36]
+        iconSize: [26, 26],
+        iconAnchor: [13, 13]
       });
 
       const marker = L.marker([loc.lat, loc.lng], { icon: pinIcon });
@@ -513,6 +538,8 @@ class CampusMapController {
 
       this.markersLayer.addLayer(marker);
     });
+
+    this.updateMarkerLabelVisibility();
   }
 
   drawRoute(pathCoords, isDetour = false, closedPathCoords = null) {

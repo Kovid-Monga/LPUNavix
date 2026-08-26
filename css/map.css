@@ -281,71 +281,119 @@ body.assistant-collapsed .map-floating-controls {
 }
 
 /* ==========================================================================
-   Custom Leaflet Marker Pins
+   Google Maps-Style Circular Marker Pins & Dynamic Zoom Labels
    ========================================================================== */
 
+.campus-pin-wrapper {
+  background: transparent !important;
+  border: none !important;
+  overflow: visible !important;
+}
+
 .custom-campus-pin {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: var(--bg-surface);
-  border-radius: var(--radius-full);
-  padding: 4px 10px 4px 5px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
-  border: 1.5px solid rgba(255, 255, 255, 0.8);
   cursor: pointer;
   white-space: nowrap;
-  transition: all var(--transition-bounce);
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  transform: translate(-50%, -100%);
+  user-select: none;
+  pointer-events: auto;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  transition: transform 0.15s ease-out;
 }
 
 .custom-campus-pin:hover {
-  transform: translate(-50%, -110%) scale(1.1);
-  z-index: 1100 !important;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22);
+  transform: scale(1.15);
+  z-index: 1000 !important;
 }
 
-.pin-icon {
+.custom-campus-pin .pin-circle {
   width: 26px;
   height: 26px;
+  min-width: 26px;
+  min-height: 26px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1.5px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+.custom-campus-pin:hover .pin-circle {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.custom-campus-pin .pin-icon {
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ffffff;
-  font-size: 11px;
+  color: #2563eb;
 }
 
-.pin-label {
+.custom-campus-pin .pin-icon svg {
+  display: block;
+}
+
+.custom-campus-pin .pin-label {
   font-weight: 700;
-  font-size: 12px;
-  color: var(--text-primary);
+  font-size: 11.5px;
+  color: #1e293b;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  padding: 2.5px 7px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+  line-height: 1.35;
+  display: none;
+  opacity: 0;
+  transform: translateX(-3px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: auto;
 }
 
-/* Category Specific Pin Themes */
-.pin-academic .pin-icon {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+/* Category Specific Pin Themes for Icons */
+.pin-academics .pin-icon, .pin-academic .pin-icon { color: #2563eb; }
+.pin-hostels .pin-icon, .pin-hostel .pin-icon { color: #7c3aed; }
+.pin-food .pin-icon { color: #ea580c; }
+.pin-parking .pin-icon { color: #dc2626; }
+.pin-offices .pin-icon, .pin-office .pin-icon { color: #059669; }
+.pin-healthcare .pin-icon { color: #e11d48; }
+.pin-others .pin-icon, .pin-other .pin-icon { color: #475569; }
+
+/* Dark mode support */
+[data-theme="dark"] .custom-campus-pin .pin-circle {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
 }
 
-.pin-hostel .pin-icon {
-  background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+[data-theme="dark"] .custom-campus-pin .pin-label {
+  background: rgba(15, 23, 42, 0.92);
+  color: #f1f5f9;
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
 }
 
-.pin-food .pin-icon {
-  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+/* Zoom-based POI Label Visibility */
+.show-poi-labels .custom-campus-pin .pin-label {
+  display: inline-block;
+  opacity: 1;
+  transform: translateX(0);
 }
 
-.pin-office .pin-icon {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-}
-
-.pin-library .pin-icon {
-  background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
-}
-
-.pin-gate .pin-icon {
-  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+.hide-poi-labels .custom-campus-pin .pin-label {
+  display: none !important;
+  opacity: 0;
+  transform: translateX(-3px);
 }
 
 /* Destination Target Pin (Red Drop Pin) */

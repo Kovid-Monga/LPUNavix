@@ -64,6 +64,8 @@ class CampusMapController {
     this.showRoads = true;
     this.showFootpaths = true;
     this.showBoundary = true;
+    this.overlayRenderFrame = null;
+    this.mapResizeObserver = null;
   }
 
   init() {
@@ -130,10 +132,24 @@ class CampusMapController {
     // Render Campus Road & Footpath Network from local cached dataset
     this.renderCampusRoadNetwork();
 
-    // Dynamic Zoom Level Adjustment to prevent road congestion when zooming out
-    this.map.on('zoomend', () => {
-      this.renderCampusRoadNetwork();
-    });
+    const scheduleRoadRender = () => {
+      if (this.overlayRenderFrame !== null) return;
+      this.overlayRenderFrame = requestAnimationFrame(() => {
+        this.overlayRenderFrame = null;
+        this.renderCampusRoadNetwork();
+        if (this.boundaryLayer) this.boundaryLayer.redraw();
+        if (this.outsideMaskLayer) this.outsideMaskLayer.redraw();
+      });
+    };
+    this.map.on('zoom', scheduleRoadRender);
+    this.map.on('zoomend', scheduleRoadRender);
+
+    const refreshMapSize = () => {
+      requestAnimationFrame(() => this.map.invalidateSize({ pan: false }));
+    };
+    this.mapResizeObserver = new ResizeObserver(refreshMapSize);
+    this.mapResizeObserver.observe(document.getElementById('map'));
+    window.addEventListener('orientationchange', refreshMapSize);
 
     // Render Campus Locations
     this.renderLocationMarkers();

@@ -222,6 +222,9 @@ class UIController {
   closeLeftPanels() {
     document.querySelectorAll(".side-panel-drawer:not(#assistant-panel)").forEach(p => p.classList.remove("active"));
     this.currentActivePanel = null;
+    if (window.CampusMap) {
+      window.CampusMap.clearRevealedLocations();
+    }
   }
 
   closeAllPanels() {
@@ -329,13 +332,14 @@ class UIController {
     ) : [];
 
     // 2. Search in individual CAMPUS_LOCATIONS (Blocks, Labs, Shops)
-    const matchingLocations = Array.isArray(CAMPUS_LOCATIONS) ? CAMPUS_LOCATIONS.filter(loc =>
+    const allLocations = getAllCampusLocations();
+    const matchingLocations = allLocations.filter(loc =>
       loc.name.toLowerCase().includes(q) ||
       (loc.groupName && loc.groupName.toLowerCase().includes(q)) ||
       (Array.isArray(loc.facilities) && loc.facilities.some(f => f.toLowerCase().includes(q))) ||
       (Array.isArray(loc.tags) && loc.tags.some(t => t.toLowerCase().includes(q))) ||
       (loc.desc && loc.desc.toLowerCase().includes(q))
-    ) : [];
+    );
 
     if (matchingGroups.length === 0 && matchingLocations.length === 0) {
       panel.innerHTML = `<div style="padding:14px;text-align:center;color:var(--text-muted);font-size:13px;">No campus location or department found for "<strong>${query}</strong>"</div>`;
@@ -395,7 +399,7 @@ class UIController {
   }
 
   selectSearchResult(locationId) {
-    const loc = CAMPUS_LOCATIONS.find(l => l.id === locationId);
+    const loc = getAllCampusLocations().find(l => l.id === locationId);
     if (!loc) return;
 
     const panel = document.getElementById("search-suggestions");
@@ -405,6 +409,9 @@ class UIController {
     if (searchInput) searchInput.value = loc.name;
 
     this.showLocationDetails(loc);
+    if (window.CampusMap) {
+      window.CampusMap.revealLocation(locationId);
+    }
   }
 
   selectGroupSearchResult(groupId) {
@@ -450,7 +457,7 @@ class UIController {
           <div style="font-weight:800;font-size:12px;color:var(--text-primary);margin-bottom:6px;">Locations Inside this Zone:</div>
           <div style="display:flex;flex-direction:column;gap:6px;">
             ${childLocations.map(loc => `
-              <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--bg-pill);border-radius:var(--radius-md);cursor:pointer;" onclick="window.UIController.showLocationDetails(CAMPUS_LOCATIONS.find(l=>l.id==='${loc.id}'))">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--bg-pill);border-radius:var(--radius-md);cursor:pointer;" onclick="window.UIController.showLocationDetails(getAllCampusLocations().find(l=>l.id==='${loc.id}'))">
                 <div>
                   <div style="font-weight:700;font-size:13px;color:var(--text-primary);">${loc.name}</div>
                   <div style="font-size:11px;color:var(--text-muted);">${loc.floor || ""}</div>
@@ -555,7 +562,7 @@ class UIController {
       return;
     }
 
-    const loc = CAMPUS_LOCATIONS.find(l => l.id === locationId);
+    const loc = getAllCampusLocations().find(l => l.id === locationId);
     if (loc) {
       this.showLocationDetails(loc);
     }

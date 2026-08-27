@@ -112,8 +112,8 @@ class AssistantController {
     }
 
     // 3. Dynamic Match in CAMPUS_LOCATIONS (Individual Blocks, Shops, Labs)
-    if (Array.isArray(CAMPUS_LOCATIONS)) {
-      const locMatch = CAMPUS_LOCATIONS.find(loc => 
+    if (typeof getAllCampusLocations === "function") {
+      const locMatch = getAllCampusLocations().find(loc => 
         loc.name.toLowerCase().includes(qLower) || 
         (Array.isArray(loc.tags) && loc.tags.some(t => qLower.includes(t.toLowerCase()))) ||
         (Array.isArray(loc.facilities) && loc.facilities.some(f => qLower.includes(f.toLowerCase())))

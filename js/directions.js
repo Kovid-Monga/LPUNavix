@@ -16,7 +16,7 @@ class DirectionsController {
 
   async geocodePlace(name) {
     // 1. First check local campus data inside LPU
-    const local = CAMPUS_LOCATIONS.find(l => 
+    const local = getAllCampusLocations().find(l => 
       l.name.toLowerCase().includes(name.toLowerCase()) || 
       l.id.toLowerCase().includes(name.toLowerCase())
     );

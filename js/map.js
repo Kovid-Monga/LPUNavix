@@ -66,6 +66,7 @@ class CampusMapController {
     this.showBoundary = true;
     this.overlayRenderFrame = null;
     this.mapResizeObserver = null;
+    this.revealedLocationIds = new Set();
   }
 
   init() {
@@ -148,6 +149,7 @@ class CampusMapController {
     this.map.on('zoomend', () => {
       scheduleRoadRender();
       this.updateMarkerLabelVisibility();
+      this.renderLocationMarkers();
     });
 
     const refreshMapSize = () => {
@@ -486,10 +488,19 @@ class CampusMapController {
   renderLocationMarkers(filterCategory = "all") {
     this.markersLayer.clearLayers();
 
-    if (!Array.isArray(CAMPUS_LOCATIONS) || CAMPUS_LOCATIONS.length === 0) return;
+    const allLocations = getAllCampusLocations();
+    if (allLocations.length === 0) return;
 
     // Filter only locations strictly within LPU campus boundary
-    const lpuOnly = CAMPUS_LOCATIONS.filter(loc => isPointInPolygon([loc.lat, loc.lng], LPU_BOUNDARY));
+    const lpuOnly = allLocations.filter(loc => {
+      const isInCampus = isPointInPolygon([loc.lat, loc.lng], LPU_BOUNDARY);
+      const isRevealed = this.revealedLocationIds.has(loc.id);
+      const isVisibleAtZoom = isRevealed || !loc.visibleFromZoom || (
+        this.map.getZoom() >= loc.visibleFromZoom &&
+        this.map.getBounds().contains([loc.lat, loc.lng])
+      );
+      return isInCampus && isVisibleAtZoom;
+    });
 
     const filtered = filterCategory === "all"
       ? lpuOnly
@@ -540,6 +551,17 @@ class CampusMapController {
     });
 
     this.updateMarkerLabelVisibility();
+  }
+
+  revealLocation(locationId) {
+    this.revealedLocationIds.add(locationId);
+    this.renderLocationMarkers();
+  }
+
+  clearRevealedLocations() {
+    if (this.revealedLocationIds.size === 0) return;
+    this.revealedLocationIds.clear();
+    this.renderLocationMarkers();
   }
 
   drawRoute(pathCoords, isDetour = false, closedPathCoords = null) {

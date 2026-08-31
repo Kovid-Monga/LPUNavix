@@ -396,59 +396,80 @@ body.assistant-collapsed .map-floating-controls {
   transform: translateX(-3px);
 }
 
-/* Destination Target Pin (Red Drop Pin) */
+/* Destination Target Pin (Red Drop Pin - Zero-Drift Bottom Tip Anchor) */
+.dest-icon-div {
+  background: transparent !important;
+  border: none !important;
+  overflow: visible !important;
+}
+
 .destination-marker-pin {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  transform: translate(-50%, -100%);
   cursor: pointer;
 }
 
 .dest-pin-badge {
+  position: absolute;
+  bottom: 44px;
+  left: 50%;
+  transform: translateX(-50%);
   background: #dc2626;
-  color: #fff;
+  color: #ffffff;
   font-size: 11px;
   font-weight: 700;
-  padding: 3px 8px;
+  padding: 3px 9px;
   border-radius: var(--radius-full);
-  margin-bottom: 2px;
-  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.4);
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.45);
+  white-space: nowrap;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  pointer-events: none;
+  z-index: 10;
 }
 
-.dest-pin-circle {
-  width: 32px;
-  height: 32px;
-  background: #ef4444;
-  border-radius: 50% 50% 50% 0;
-  transform: rotate(-45deg);
-  border: 3px solid #ffffff;
+.dest-pin-svg-wrap {
+  position: absolute;
+  left: -15px;
+  bottom: 0;
+  width: 30px;
+  height: 40px;
+  display: block;
+  filter: drop-shadow(0 4px 10px rgba(220, 38, 38, 0.45));
+}
+
+.dest-pin-svg {
+  width: 30px;
+  height: 40px;
+  display: block;
+}
+
+/* User Location Marker (Pulsing Blue Dot - No Text Tag) */
+.user-loc-div-icon {
+  background: transparent !important;
+  border: none !important;
+  overflow: visible !important;
+}
+
+.user-location-marker {
+  position: relative;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
-}
-
-.dest-pin-circle svg {
-  transform: rotate(45deg);
-  color: #fff;
-  width: 16px;
-  height: 16px;
-}
-
-/* You Are Here Pulsing Marker with Speech Bubble */
-.user-location-marker {
-  position: relative;
-  width: 28px;
-  height: 28px;
-  transform: translate(-50%, -50%);
 }
 
 .user-location-dot {
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   background: #2563eb;
-  border: 3.5px solid #ffffff;
+  border: 3px solid #ffffff;
   border-radius: 50%;
   box-shadow: 0 3px 10px rgba(37, 99, 235, 0.6);
   position: absolute;
@@ -463,44 +484,12 @@ body.assistant-collapsed .map-floating-controls {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 56px;
-  height: 56px;
-  background: rgba(37, 99, 235, 0.35);
+  width: 48px;
+  height: 48px;
+  background: rgba(37, 99, 235, 0.3);
   border-radius: 50%;
   animation: pulseGlow 2.2s infinite ease-out;
   z-index: 1;
-}
-
-.user-location-tag {
-  position: absolute;
-  bottom: calc(100% + 10px);
-  left: 50%;
-  transform: translateX(-50%);
-  background: #ffffff;
-  color: #2563eb;
-  font-weight: 800;
-  font-size: 11.5px;
-  padding: 5px 12px;
-  border-radius: 20px;
-  white-space: nowrap;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(37, 99, 235, 0.15);
-  z-index: 10;
-  pointer-events: none;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.user-location-tag::after {
-  content: '';
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border-width: 5px 5px 0 5px;
-  border-style: solid;
-  border-color: #ffffff transparent transparent transparent;
-  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.1));
 }
 
 /* Live Kart Marker on Map */
@@ -530,3 +519,108 @@ body.assistant-collapsed .map-floating-controls {
   width: 14px;
   height: 14px;
 }
+
+/* ============================================================================
+   🔵 DOT FORMAT ROUTE & NAVIGATION STYLING
+   ============================================================================ */
+
+/* Dotted Route Polyline */
+.route-dot-path {
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+  pointer-events: none;
+}
+
+/* Glowing Route Underlay Halo */
+.route-halo-underlay {
+  filter: blur(2px);
+  pointer-events: none;
+}
+
+/* Intermediate Waypoint Dots */
+.waypoint-dot-wrapper {
+  background: transparent;
+  border: none;
+}
+
+.waypoint-route-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 1.5px solid #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* Start Location Origin Pin (Zero-Drift Centered Anchor) */
+.start-icon-div {
+  background: transparent !important;
+  border: none !important;
+  overflow: visible !important;
+}
+
+.start-marker-pin {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.start-pin-tag {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #10b981;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: var(--radius-full);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.45);
+  white-space: nowrap;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.start-pin-pulse {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid #10b981;
+  background: rgba(16, 185, 129, 0.2);
+  animation: pulseGlow 2s infinite ease-out;
+  pointer-events: none;
+}
+
+.start-pin-dot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2.5px solid #ffffff;
+  background: #10b981;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.start-pin-inner {
+  width: 4px;
+  height: 4px;
+  background: #ffffff;
+  border-radius: 50%;
+}

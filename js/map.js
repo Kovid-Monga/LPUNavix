@@ -102,20 +102,39 @@ class CampusMapController {
       paddingBottomRight: isMobile ? [10, 85] : [390, 70]
     });
 
-    // 1. Google Maps Satellite
-    this.tileLayers.satellite = L.tileLayer(
-      "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
-      { maxZoom: 22, attribution: "© Google" }
+    // 1. Clean OpenStreetMap Standard Tile Layer (Guaranteed universal availability)
+    this.tileLayers.street = L.tileLayer(
+      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      { maxZoom: 19, subdomains: "abc", attribution: "© OpenStreetMap contributors" }
     );
 
-    // 2. Clean Street Vector Style (CartoDB Positron)
-    this.tileLayers.street = L.tileLayer(
+    // 2. Google Maps Satellite
+    this.tileLayers.satellite = L.tileLayer(
+      "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
+      { maxZoom: 20, attribution: "© Google" }
+    );
+
+    // 3. CartoDB Positron
+    this.tileLayers.carto = L.tileLayer(
       "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
       { maxZoom: 19, subdomains: "abcd" }
     );
 
-    // Set default base layer to Satellite Imagery
+    // Set default base layer (street fallback or satellite)
     this.setBaseLayer("satellite");
+
+    // Create Dedicated Panes to strictly guarantee Z-Index ordering on zoom
+    this.map.createPane('roadsPane');
+    this.map.getPane('roadsPane').style.zIndex = 410;
+
+    this.map.createPane('footpathsPane');
+    this.map.getPane('footpathsPane').style.zIndex = 420;
+
+    this.map.createPane('routesHaloPane');
+    this.map.getPane('routesHaloPane').style.zIndex = 510;
+
+    this.map.createPane('routesPane');
+    this.map.getPane('routesPane').style.zIndex = 520;
 
     // Initialize Layer Groups
     this.roadsLayer = L.layerGroup().addTo(this.map);
@@ -124,10 +143,10 @@ class CampusMapController {
     this.routesLayer = L.layerGroup().addTo(this.map);
     this.kartsLayer = L.layerGroup().addTo(this.map);
 
-    // Render Original LPU Campus Boundary (Solid Blue) & Outside Dimming Mask
+    // Render Campus Perimeter Boundary
     this.renderCampusBoundary();
 
-    // Directly start live GPS location tracking on opening (no random/hardcoded point)
+    // Start Location Tracking
     this.startLocationTracking();
 
     // Render Campus Road & Footpath Network from local cached dataset
@@ -138,8 +157,7 @@ class CampusMapController {
       this.overlayRenderFrame = requestAnimationFrame(() => {
         this.overlayRenderFrame = null;
         this.renderCampusRoadNetwork();
-        if (this.boundaryLayer) this.boundaryLayer.redraw();
-        if (this.outsideMaskLayer) this.outsideMaskLayer.redraw();
+        if (this.boundaryLayer && this.boundaryLayer.redraw) this.boundaryLayer.redraw();
       });
     };
     this.map.on('zoom', () => {
@@ -153,11 +171,23 @@ class CampusMapController {
     });
 
     const refreshMapSize = () => {
-      requestAnimationFrame(() => this.map.invalidateSize({ pan: false }));
+      if (this.map) {
+        requestAnimationFrame(() => this.map.invalidateSize({ pan: false }));
+      }
     };
     this.mapResizeObserver = new ResizeObserver(refreshMapSize);
-    this.mapResizeObserver.observe(document.getElementById('map'));
+    const mapEl = document.getElementById('map');
+    if (mapEl) this.mapResizeObserver.observe(mapEl);
     window.addEventListener('orientationchange', refreshMapSize);
+    window.addEventListener('resize', refreshMapSize);
+
+    // Immediate and delayed resize invalidation to ensure map is visible instantly
+    setTimeout(() => {
+      if (this.map) this.map.invalidateSize({ pan: false });
+    }, 100);
+    setTimeout(() => {
+      if (this.map) this.map.invalidateSize({ pan: false });
+    }, 500);
 
     // Render Campus Locations
     this.renderLocationMarkers();
@@ -177,51 +207,33 @@ class CampusMapController {
   }
 
   setBaseLayer(layerName) {
-    if (this.currentTileLayer) {
+    if (this.currentTileLayer && this.map.hasLayer(this.currentTileLayer)) {
       this.map.removeLayer(this.currentTileLayer);
     }
-    if (this.tileLayers[layerName]) {
+    const targetLayer = this.tileLayers[layerName] || this.tileLayers.street;
+    if (targetLayer) {
       this.currentLayerMode = layerName;
-      this.currentTileLayer = this.tileLayers[layerName];
+      this.currentTileLayer = targetLayer;
       this.currentTileLayer.addTo(this.map);
-      // Re-apply mode-specific outside mask contrast
-      this.renderCampusBoundary();
     }
   }
 
   renderCampusBoundary() {
     if (typeof LPU_BOUNDARY !== "undefined" && Array.isArray(LPU_BOUNDARY) && LPU_BOUNDARY.length > 0) {
-      if (this.boundaryLayer) this.map.removeLayer(this.boundaryLayer);
-      if (this.outsideMaskLayer) this.map.removeLayer(this.outsideMaskLayer);
+      if (this.boundaryLayer && this.map.hasLayer(this.boundaryLayer)) {
+        this.map.removeLayer(this.boundaryLayer);
+      }
+      if (this.outsideMaskLayer && this.map.hasLayer(this.outsideMaskLayer)) {
+        this.map.removeLayer(this.outsideMaskLayer);
+      }
 
-      const maskColor = CAMPUS_STYLE_CONFIG.outsideDimMask || "#020617";
-      const maskOpacity = (typeof CAMPUS_STYLE_CONFIG.outsideDimOpacity !== "undefined")
-        ? CAMPUS_STYLE_CONFIG.outsideDimOpacity
-        : (this.currentLayerMode === "satellite" ? 0.35 : 0.20);
-
-      // 1. Inverted Polygon Mask: Always remains active to dim/blur the outside region
-      const worldBounds = [
-        [90, -180],
-        [90, 180],
-        [-90, 180],
-        [-90, -180]
-      ];
-
-      this.outsideMaskLayer = L.polygon([worldBounds, LPU_BOUNDARY], {
-        className: "lpu-outside-mask-layer",
-        color: "transparent",
-        fillColor: maskColor,
-        fillOpacity: maskOpacity,
-        interactive: false
-      }).addTo(this.map);
-
-      // 2. Solid Perimeter Boundary Line: Only added when checkbox is ON
+      // Solid Perimeter Boundary Line
       if (this.showBoundary) {
         this.boundaryLayer = L.polygon(LPU_BOUNDARY, {
           className: "lpu-boundary-perimeter",
-          color: CAMPUS_STYLE_CONFIG.boundaryLine,
+          color: CAMPUS_STYLE_CONFIG.boundaryLine || "#3b82f6",
           weight: 3.5,
-          opacity: CAMPUS_STYLE_CONFIG.boundaryOpacity,
+          opacity: 0.9,
           fillColor: "#3b82f6",
           fillOpacity: 0.02
         }).addTo(this.map);
@@ -237,7 +249,6 @@ class CampusMapController {
 
     const iconHtml = `
       <div class="user-location-marker">
-        <div class="user-location-tag">You are here</div>
         <div class="user-location-pulse"></div>
         <div class="user-location-dot"></div>
       </div>
@@ -357,6 +368,7 @@ class CampusMapController {
         if (zoom >= 16) {
           // White outer casing/border
           L.polyline(coords, {
+            pane: 'footpathsPane',
             color: CAMPUS_STYLE_CONFIG.footpathCasing,
             weight: footpathCasingWeight,
             opacity: CAMPUS_STYLE_CONFIG.footpathCasingOpacity,
@@ -368,6 +380,7 @@ class CampusMapController {
 
         // Terracotta orange path core
         L.polyline(coords, {
+          pane: 'footpathsPane',
           color: CAMPUS_STYLE_CONFIG.footpathCore,
           weight: footpathCoreWeight,
           opacity: CAMPUS_STYLE_CONFIG.footpathOpacity,
@@ -385,6 +398,7 @@ class CampusMapController {
         if (zoom >= 16) {
           // 1. Solid White Outer Edge Casing
           L.polyline(coords, {
+            pane: 'roadsPane',
             color: CAMPUS_STYLE_CONFIG.roadCasing,
             weight: roadCasingWeight,
             opacity: CAMPUS_STYLE_CONFIG.roadCasingOpacity,
@@ -395,6 +409,7 @@ class CampusMapController {
 
           // 2. Dark Asphalt Road Surface Core
           const roadLine = L.polyline(coords, {
+            pane: 'roadsPane',
             color: CAMPUS_STYLE_CONFIG.roadCore,
             weight: roadCoreWeight,
             opacity: CAMPUS_STYLE_CONFIG.roadOpacity,
@@ -406,6 +421,7 @@ class CampusMapController {
           // 3. Dashed White Center Lane Divider
           if (showDividers) {
             L.polyline(coords, {
+              pane: 'roadsPane',
               color: CAMPUS_STYLE_CONFIG.roadDivider,
               weight: dividerWeight,
               dashArray: '5, 8',
@@ -428,6 +444,7 @@ class CampusMapController {
                       pixelSize: 7,
                       polygon: false,
                       pathOptions: {
+                        pane: 'roadsPane',
                         stroke: true,
                         color: CAMPUS_STYLE_CONFIG.roadArrow,
                         weight: 1.6,
@@ -444,6 +461,7 @@ class CampusMapController {
         } else {
           // Zoom <= 15 (Overview mode: clean slim line)
           L.polyline(coords, {
+            pane: 'roadsPane',
             color: CAMPUS_STYLE_CONFIG.roadCasing,
             weight: roadCasingWeight,
             opacity: CAMPUS_STYLE_CONFIG.roadCasingOpacity,
@@ -451,6 +469,7 @@ class CampusMapController {
           }).addTo(this.roadsLayer);
 
           L.polyline(coords, {
+            pane: 'roadsPane',
             color: CAMPUS_STYLE_CONFIG.roadCore,
             weight: roadCoreWeight,
             opacity: CAMPUS_STYLE_CONFIG.roadOpacity,
@@ -486,19 +505,33 @@ class CampusMapController {
   }
 
   renderLocationMarkers(filterCategory = "all") {
+    if (!this.markersLayer) return;
     this.markersLayer.clearLayers();
 
-    const allLocations = getAllCampusLocations();
-    if (allLocations.length === 0) return;
+    const allLocations = (typeof getAllCampusLocations === "function") ? getAllCampusLocations() : (window.CAMPUS_LOCATIONS || []);
+    if (!Array.isArray(allLocations) || allLocations.length === 0) return;
 
-    // Filter only locations strictly within LPU campus boundary
+    let currentZoom = 16;
+    let bounds = null;
+    try {
+      if (this.map) {
+        currentZoom = this.map.getZoom();
+        bounds = this.map.getBounds();
+      }
+    } catch (e) {}
+
+    // Filter locations strictly within LPU campus boundary
     const lpuOnly = allLocations.filter(loc => {
+      if (!loc || typeof loc.lat !== "number" || typeof loc.lng !== "number") return false;
       const isInCampus = isPointInPolygon([loc.lat, loc.lng], LPU_BOUNDARY);
       const isRevealed = this.revealedLocationIds.has(loc.id);
-      const isVisibleAtZoom = isRevealed || !loc.visibleFromZoom || (
-        this.map.getZoom() >= loc.visibleFromZoom &&
-        this.map.getBounds().contains([loc.lat, loc.lng])
-      );
+      let isVisibleAtZoom = true;
+      if (loc.visibleFromZoom) {
+        isVisibleAtZoom = isRevealed || (
+          currentZoom >= loc.visibleFromZoom &&
+          (!bounds || (bounds.getWest() <= loc.lng && loc.lng <= bounds.getEast() && bounds.getSouth() <= loc.lat && loc.lat <= bounds.getNorth()))
+        );
+      }
       return isInCampus && isVisibleAtZoom;
     });
 
@@ -564,61 +597,144 @@ class CampusMapController {
     this.renderLocationMarkers();
   }
 
-  drawRoute(pathCoords, isDetour = false, closedPathCoords = null) {
+  drawRoute(pathCoords, isDetour = false, closedPathCoords = null, options = {}) {
     this.routesLayer.clearLayers();
 
-    // STRICT CHECK: Filter only coordinates that are inside LPU boundary
-    const validPath = pathCoords.filter(pt => isPointInPolygon(pt, LPU_BOUNDARY));
+    if (!Array.isArray(pathCoords) || pathCoords.length < 2) return;
+
+    // Filter valid coordinates
+    const validPath = pathCoords.filter(pt => Array.isArray(pt) && pt.length >= 2 && typeof pt[0] === 'number' && typeof pt[1] === 'number');
     if (validPath.length < 2) return;
 
-    // If there is a closed / maintenance path (Panel 6)
+    this.currentRouteData = { pathCoords: validPath, isDetour, closedPathCoords, options };
+
+    const mode = options.mode || (window.Directions ? window.Directions.currentMode : 'walking');
+    const originName = options.originName || (window.Directions ? window.Directions.currentOrigin : 'Start Location');
+    const destName = options.destName || (window.Directions ? window.Directions.currentDestination : 'Destination');
+    const skipFitBounds = options.skipFitBounds === true;
+
+    // Dynamic mode styling colors
+    let dotColor = "#2563eb"; // Walking: electric blue
+    let glowColor = "#3b82f6";
+    if (mode === "bicycle") {
+      dotColor = "#059669"; // Bicycle: emerald
+      glowColor = "#10b981";
+    } else if (mode === "kart") {
+      dotColor = "#d97706"; // Kart: amber / gold
+      glowColor = "#f59e0b";
+    }
+
+    // 1. Closed / Construction / Detour Path (if detour mode)
     if (closedPathCoords && closedPathCoords.length > 0) {
-      const validClosed = closedPathCoords.filter(pt => isPointInPolygon(pt, LPU_BOUNDARY));
+      const validClosed = closedPathCoords.filter(pt => Array.isArray(pt) && pt.length >= 2);
       if (validClosed.length >= 2) {
         L.polyline(validClosed, {
+          pane: 'routesPane',
+          className: "route-closed-line",
           color: "#ef4444",
           weight: 5,
-          opacity: 0.8,
-          dashArray: "8, 8",
+          opacity: 0.85,
+          dashArray: "6, 8",
           lineCap: "round"
         }).addTo(this.routesLayer);
       }
     }
 
-    // Recommended Main Route
-    const routeLine = L.polyline(validPath, {
-      color: "#2563eb",
-      weight: 6,
-      opacity: 0.95,
+    // 2. Glowing Route Underlay Halo (placed in routesHaloPane with z-index 510)
+    L.polyline(validPath, {
+      pane: 'routesHaloPane',
+      className: "route-halo-underlay",
+      color: glowColor,
+      weight: 16,
+      opacity: 0.35,
       lineCap: "round",
       lineJoin: "round"
     }).addTo(this.routesLayer);
 
-    // Destination Pin
-    const destCoords = validPath[validPath.length - 1];
-    const destIconHtml = `
-      <div class="destination-marker-pin">
-        <div class="dest-pin-badge">Destination</div>
-        <div class="dest-pin-circle">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+    // 3. Main DOT FORMAT Route Path (placed in routesPane with z-index 520, ALWAYS on top)
+    const routeDotLine = L.polyline(validPath, {
+      pane: 'routesPane',
+      className: "route-dot-path",
+      color: dotColor,
+      weight: 9,
+      opacity: 1.0,
+      dashArray: "0, 18",
+      lineCap: "round",
+      lineJoin: "round"
+    }).addTo(this.routesLayer);
+
+    // 4. Intermediate Waypoint Dots at turn points
+    if (validPath.length > 3) {
+      const stepInterval = Math.max(1, Math.floor(validPath.length / 6));
+      for (let i = stepInterval; i < validPath.length - 1; i += stepInterval) {
+        const wp = validPath[i];
+        const wpIcon = L.divIcon({
+          className: "waypoint-dot-wrapper",
+          html: `<div class="waypoint-route-dot" style="background:${dotColor};"></div>`,
+          iconSize: [8, 8],
+          iconAnchor: [4, 4]
+        });
+        L.marker(wp, { icon: wpIcon, interactive: false, zIndexOffset: 1200 }).addTo(this.routesLayer);
+      }
+    }
+
+    // 5. Origin / Start Location Marker (Pulsing Green Dot Pin - Zero-Drift Anchor)
+    const startCoords = validPath[0];
+    const startIconHtml = `
+      <div class="start-marker-pin">
+        <div class="start-pin-tag">${originName}</div>
+        <div class="start-pin-pulse" style="border-color:${dotColor};"></div>
+        <div class="start-pin-dot">
+          <div class="start-pin-inner"></div>
         </div>
       </div>
     `;
+    const startIcon = L.divIcon({
+      className: "start-icon-div",
+      html: startIconHtml,
+      iconSize: [0, 0],
+      iconAnchor: [0, 0]
+    });
+    L.marker(startCoords, { icon: startIcon, zIndexOffset: 2500 }).addTo(this.routesLayer);
 
+    // 6. Destination Target Pin (Red Drop Pin with Destination Tag - Zero-Drift Bottom Tip Anchor)
+    const destCoords = validPath[validPath.length - 1];
+    const destIconHtml = `
+      <div class="destination-marker-pin">
+        <div class="dest-pin-badge">${destName}</div>
+        <div class="dest-pin-svg-wrap">
+          <svg class="dest-pin-svg" width="30" height="40" viewBox="0 0 30 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M15 0C6.71573 0 0 6.71573 0 15C0 26.25 15 40 15 40C15 40 30 26.25 30 15C30 6.71573 23.2843 0 15 0Z" fill="#EF4444"/>
+            <path d="M15 0C6.71573 0 0 6.71573 0 15C0 26.25 15 40 15 40C15 40 30 26.25 30 15C30 6.71573 23.2843 0 15 0Z" stroke="#B91C1C" stroke-width="1.5"/>
+            <circle cx="15" cy="15" r="5" fill="#FFFFFF"/>
+          </svg>
+        </div>
+      </div>
+    `;
     const destIcon = L.divIcon({
       className: "dest-icon-div",
       html: destIconHtml,
-      iconSize: [80, 50],
-      iconAnchor: [40, 50]
+      iconSize: [0, 0],
+      iconAnchor: [0, 0]
     });
+    L.marker(destCoords, { icon: destIcon, zIndexOffset: 3000 }).addTo(this.routesLayer);
 
-    L.marker(destCoords, { icon: destIcon }).addTo(this.routesLayer);
-
-    // Fit map bounds strictly within LPU bounds
-    this.map.fitBounds(routeLine.getBounds(), { padding: [100, 100], maxZoom: 17 });
+    // 7. Auto-fit map bounds smoothly (only on first calculation)
+    if (!skipFitBounds) {
+      try {
+        this.map.fitBounds(routeDotLine.getBounds(), {
+          padding: [80, 80],
+          maxZoom: 17.5,
+          animate: true
+        });
+      } catch (e) {
+        console.warn("Could not fit route bounds:", e);
+      }
+    }
   }
 
   clearRoutes() {
+    this.currentRouteData = null;
     this.routesLayer.clearLayers();
   }
 

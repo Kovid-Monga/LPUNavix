@@ -17,12 +17,12 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
   <!-- Modular Application Styles -->
-  <link rel="stylesheet" href="css/main.css?v=2" />
-  <link rel="stylesheet" href="css/sidebar.css" />
-  <link rel="stylesheet" href="css/topbar.css" />
-  <link rel="stylesheet" href="css/map.css" />
-  <link rel="stylesheet" href="css/panels.css?v=2" />
-  <link rel="stylesheet" href="css/mobile.css?v=6" />
+  <link rel="stylesheet" href="css/main.css?v=7" />
+  <link rel="stylesheet" href="css/sidebar.css?v=7" />
+  <link rel="stylesheet" href="css/topbar.css?v=7" />
+  <link rel="stylesheet" href="css/map.css?v=7" />
+  <link rel="stylesheet" href="css/panels.css?v=7" />
+  <link rel="stylesheet" href="css/mobile.css?v=7" />
 </head>
 
 <body class="assistant-collapsed">
@@ -376,12 +376,12 @@
           <!-- Origin & Destination Card -->
           <div class="directions-inputs-card">
             <div class="input-location-row">
-              <span class="location-dot-icon dot-origin"></span>
-              <input id="direction-origin-input" class="input-location-field" type="text" value="Main Gate" />
+              <span class="location-dot-icon dot-origin" title="Starting Location"></span>
+              <input id="direction-origin-input" class="input-location-field" type="text" placeholder="Starting point (e.g. Main Gate, My Location)" value="Main Gate (Students)" autocomplete="off" />
             </div>
             <div class="input-location-row">
-              <span class="location-dot-icon dot-dest"></span>
-              <input id="direction-dest-input" class="input-location-field" type="text" value="Block 18" />
+              <span class="location-dot-icon dot-dest" title="Destination Location"></span>
+              <input id="direction-dest-input" class="input-location-field" type="text" placeholder="Destination (e.g. Block 25, Block 34, UniMall)" value="Block 25 (CSE)" autocomplete="off" />
             </div>
             <button id="swap-directions-btn" class="swap-locations-btn" title="Swap locations">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
@@ -391,6 +391,22 @@
                 <polyline points="11 3 7 7 11 11"></polyline>
               </svg>
             </button>
+            <div class="directions-actions-row">
+              <button id="find-route-btn" class="btn-primary find-route-action-btn" type="button">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+                </svg>
+                <span>Get Directions (Dot Route)</span>
+              </button>
+            </div>
+            <!-- Quick Chips -->
+            <div class="directions-quick-chips">
+              <button type="button" class="quick-chip" onclick="document.getElementById('direction-origin-input').value='Your Current Location'; window.Directions.showDirections('Your Current Location', document.getElementById('direction-dest-input').value);">📍 My Location</button>
+              <button type="button" class="quick-chip" onclick="document.getElementById('direction-dest-input').value='Block 25 (CSE)'; window.Directions.showDirections(document.getElementById('direction-origin-input').value, 'Block 25 (CSE)');">Block 25</button>
+              <button type="button" class="quick-chip" onclick="document.getElementById('direction-dest-input').value='Block 31 (Admin)'; window.Directions.showDirections(document.getElementById('direction-origin-input').value, 'Block 31 (Admin)');">Block 31</button>
+              <button type="button" class="quick-chip" onclick="document.getElementById('direction-dest-input').value='Block 34 (CSE)'; window.Directions.showDirections(document.getElementById('direction-origin-input').value, 'Block 34 (CSE)');">Block 34</button>
+              <button type="button" class="quick-chip" onclick="document.getElementById('direction-dest-input').value='Block 1'; window.Directions.showDirections(document.getElementById('direction-origin-input').value, 'Block 1');">Block 1</button>
+            </div>
           </div>
 
           <!-- Mode Selectors -->
@@ -1125,15 +1141,15 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet-rotate@0.2.8/dist/leaflet-rotate-src.js?v=1"></script>
   <script src="https://unpkg.com/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.js"></script>
-  <script src="js/boundary.js"></script>
-  <script src="js/roads_data.js"></script>
-  <script src="js/data.js?v=2"></script>
-  <script src="js/map.js?v=3"></script>
-  <script src="js/directions.js"></script>
-  <script src="js/assistant.js"></script>
-  <script src="js/karts.js"></script>
-  <script src="js/ui.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/boundary.js?v=7"></script>
+  <script src="js/roads_data.js?v=7"></script>
+  <script src="js/data.js?v=7"></script>
+  <script src="js/map.js?v=7"></script>
+  <script src="js/directions.js?v=7"></script>
+  <script src="js/assistant.js?v=7"></script>
+  <script src="js/karts.js?v=7"></script>
+  <script src="js/ui.js?v=7"></script>
+  <script src="js/app.js?v=7"></script>
 
 </body>
 

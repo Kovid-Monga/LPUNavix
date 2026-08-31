@@ -164,7 +164,7 @@ class UIController {
     }
   }
 
-  switchView(viewName) {
+  switchView(viewName, customOrigin = null, customDest = null) {
     if (viewName === "assistant") {
       this.toggleAssistant();
       return;
@@ -185,7 +185,6 @@ class UIController {
     if (viewName === "home" || viewName === "map") {
       if (window.CampusMap) {
         window.CampusMap.renderLocationMarkers("all");
-        window.CampusMap.recenterCampus();
       }
       return;
     }
@@ -193,7 +192,13 @@ class UIController {
     if (viewName === "directions") {
       this.openLeftPanel("directions-panel");
       if (window.Directions) {
-        window.Directions.showDirections("Main Gate", "Block 18");
+        const originInput = document.getElementById("direction-origin-input");
+        const destInput = document.getElementById("direction-dest-input");
+        const o = customOrigin || (originInput ? originInput.value : "Main Gate (Students)");
+        const d = customDest || (destInput ? destInput.value : "Block 25 (CSE)");
+        if (originInput) originInput.value = o;
+        if (destInput) destInput.value = d;
+        window.Directions.showDirections(o, d);
       }
     } else if (viewName === "karts") {
       this.openLeftPanel("karts-panel");
@@ -482,10 +487,8 @@ class UIController {
     const getDirectionsBtn = document.getElementById("detail-get-directions-btn");
     if (getDirectionsBtn) {
       getDirectionsBtn.onclick = () => {
-        this.switchView("directions");
-        if (window.Directions) {
-          window.Directions.showDirections("Main Gate", group.name);
-        }
+        const originVal = document.getElementById("direction-origin-input")?.value || "Main Gate (Students)";
+        this.switchView("directions", originVal, group.name);
       };
     }
 
@@ -540,10 +543,8 @@ class UIController {
     const getDirectionsBtn = document.getElementById("detail-get-directions-btn");
     if (getDirectionsBtn) {
       getDirectionsBtn.onclick = () => {
-        this.switchView("directions");
-        if (window.Directions) {
-          window.Directions.showDirections("Main Gate", loc.name);
-        }
+        const originVal = document.getElementById("direction-origin-input")?.value || "Main Gate (Students)";
+        this.switchView("directions", originVal, loc.name);
       };
     }
 

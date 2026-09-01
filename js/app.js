@@ -10,7 +10,12 @@ document.addEventListener("DOMContentLoaded", () => {
     window.CampusMap.init();
   }
 
-  // 2. Initialize UI Panels & Search
+  // 2. Fetch a fresh OSM road network once and cache it for later reloads.
+  if (window.loadCampusRoadsFromOpenStreetMap) {
+    window.loadCampusRoadsFromOpenStreetMap();
+  }
+
+  // 3. Initialize UI Panels & Search
   if (window.UIController) {
     window.UIController.init();
   }

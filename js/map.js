@@ -44,6 +44,21 @@ function isPointInPolygon(point, vs) {
   return inside;
 }
 
+// ============================================================================
+// 🛠️ LEAFLET 1.9.4 & LEAFLET-ROTATE HARDWARE ACCELERATION COMPATIBILITY PATCH
+// Ensures SVG and Canvas renderers receive dynamic CSS rotation & zoom transforms simultaneously
+// ============================================================================
+if (typeof L !== 'undefined' && L.Renderer) {
+  L.Renderer.addInitHook(function () {
+    this.on('add', function () {
+      if (this._container) {
+        this._container.classList.add('leaflet-zoom-animated');
+        this._container.style.transformOrigin = '0 0';
+      }
+    });
+  });
+}
+
 class CampusMapController {
   constructor() {
     this.map = null;
@@ -79,11 +94,8 @@ class CampusMapController {
     this.map = L.map("map", {
       center: CAMPUS_CENTER,
       zoom: 15.25,
-      // minZoom: 14.8,                 // Temporarily disabled for testing outside LPU
-      maxZoom: 19.5,                   // Deep building & block zoom
-      // maxBounds: lpuBounds.pad(2.0), // Temporarily disabled for testing outside LPU
-      // maxBoundsViscosity: 0.3,       // Temporarily disabled with maxBounds
-      zoomSnap: 0.25,                  // Smooth fractional zooming
+      maxZoom: 19.5,
+      zoomSnap: 0.25,                  // Crisp fractional zooming matching web view
       zoomDelta: 0.5,
       wheelPxPerZoomLevel: 100,
       inertia: true,
@@ -91,7 +103,7 @@ class CampusMapController {
       zoomControl: false,
       attributionControl: false,
       rotate: true,
-      touchRotate: true,
+      touchRotate: false,              // Disables accidental gesture rotation skewing mobile pinch-zoom
       rotateControl: false
     });
 
@@ -123,24 +135,11 @@ class CampusMapController {
     // Set default base layer (street fallback or satellite)
     this.setBaseLayer("satellite");
 
-    // Create Dedicated Panes to strictly guarantee Z-Index ordering on zoom
-    this.map.createPane('roadsPane');
-    this.map.getPane('roadsPane').style.zIndex = 410;
-
-    this.map.createPane('footpathsPane');
-    this.map.getPane('footpathsPane').style.zIndex = 420;
-
-    this.map.createPane('routesHaloPane');
-    this.map.getPane('routesHaloPane').style.zIndex = 510;
-
-    this.map.createPane('routesPane');
-    this.map.getPane('routesPane').style.zIndex = 520;
-
-    // Initialize Layer Groups
+    // Initialize Layer Groups in strict visual order (Roads -> Footpaths -> Routes -> Markers)
     this.roadsLayer = L.layerGroup().addTo(this.map);
     this.footpathsLayer = L.layerGroup().addTo(this.map);
-    this.markersLayer = L.layerGroup().addTo(this.map);
     this.routesLayer = L.layerGroup().addTo(this.map);
+    this.markersLayer = L.layerGroup().addTo(this.map);
     this.kartsLayer = L.layerGroup().addTo(this.map);
 
     // Render Campus Perimeter Boundary
@@ -160,14 +159,28 @@ class CampusMapController {
         if (this.boundaryLayer && this.boundaryLayer.redraw) this.boundaryLayer.redraw();
       });
     };
+
+    this.map.on('zoomstart', () => {
+      if (this.overlayRenderFrame !== null) {
+        cancelAnimationFrame(this.overlayRenderFrame);
+        this.overlayRenderFrame = null;
+      }
+    });
+
     this.map.on('zoom', () => {
-      scheduleRoadRender();
       this.updateMarkerLabelVisibility();
     });
     this.map.on('zoomend', () => {
       scheduleRoadRender();
       this.updateMarkerLabelVisibility();
       this.renderLocationMarkers();
+    });
+    this.map.on('moveend', () => {
+      scheduleRoadRender();
+      this.updateMarkerLabelVisibility();
+    });
+    this.map.on('rotateend', () => {
+      if (this.boundaryLayer && this.boundaryLayer.redraw) this.boundaryLayer.redraw();
     });
 
     const refreshMapSize = () => {
@@ -368,25 +381,21 @@ class CampusMapController {
         if (zoom >= 16) {
           // White outer casing/border
           L.polyline(coords, {
-            pane: 'footpathsPane',
             color: CAMPUS_STYLE_CONFIG.footpathCasing,
             weight: footpathCasingWeight,
             opacity: CAMPUS_STYLE_CONFIG.footpathCasingOpacity,
             lineCap: 'round',
-            lineJoin: 'round',
-            smoothFactor: 1.2
+            lineJoin: 'round'
           }).addTo(this.footpathsLayer);
         }
 
         // Terracotta orange path core
         L.polyline(coords, {
-          pane: 'footpathsPane',
           color: CAMPUS_STYLE_CONFIG.footpathCore,
           weight: footpathCoreWeight,
           opacity: CAMPUS_STYLE_CONFIG.footpathOpacity,
           lineCap: 'round',
-          lineJoin: 'round',
-          smoothFactor: 1.2
+          lineJoin: 'round'
         }).bindPopup(`<b>Footpath / Walkway</b>`).addTo(this.footpathsLayer);
 
       } else {
@@ -398,36 +407,30 @@ class CampusMapController {
         if (zoom >= 16) {
           // 1. Solid White Outer Edge Casing
           L.polyline(coords, {
-            pane: 'roadsPane',
             color: CAMPUS_STYLE_CONFIG.roadCasing,
             weight: roadCasingWeight,
             opacity: CAMPUS_STYLE_CONFIG.roadCasingOpacity,
             lineCap: 'round',
-            lineJoin: 'round',
-            smoothFactor: 1.2
+            lineJoin: 'round'
           }).addTo(this.roadsLayer);
 
           // 2. Dark Asphalt Road Surface Core
           const roadLine = L.polyline(coords, {
-            pane: 'roadsPane',
             color: CAMPUS_STYLE_CONFIG.roadCore,
             weight: roadCoreWeight,
             opacity: CAMPUS_STYLE_CONFIG.roadOpacity,
             lineCap: 'round',
-            lineJoin: 'round',
-            smoothFactor: 1.2
+            lineJoin: 'round'
           }).bindPopup(`<b>Road:</b> ${way.tags?.name || highway}`).addTo(this.roadsLayer);
 
           // 3. Dashed White Center Lane Divider
           if (showDividers) {
             L.polyline(coords, {
-              pane: 'roadsPane',
               color: CAMPUS_STYLE_CONFIG.roadDivider,
               weight: dividerWeight,
               dashArray: '5, 8',
               opacity: 0.9,
-              lineCap: 'butt',
-              smoothFactor: 1.2
+              lineCap: 'butt'
             }).addTo(this.roadsLayer);
           }
 
@@ -441,42 +444,37 @@ class CampusMapController {
                     offset: 35,
                     repeat: 120,
                     symbol: L.Symbol.arrowHead({
-                      pixelSize: 7,
-                      polygon: false,
-                      pathOptions: {
-                        pane: 'roadsPane',
-                        stroke: true,
-                        color: CAMPUS_STYLE_CONFIG.roadArrow,
-                        weight: 1.6,
-                        opacity: 0.95
-                      }
-                    })
-                  }
-                ]
-              }).addTo(this.roadsLayer);
-            } catch (e) {
-              // fallback gracefully
-            }
+                    pixelSize: 7,
+                    polygon: false,
+                    pathOptions: {
+                      stroke: true,
+                      color: CAMPUS_STYLE_CONFIG.roadArrow,
+                      weight: 1.6,
+                      opacity: 0.95
+                    }
+                  })
+                }
+              ]
+            }).addTo(this.roadsLayer);
+          } catch (e) {
+            // fallback gracefully
           }
-        } else {
-          // Zoom <= 15 (Overview mode: clean slim line)
-          L.polyline(coords, {
-            pane: 'roadsPane',
-            color: CAMPUS_STYLE_CONFIG.roadCasing,
-            weight: roadCasingWeight,
-            opacity: CAMPUS_STYLE_CONFIG.roadCasingOpacity,
-            smoothFactor: 1.2
-          }).addTo(this.roadsLayer);
-
-          L.polyline(coords, {
-            pane: 'roadsPane',
-            color: CAMPUS_STYLE_CONFIG.roadCore,
-            weight: roadCoreWeight,
-            opacity: CAMPUS_STYLE_CONFIG.roadOpacity,
-            smoothFactor: 1.2
-          }).bindPopup(`<b>Road:</b> ${way.tags?.name || highway}`).addTo(this.roadsLayer);
         }
+      } else {
+        // Zoom <= 15 (Overview mode: clean slim line)
+        L.polyline(coords, {
+          color: CAMPUS_STYLE_CONFIG.roadCasing,
+          weight: roadCasingWeight,
+          opacity: CAMPUS_STYLE_CONFIG.roadCasingOpacity
+        }).addTo(this.roadsLayer);
+
+        L.polyline(coords, {
+          color: CAMPUS_STYLE_CONFIG.roadCore,
+          weight: roadCoreWeight,
+          opacity: CAMPUS_STYLE_CONFIG.roadOpacity
+        }).bindPopup(`<b>Road:</b> ${way.tags?.name || highway}`).addTo(this.roadsLayer);
       }
+    }
     });
   }
 
@@ -629,7 +627,6 @@ class CampusMapController {
       const validClosed = closedPathCoords.filter(pt => Array.isArray(pt) && pt.length >= 2);
       if (validClosed.length >= 2) {
         L.polyline(validClosed, {
-          pane: 'routesPane',
           className: "route-closed-line",
           color: "#ef4444",
           weight: 5,
@@ -640,9 +637,8 @@ class CampusMapController {
       }
     }
 
-    // 2. Glowing Route Underlay Halo (placed in routesHaloPane with z-index 510)
+    // 2. Glowing Route Underlay Halo
     L.polyline(validPath, {
-      pane: 'routesHaloPane',
       className: "route-halo-underlay",
       color: glowColor,
       weight: 16,
@@ -651,9 +647,8 @@ class CampusMapController {
       lineJoin: "round"
     }).addTo(this.routesLayer);
 
-    // 3. Main DOT FORMAT Route Path (placed in routesPane with z-index 520, ALWAYS on top)
+    // 3. Main DOT FORMAT Route Path
     const routeDotLine = L.polyline(validPath, {
-      pane: 'routesPane',
       className: "route-dot-path",
       color: dotColor,
       weight: 9,

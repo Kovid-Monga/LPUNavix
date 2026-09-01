@@ -293,10 +293,10 @@
   text-align: center;
 }
 
-/* Mode Selector Pills (Walk, Cycle, Kart) */
+/* Mode Selector Pills (Walk, Kart/Car) */
 .travel-modes-row {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 8px;
 }
 

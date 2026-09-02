@@ -16,7 +16,7 @@ except ImportError:
     pass
 
 try:
-    import google.generativeai as genai
+    from google import genai
 except ImportError:  # pragma: no cover - handled at runtime when dependency is installed.
     genai = None
 
@@ -271,7 +271,7 @@ def build_context_block(records: List[dict]) -> str:
 def generate_chat_reply(question: str, relevant_records: List[dict]) -> str:
     if not relevant_records:
         return (
-            "I couldn’t find any campus records that match your question. "
+            "I couldn’=t find any campus records that match your question. "
             "Please ask a more specific question about a block, office, department, or service, "
             "such as a room, office, or campus facility."
         )
@@ -283,10 +283,9 @@ def generate_chat_reply(question: str, relevant_records: List[dict]) -> str:
         )
 
     if genai is None:
-        raise RuntimeError("The google-generativeai package is not installed. Add it to requirements.txt and install dependencies.")
+        raise RuntimeError("The google-genai package is not installed. Add it to requirements.txt and install dependencies.")
 
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel("gemini-1.5-flash")
+    client = genai.Client(api_key=api_key)
 
     system_instruction = (
         "Answer using ONLY the information in the provided campus-context data. "
@@ -301,5 +300,8 @@ def generate_chat_reply(question: str, relevant_records: List[dict]) -> str:
         f"Relevant campus context:\n{context_block}"
     )
 
-    response = model.generate_content(prompt)
-    return getattr(response, "text", str(response)).strip() or "I couldn’t find a reliable answer in the campus data provided."
+    response = client.models.generate_content(
+        model="Gemini 2.5 Flash",
+        contents=prompt,
+    )
+    return response.text.strip() if response.text else "I couldn't find a reliable answer in the campus data provided."

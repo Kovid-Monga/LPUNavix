@@ -59,25 +59,40 @@ class AssistantController {
     this.submitPrompt(text);
   }
 
-  submitPrompt(queryText) {
+  async submitPrompt(queryText) {
     this.appendMessage({ sender: "user", text: queryText });
 
-    setTimeout(() => {
-      const match = this.findMatchingAnswer(queryText);
-      if (match) {
-        this.appendMessage({
-          sender: "assistant",
-          text: match.answer,
-          hasMapAction: !!match.locationId,
-          locationId: match.locationId
-        });
-      } else {
-        this.appendMessage({
-          sender: "assistant",
-          text: `I will look up details for "**${queryText}**" once campus records are added.`
-        });
+    const assistantBubble = this.appendMessage({
+      sender: "assistant",
+      text: "I’m checking the campus records for the best match…"
+    });
+
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: queryText })
+      });
+
+      const data = await response.json();
+      const reply = data && data.reply ? data.reply : "I couldn’t find a reliable answer in the campus records right now.";
+
+      const chatStream = document.getElementById("chat-messages-stream");
+      if (chatStream) {
+        const lastBubble = chatStream.querySelector(".chat-bubble-row.assistant:last-child .chat-bubble");
+        if (lastBubble) {
+          lastBubble.innerHTML = `<div>${reply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br/>')}</div>`;
+        }
       }
-    }, 350);
+    } catch (error) {
+      const chatStream = document.getElementById("chat-messages-stream");
+      if (chatStream) {
+        const lastBubble = chatStream.querySelector(".chat-bubble-row.assistant:last-child .chat-bubble");
+        if (lastBubble) {
+          lastBubble.innerHTML = `<div>I’m not able to reach the campus assistant backend right now. Please make sure the server is running and the Gemini API key is configured.</div>`;
+        }
+      }
+    }
   }
 
   findMatchingAnswer(query) {

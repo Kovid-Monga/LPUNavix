@@ -10,6 +10,7 @@ Run it with:
 """
 
 import json
+import os
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -20,6 +21,8 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+
+from api.rag import CAMPUS_RECORDS, generate_chat_reply, retrieve_relevant_records
 
 app = FastAPI(title="LPUNavix Live Tracking & Campus Navigation")
 
@@ -60,6 +63,31 @@ class KartStatus(BaseModel):
     lat: float
     lng: float
     timestamp: str
+
+
+class ChatRequest(BaseModel):
+    message: str
+
+
+# -------- Campus assistant chat endpoint --------
+@app.post("/api/chat")
+def campus_chat(request: ChatRequest):
+    message = (request.message or "").strip()
+    if not message:
+        raise HTTPException(status_code=400, detail="Message cannot be empty.")
+
+    relevant = retrieve_relevant_records(message, CAMPUS_RECORDS, limit=5)
+    if not relevant:
+        return {"reply": "I couldn’t find any relevant campus records for that question. Please ask about a specific block, office, department, or service and I’ll help narrow it down."}
+
+    try:
+        reply = generate_chat_reply(message, relevant)
+        return {"reply": reply}
+    except RuntimeError as exc:
+        detail = str(exc)
+        if "GEMINI_API_KEY" in detail:
+            raise HTTPException(status_code=503, detail="Gemini API key is not configured. Please add GEMINI_API_KEY before using the campus assistant.") from exc
+        raise HTTPException(status_code=503, detail=detail) from exc
 
 
 # -------- Senders and Traccar Client post location updates here --------

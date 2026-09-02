@@ -1,10 +1,32 @@
 import unittest
 
-from api.rag import retrieve_relevant_records
+from api.rag import CAMPUS_RECORDS, build_context_block, load_campus_records, retrieve_relevant_records
 
 
 class TestRAGRetrieval(unittest.TestCase):
-    def test_lost_item_query_returns_administrative_office(self):
+    def test_load_campus_records_from_data_js(self):
+        records = load_campus_records()
+        self.assertIsInstance(records, list)
+        self.assertGreater(len(records), 0)
+
+        # Check that groups, blocks/locations, and offices exist
+        kinds = {r.get("kind") for r in records}
+        self.assertIn("group", kinds)
+        self.assertTrue("block" in kinds or "location" in kinds)
+        self.assertIn("office", kinds)
+
+        # Verify fashion design, cse, and admin office are loaded
+        ids = {r.get("id") for r in records}
+        self.assertIn("fashion-design-dept", ids)
+        self.assertIn("cse-dept", ids)
+        self.assertIn("office-admin-28-209", ids)
+
+    def test_default_retrieval_uses_dynamic_records(self):
+        top_records = retrieve_relevant_records("where can I report a lost item")
+        self.assertTrue(top_records)
+        self.assertEqual(top_records[0]["id"], "office-admin-28-209")
+
+    def test_custom_records_retrieval(self):
         records = [
             {
                 "id": "cse-dept",
@@ -50,6 +72,13 @@ class TestRAGRetrieval(unittest.TestCase):
         self.assertEqual(top_records[0]["id"], "office-admin-28-209")
         self.assertIn("lost", top_records[0]["search_text"].lower())
 
+    def test_build_context_block(self):
+        records = retrieve_relevant_records("where is CSE department")
+        self.assertTrue(records)
+        context = build_context_block(records)
+        self.assertIn("Computer Science", context)
+
 
 if __name__ == "__main__":
     unittest.main()
+

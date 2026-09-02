@@ -17,14 +17,19 @@ from pathlib import Path
 from typing import List, Optional
 from urllib.parse import parse_qs
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from api.rag import CAMPUS_RECORDS, generate_chat_reply, retrieve_relevant_records
+from api.rag import CAMPUS_RECORDS, generate_chat_reply, load_campus_records, retrieve_relevant_records
 
 app = FastAPI(title="LPUNavix Live Tracking & Campus Navigation")
+
 
 # Allow requests from any origin
 app.add_middleware(
@@ -76,8 +81,9 @@ def campus_chat(request: ChatRequest):
     if not message:
         raise HTTPException(status_code=400, detail="Message cannot be empty.")
 
-    relevant = retrieve_relevant_records(message, CAMPUS_RECORDS, limit=5)
+    relevant = retrieve_relevant_records(message, load_campus_records(), limit=5)
     if not relevant:
+
         return {"reply": "I couldn’t find any relevant campus records for that question. Please ask about a specific block, office, department, or service and I’ll help narrow it down."}
 
     try:

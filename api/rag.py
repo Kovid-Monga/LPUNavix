@@ -1,265 +1,136 @@
+import json
 import os
 import re
-from typing import Iterable, List, Optional
+from pathlib import Path
+from typing import Any, Iterable, List, Optional, Union
+
+try:
+    import json5
+except ImportError:
+    json5 = None
+
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 try:
     import google.generativeai as genai
 except ImportError:  # pragma: no cover - handled at runtime when dependency is installed.
     genai = None
 
+DATA_JS_PATH = Path(__file__).resolve().parent.parent / "js" / "data.js"
 
-CAMPUS_RECORDS = [
-    {
-        "id": "fashion-design-dept",
-        "kind": "group",
-        "name": "School of Fashion Design",
-        "category": "academics",
-        "type": "Department",
-        "tags": ["fashion design", "school of fashion design", "design department"],
-        "blocks": ["block-1-fashion-design"],
-        "groupName": "",
-        "desc": "Department of Fashion Design at LPU.",
-        "facilities": [],
-    },
-    {
-        "id": "cse-dept",
-        "kind": "group",
-        "name": "School of Computer Science & Engineering (CSE)",
-        "category": "academics",
-        "type": "Department Zone",
-        "tags": ["cse", "computer science", "it", "coding", "software", "btech cse", "cse blocks"],
-        "blocks": ["block-25", "block-26", "block-27", "block-28", "block-31"],
-        "groupName": "",
-        "desc": "Houses the School of Computer Science & Engineering.",
-        "facilities": [],
-    },
-    {
-        "id": "block-1",
-        "kind": "block",
-        "name": "Block 1",
-        "groupId": "fashion-design-dept",
-        "groupName": "School of Fashion Design",
-        "category": "academics",
-        "type": "Academic Block",
-        "lat": 31.258597515534394,
-        "lng": 75.70874010081363,
-        "floor": "Academic Block",
-        "facilities": ["Classrooms", "Design Studios", "Faculty Offices"],
-        "tags": ["block 1", "block-1", "school of fashion design", "fashion design", "academic block"],
-        "desc": "Block 1 houses the School of Fashion Design on the LPU campus.",
-        "hours": "Open on Campus Schedule",
-    },
-    {
-        "id": "block-25",
-        "kind": "block",
-        "name": "Block 25 (CSE)",
-        "groupId": "cse-dept",
-        "groupName": "School of Computer Science & Engineering (CSE)",
-        "category": "academics",
-        "type": "Academic Block",
-        "lat": 31.25285938442377,
-        "lng": 75.70247885462516,
-        "floor": "Multi-storey Block",
-        "facilities": ["Classrooms", "Computer Labs", "Faculty Cabins"],
-        "tags": ["block 25", "cse", "computer science", "b25", "academic block"],
-        "desc": "Block 25 - Department of Computer Science & Engineering.",
-        "hours": "8:00 AM - 5:30 PM",
-    },
-    {
-        "id": "block-26",
-        "kind": "block",
-        "name": "Block 26 (CSE)",
-        "groupId": "cse-dept",
-        "groupName": "School of Computer Science & Engineering (CSE)",
-        "category": "academics",
-        "type": "Academic Block",
-        "lat": 31.252861883513926,
-        "lng": 75.70289512306216,
-        "floor": "Multi-storey Block",
-        "facilities": ["Classrooms", "Computer Labs", "Faculty Cabins"],
-        "tags": ["block 26", "cse", "computer science", "b26", "academic block"],
-        "desc": "Block 26 - Department of Computer Science & Engineering.",
-        "hours": "8:00 AM - 5:30 PM",
-    },
-    {
-        "id": "block-27",
-        "kind": "block",
-        "name": "Block 27 (CSE)",
-        "groupId": "cse-dept",
-        "groupName": "School of Computer Science & Engineering (CSE)",
-        "category": "academics",
-        "type": "Academic Block",
-        "lat": 31.252858651898666,
-        "lng": 75.70330718355343,
-        "floor": "Multi-storey Block",
-        "facilities": ["Classrooms", "Computer Labs", "Faculty Cabins"],
-        "tags": ["block 27", "cse", "computer science", "b27", "academic block"],
-        "desc": "Block 27 - Department of Computer Science & Engineering.",
-        "hours": "8:00 AM - 5:30 PM",
-    },
-    {
-        "id": "block-28",
-        "kind": "block",
-        "name": "Block 28 (CSE)",
-        "groupId": "cse-dept",
-        "groupName": "School of Computer Science & Engineering (CSE)",
-        "category": "academics",
-        "type": "Academic Block",
-        "lat": 31.25284540741938,
-        "lng": 75.70373386456326,
-        "floor": "Multi-storey Block",
-        "facilities": ["Classrooms", "Computer Labs", "Faculty Cabins"],
-        "tags": ["block 28", "cse", "computer science", "b28", "academic block"],
-        "desc": "Block 28 - Department of Computer Science & Engineering.",
-        "hours": "8:00 AM - 5:30 PM",
-    },
-    {
-        "id": "block-31",
-        "kind": "block",
-        "name": "Block 31 (Admin)",
-        "groupId": "cse-dept",
-        "groupName": "School of Computer Science & Engineering (CSE)",
-        "category": "offices",
-        "type": "Administrative & Academic Block",
-        "lat": 31.252443962233237,
-        "lng": 75.70496872629623,
-        "floor": "Multi-storey Block",
-        "facilities": ["Administrative Offices", "Classrooms", "Computer Labs", "Faculty Cabins"],
-        "tags": ["block 31", "admin", "administration", "cse", "computer science", "b31", "administrative block"],
-        "desc": "Block 31 - Administrative Block & CSE Department.",
-        "hours": "8:00 AM - 5:30 PM",
-    },
-    {
-        "id": "block-32",
-        "kind": "block",
-        "name": "Block 32 (Admin)",
-        "groupId": "cse-dept",
-        "groupName": "School of Computer Science & Engineering (CSE)",
-        "category": "academics",
-        "type": "Academic Block",
-        "lat": 31.252169312144662,
-        "lng": 75.70476168618337,
-        "floor": "Multi-storey Block",
-        "facilities": ["Classrooms", "Computer Labs", "Faculty Cabins"],
-        "tags": ["block 32", "cse", "computer science", "b32", "academic block"],
-        "desc": "Block 32 - Department of Computer Science & Engineering.",
-        "hours": "8:00 AM - 5:30 PM",
-    },
-    {
-        "id": "block-33",
-        "kind": "block",
-        "name": "Block 33 (CSE)",
-        "groupId": "cse-dept",
-        "groupName": "School of Computer Science & Engineering (CSE)",
-        "category": "academics",
-        "type": "Academic Block",
-        "lat": 31.25182752424929,
-        "lng": 75.70475097721261,
-        "floor": "Multi-storey Block",
-        "facilities": ["Classrooms", "Computer Labs", "Faculty Cabins"],
-        "tags": ["block 33", "cse", "computer science", "b33", "academic block"],
-        "desc": "Block 33 - Department of Computer Science & Engineering.",
-        "hours": "8:00 AM - 5:30 PM",
-    },
-    {
-        "id": "block-34",
-        "kind": "block",
-        "name": "Block 34 (CSE)",
-        "groupId": "cse-dept",
-        "groupName": "School of Computer Science & Engineering (CSE)",
-        "category": "academics",
-        "type": "Academic Block",
-        "lat": 31.251755912632076,
-        "lng": 75.70394589038689,
-        "floor": "Multi-storey Block",
-        "facilities": ["Classrooms", "Computer Labs", "Faculty Cabins"],
-        "tags": ["block 34", "cse", "computer science", "b34", "academic block"],
-        "desc": "Block 34 - Department of Computer Science & Engineering.",
-        "hours": "8:00 AM - 5:30 PM",
-    },
-    {
-        "id": "block-35",
-        "kind": "block",
-        "name": "Block 35 (CSE)",
-        "groupId": "cse-dept",
-        "groupName": "School of Computer Science & Engineering (CSE)",
-        "category": "academics",
-        "type": "Academic Block",
-        "lat": 31.251822078239537,
-        "lng": 75.70336032734117,
-        "floor": "Multi-storey Block",
-        "facilities": ["Classrooms", "Computer Labs", "Faculty Cabins"],
-        "tags": ["block 35", "cse", "computer science", "b35", "academic block"],
-        "desc": "Block 35 - Department of Computer Science & Engineering.",
-        "hours": "8:00 AM - 5:30 PM",
-    },
-    {
-        "id": "block-36",
-        "kind": "block",
-        "name": "Block 36 (CSE)",
-        "groupId": "cse-dept",
-        "groupName": "School of Computer Science & Engineering (CSE)",
-        "category": "academics",
-        "type": "Academic Block",
-        "lat": 31.251689259364163,
-        "lng": 75.70286644251997,
-        "floor": "Multi-storey Block",
-        "facilities": ["Classrooms", "Computer Labs", "Faculty Cabins"],
-        "tags": ["block 36", "cse", "computer science", "b36", "academic block"],
-        "desc": "Block 36 - Department of Computer Science & Engineering.",
-        "hours": "8:00 AM - 5:30 PM",
-    },
-    {
-        "id": "block-37",
-        "kind": "block",
-        "name": "Block 37 (CSE)",
-        "groupId": "cse-dept",
-        "groupName": "School of Computer Science & Engineering (CSE)",
-        "category": "academics",
-        "type": "Academic Block",
-        "lat": 31.252110679864544,
-        "lng": 75.70278483547997,
-        "floor": "Multi-storey Block",
-        "facilities": ["Classrooms", "Computer Labs", "Faculty Cabins"],
-        "tags": ["block 37", "cse", "computer science", "b37", "academic block"],
-        "desc": "Block 37 - Department of Computer Science & Engineering.",
-        "hours": "8:00 AM - 5:30 PM",
-    },
-    {
-        "id": "block-38",
-        "kind": "block",
-        "name": "Block 38 (CSE)",
-        "groupId": "cse-dept",
-        "groupName": "School of Computer Science & Engineering (CSE)",
-        "category": "academics",
-        "type": "Academic Block",
-        "lat": 31.252140287536804,
-        "lng": 75.70338135340346,
-        "floor": "Multi-storey Block",
-        "facilities": ["Classrooms", "Computer Labs", "Faculty Cabins"],
-        "tags": ["block 38", "cse", "computer science", "b38", "academic block"],
-        "desc": "Block 38 - Department of Computer Science & Engineering.",
-        "hours": "8:00 AM - 5:30 PM",
-    },
-    {
-        "id": "office-admin-28-209",
-        "kind": "office",
-        "name": "Administrative Office (Block 28, Room 209)",
-        "groupId": "cse-dept",
-        "groupName": "School of Computer Science & Engineering (CSE)",
-        "category": "offices",
-        "type": "Administrative Office",
-        "parentBlockIds": ["block-27", "block-28"],
-        "visibleFromZoom": 19,
-        "lat": 31.252754224964615,
-        "lng": 75.70378526355849,
-        "floor": "Second Floor, Room 209",
-        "facilities": ["Lost and Found", "Infrastructure Queries", "Faculty Details", "General Queries"],
-        "tags": ["administrative office", "admin office", "block 27", "block 28", "room 209", "lost and found", "infrastructure", "faculty details", "general queries"],
-        "desc": "Administrative office serving Blocks 27 and 28 for lost and found, infrastructure queries, faculty details, and general queries.",
-        "hours": "8:00 AM - 5:30 PM",
-    },
-]
+
+def _extract_js_array(var_name: str, js_code: str) -> List[dict]:
+    """Extract a JavaScript array variable from JS source code."""
+    pattern = re.compile(
+        rf"{var_name}\s*(?:=\s*window\.{var_name}\s*)?=\s*(\[[\s\S]*?\n\s*\]);",
+        re.MULTILINE,
+    )
+    match = pattern.search(js_code)
+    if not match:
+        return []
+
+    raw_array = match.group(1)
+
+    if json5 is not None:
+        try:
+            return json5.loads(raw_array)
+        except Exception:
+            pass
+
+    # Fallback parser if json5 is unavailable or fails
+    cleaned = re.sub(r"//.*$", "", raw_array, flags=re.MULTILINE)
+    cleaned = re.sub(r"/\*[\s\S]*?\*/", "", cleaned)
+    cleaned = re.sub(r",\s*([}\]])", r"\1", cleaned)
+    cleaned = re.sub(r"(?<=[{,\n\r\t ])([a-zA-Z_][a-zA-Z0-9_]*)\s*:", r'"\1":', cleaned)
+    try:
+        return json.loads(cleaned)
+    except Exception:
+        return []
+
+
+def load_campus_records(data_js_path: Optional[Union[str, Path]] = None) -> List[dict]:
+    """
+    Dynamically loads campus entities (groups, locations/blocks, offices) from js/data.js.
+    """
+    target_path = Path(data_js_path) if data_js_path else DATA_JS_PATH
+    if not target_path.exists():
+        return []
+
+    try:
+        content = target_path.read_text(encoding="utf-8")
+    except Exception:
+        return []
+
+    groups = _extract_js_array("CAMPUS_GROUPS", content)
+    locations = _extract_js_array("CAMPUS_LOCATIONS", content)
+    offices = _extract_js_array("CAMPUS_OFFICES", content)
+
+    records: List[dict] = []
+
+    for group in groups:
+        records.append({
+            "id": group.get("id"),
+            "kind": "group",
+            "name": group.get("name", ""),
+            "category": group.get("category", ""),
+            "type": group.get("type", "Department"),
+            "tags": group.get("tags", []) or [],
+            "blocks": group.get("blocks", []) or [],
+            "groupName": group.get("groupName", ""),
+            "desc": group.get("desc", ""),
+            "facilities": group.get("facilities", []) or [],
+        })
+
+    for loc in locations:
+        loc_id = str(loc.get("id", ""))
+        kind = loc.get("kind") or ("block" if "block" in loc_id.lower() else "location")
+        records.append({
+            "id": loc_id,
+            "kind": kind,
+            "name": loc.get("name", ""),
+            "groupId": loc.get("groupId"),
+            "groupName": loc.get("groupName") or "",
+            "category": loc.get("category", ""),
+            "type": loc.get("type", "Campus Location"),
+            "lat": loc.get("lat"),
+            "lng": loc.get("lng"),
+            "floor": loc.get("floor", ""),
+            "facilities": loc.get("facilities", []) or [],
+            "tags": loc.get("tags", []) or [],
+            "desc": loc.get("desc", ""),
+            "hours": loc.get("hours", "Open on Campus Schedule"),
+        })
+
+    for office in offices:
+        records.append({
+            "id": office.get("id"),
+            "kind": "office",
+            "name": office.get("name", ""),
+            "groupId": office.get("groupId"),
+            "groupName": office.get("groupName") or "",
+            "category": office.get("category", "offices"),
+            "type": office.get("type", "Administrative Office"),
+            "parentBlockIds": office.get("parentBlockIds", []) or [],
+            "visibleFromZoom": office.get("visibleFromZoom"),
+            "lat": office.get("lat"),
+            "lng": office.get("lng"),
+            "floor": office.get("floor", ""),
+            "facilities": office.get("facilities", []) or [],
+            "tags": office.get("tags", []) or [],
+            "desc": office.get("desc", ""),
+            "hours": office.get("hours", "8:00 AM - 5:30 PM"),
+        })
+
+    return records
+
+
+# CAMPUS_RECORDS loaded dynamically from data.js
+CAMPUS_RECORDS = load_campus_records()
+
 
 SYNONYM_MAP = {
     "lost": ["lost", "missing", "misplaced", "found", "find"],

@@ -651,8 +651,13 @@ class DirectionsController {
     if (startNavBtn) {
       startNavBtn.addEventListener("click", (e) => {
         if (e) e.preventDefault();
+        const dest = this.currentDestination || "Block 25 (CSE)";
+        const dur = (this.currentRouteData && this.currentRouteData.activeRoute) ? this.currentRouteData.activeRoute.duration : "5 min";
+        const dist = (this.currentRouteData && this.currentRouteData.activeRoute) ? this.currentRouteData.activeRoute.distance : "350 m";
+        const path = (this.currentRouteData && this.currentRouteData.activeRoute) ? this.currentRouteData.activeRoute.path : null;
+
         if (window.UIController) {
-          window.UIController.startActiveNavigation(this.currentDestination || "Block 25 (CSE)", "8 min", "650 m");
+          window.UIController.startActiveNavigation(dest, dur, dist, this.currentMode, path);
         }
       });
     }
@@ -660,7 +665,7 @@ class DirectionsController {
 
   /* ==========================================================================
      🚀 Main Function: showDirections(origin, destination)
-     Renders directions between entered locations in DOT FORMAT.
+     Renders directions between entered locations in DOT FORMAT with both Walking & Kart ETAs.
      ========================================================================== */
   async showDirections(origin = "Main Gate (Students)", dest = "Block 25 (CSE)") {
     clearTimeout(this.debounceTimer);
@@ -679,47 +684,65 @@ class DirectionsController {
     const summaryCard = document.querySelector(".route-summary-card");
     if (summaryCard) {
       const stats = summaryCard.querySelector(".route-summary-stats");
-      if (stats) stats.textContent = "Calculating route...";
+      if (stats) stats.textContent = "Calculating walking & kart routes...";
     }
 
     try {
-      const start = await this.geocodePlace(origin || "Main Gate (Students)");
+      const start = await this.geocodePlace(origin || "Your Current Location");
       const end = await this.geocodePlace(dest || "Block 25 (CSE)");
 
       // Check if another request superceded this one
       if (reqId !== this.activeRequestId) return;
 
-      const route = await this.fetchRoute(start, end, this.currentMode);
+      // 1. Calculate active mode route
+      const activeRoute = await this.fetchRoute(start, end, this.currentMode);
+
+      // 2. Also calculate walking and kart routes to get simultaneous ETAs
+      const walkRoute = this.currentMode === "walking" ? activeRoute : await this.fetchRoute(start, end, "walking");
+      const kartRoute = this.currentMode === "kart" ? activeRoute : await this.fetchRoute(start, end, "kart");
 
       if (reqId !== this.activeRequestId) return;
 
+      this.currentRouteData = {
+        activeRoute,
+        walkRoute,
+        kartRoute,
+        start,
+        end,
+        mode: this.currentMode
+      };
+
       // Render Steps in Panel
-      this.renderSteps(route.steps);
+      this.renderSteps(activeRoute.steps);
 
       // DRAW ROUTE IN DOT FORMAT ON LEAFLET MAP
       if (window.CampusMap) {
-        window.CampusMap.drawRoute(route.path, false, null, {
+        window.CampusMap.drawRoute(activeRoute.path, false, null, {
           mode: this.currentMode,
           originName: start.display,
           destName: end.display
         });
       }
 
-      // Update Summary Header Card
+      // Update Mode Pills with Walking & Kart ETAs
+      const walkBtn = document.querySelector(".mode-tab-btn[data-mode='walking'] span");
+      const kartBtn = document.querySelector(".mode-tab-btn[data-mode='kart'] span");
+      if (walkBtn) walkBtn.textContent = `🚶 ${walkRoute.duration}`;
+      if (kartBtn) kartBtn.textContent = `🛺 ${kartRoute.duration}`;
+
+      // Update Summary Header Card with BOTH Walking and Kart ETAs
       if (summaryCard) {
         const title = summaryCard.querySelector(".route-summary-title");
         const stats = summaryCard.querySelector(".route-summary-stats");
         if (title) {
           title.textContent = this.currentMode === "kart" 
-            ? "Kart / Shuttle Route" 
-            : "Best Route (Walking)";
+            ? `Kart Route to ${end.display}` 
+            : `Walking Route to ${end.display}`;
         }
         if (stats) {
-          stats.textContent = `${route.distance} • ${route.duration}`;
+          stats.innerHTML = `<span style="color:var(--color-primary);font-weight:700;">🚶 ${walkRoute.duration} walk</span> &nbsp;•&nbsp; <span style="color:#d97706;font-weight:700;">🛺 ${kartRoute.duration} kart</span> &nbsp;(${activeRoute.distance})`;
         }
       }
-
-      this.updateModePillEstimates(route.distance);
 
     } catch (error) {
       console.error("Error calculating directions:", error);
@@ -734,8 +757,8 @@ class DirectionsController {
     const walkBtn = document.querySelector(".mode-tab-btn[data-mode='walking'] span");
     const kartBtn = document.querySelector(".mode-tab-btn[data-mode='kart'] span");
 
-    if (walkBtn) walkBtn.textContent = `${walkMin} min`;
-    if (kartBtn) kartBtn.textContent = `${kartMin} min`;
+    if (walkBtn) walkBtn.textContent = `🚶 ${walkMin} min`;
+    if (kartBtn) kartBtn.textContent = `🛺 ${kartMin} min`;
   }
 
   showDetourRerouting() {

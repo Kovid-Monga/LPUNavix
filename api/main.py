@@ -17,9 +17,15 @@ from pathlib import Path
 from typing import List, Optional
 from urllib.parse import parse_qs
 
-from dotenv import load_dotenv
-
-load_dotenv()
+try:
+    from dotenv import load_dotenv
+    env_file = Path(__file__).resolve().parent.parent / ".env"
+    if env_file.exists():
+        load_dotenv(dotenv_path=env_file)
+    else:
+        load_dotenv()
+except ImportError:
+    pass
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -81,19 +87,35 @@ def campus_chat(request: ChatRequest):
     if not message:
         raise HTTPException(status_code=400, detail="Message cannot be empty.")
 
-    relevant = retrieve_relevant_records(message, load_campus_records(), limit=5)
+    # Use preloaded in-memory campus records for zero-latency data access
+    relevant = retrieve_relevant_records(message, CAMPUS_RECORDS, limit=4)
     if not relevant:
+        return {
+            "reply": "I couldn’t find any relevant campus records for that question. Please ask about a specific block, office, department, or service and I’ll help narrow it down.",
+            "locationId": None,
+            "title": None
+        }
 
-        return {"reply": "I couldn’t find any relevant campus records for that question. Please ask about a specific block, office, department, or service and I’ll help narrow it down."}
+    top_rec = relevant[0]["record"] if relevant else {}
+    location_id = top_rec.get("id") or top_rec.get("locationId")
+    title = top_rec.get("name")
 
     try:
         reply = generate_chat_reply(message, relevant)
-        return {"reply": reply}
-    except RuntimeError as exc:
-        detail = str(exc)
-        if "GEMINI_API_KEY" in detail:
-            raise HTTPException(status_code=503, detail="Gemini API key is not configured. Please add GEMINI_API_KEY before using the campus assistant.") from exc
-        raise HTTPException(status_code=503, detail=detail) from exc
+        return {
+            "reply": reply,
+            "locationId": location_id,
+            "title": title
+        }
+    except Exception as exc:
+        # Fallback to direct synthesis on unexpected runtime error
+        from api.rag import generate_direct_reply
+        reply = generate_direct_reply(message, relevant)
+        return {
+            "reply": reply,
+            "locationId": location_id,
+            "title": title
+        }
 
 
 # -------- Senders and Traccar Client post location updates here --------

@@ -59,12 +59,35 @@ class AssistantController {
     this.submitPrompt(text);
   }
 
+  formatMarkdown(text) {
+    if (!text) return "";
+    let html = text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+    // Bold: **text**
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    // Italics: *text*
+    html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    // Bullet lines (e.g. • or - or *)
+    html = html.replace(/^[\s]*[•\-\*]\s+(.*)$/gm, '<li style="margin-bottom:4px;">$1</li>');
+    // Wrap lists if <li> exists
+    if (html.includes('<li')) {
+      html = html.replace(/(<li[\s\S]*?<\/li>)/g, '<ul style="padding-left:18px;margin:6px 0;">$1</ul>');
+      // Clean up adjacent </ul><ul>
+      html = html.replace(/<\/ul>\s*<ul style="padding-left:18px;margin:6px 0;">/g, '');
+    }
+    // Newlines to <br/>
+    html = html.replace(/\n/g, '<br/>');
+    return html;
+  }
+
   async submitPrompt(queryText) {
     this.appendMessage({ sender: "user", text: queryText });
 
     const assistantBubble = this.appendMessage({
       sender: "assistant",
-      text: "I’m checking the campus records for the best match…"
+      text: "Checking campus records..."
     });
 
     try {
@@ -75,21 +98,68 @@ class AssistantController {
       });
 
       const data = await response.json();
-      const reply = data && data.reply ? data.reply : "I couldn’t find a reliable answer in the campus records right now.";
+      const reply = data && data.reply ? data.reply : "I couldn’t find a reliable answer in the campus records.";
+      const locationId = data && data.locationId ? data.locationId : null;
+      const title = data && data.title ? data.title : null;
 
       const chatStream = document.getElementById("chat-messages-stream");
       if (chatStream) {
         const lastBubble = chatStream.querySelector(".chat-bubble-row.assistant:last-child .chat-bubble");
         if (lastBubble) {
-          lastBubble.innerHTML = `<div>${reply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br/>')}</div>`;
+          const formattedHtml = this.formatMarkdown(reply);
+          let cardHtml = "";
+          if (locationId || title) {
+            const safeLocId = (locationId || "").replace(/'/g, "\\'");
+            const safeTitle = (title || "").replace(/'/g, "\\'");
+            cardHtml = `
+              <div class="ai-map-preview-card" style="margin-top:10px;">
+                <div class="ai-map-action-bar">
+                  <div style="display:flex;flex-direction:column;gap:2px;">
+                    <span style="font-size:12px;font-weight:700;color:var(--text-primary);">${title || "Campus Location"}</span>
+                    <span style="font-size:10px;color:var(--text-muted);">Get dotted route & live ETAs</span>
+                  </div>
+                  <button class="btn-show-map" onclick="window.UIController && window.UIController.triggerShowOnMap ? window.UIController.triggerShowOnMap('${safeLocId}', '${safeTitle}') : null">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
+                    Show on Map
+                  </button>
+                </div>
+              </div>
+            `;
+          }
+          lastBubble.innerHTML = `<div>${formattedHtml}</div>${cardHtml}`;
         }
       }
     } catch (error) {
+      // Client-side fallback if backend server is unreachable
+      const localMatch = this.findMatchingAnswer(queryText);
       const chatStream = document.getElementById("chat-messages-stream");
       if (chatStream) {
         const lastBubble = chatStream.querySelector(".chat-bubble-row.assistant:last-child .chat-bubble");
         if (lastBubble) {
-          lastBubble.innerHTML = `<div>I’m not able to reach the campus assistant backend right now. Please make sure the server is running and the Gemini API key is configured.</div>`;
+          if (localMatch) {
+            const reply = localMatch.answer || `**${localMatch.title || "Campus Location"}**: ${localMatch.desc || ""}`;
+            const locId = localMatch.locationId || null;
+            const title = localMatch.title || null;
+            const formattedHtml = this.formatMarkdown(reply);
+            const safeLocId = (locId || "").replace(/'/g, "\\'");
+            const safeTitle = (title || "").replace(/'/g, "\\'");
+            const cardHtml = (locId || title) ? `
+              <div class="ai-map-preview-card" style="margin-top:10px;">
+                <div class="ai-map-action-bar">
+                  <div style="display:flex;flex-direction:column;gap:2px;">
+                    <span style="font-size:12px;font-weight:700;color:var(--text-primary);">${title || "Campus Location"}</span>
+                    <span style="font-size:10px;color:var(--text-muted);">Get dotted route & live ETAs</span>
+                  </div>
+                  <button class="btn-show-map" onclick="window.UIController && window.UIController.triggerShowOnMap ? window.UIController.triggerShowOnMap('${safeLocId}', '${safeTitle}') : null">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
+                    Show on Map
+                  </button>
+                </div>
+              </div>` : "";
+            lastBubble.innerHTML = `<div>${formattedHtml}</div>${cardHtml}`;
+          } else {
+            lastBubble.innerHTML = `<div>I’m unable to reach the campus assistant backend right now. Please make sure the Python server is running (<code>uvicorn api.main:app --port 8000</code>).</div>`;
+          }
         }
       }
     }
@@ -159,18 +229,23 @@ class AssistantController {
     let contentHtml = "";
 
     if (sender === "assistant") {
+      const safeLocId = (locationId || "").replace(/'/g, "\\'");
+      const safeTitle = (title || "").replace(/'/g, "\\'");
       contentHtml = `
         <div class="ai-avatar">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="10" rx="2"></rect><circle cx="12" cy="5" r="2"></circle><path d="M12 7v4"></path><line x1="8" y1="16" x2="8.01" y2="16"></line><line x1="16" y1="16" x2="16.01" y2="16"></line></svg>
         </div>
         <div class="chat-bubble">
           <div>${formattedText}</div>
-          ${(hasMapAction || locationId) ? `
+          ${(hasMapAction || locationId || title) ? `
             <div class="ai-map-preview-card" style="margin-top:10px;">
               <div class="ai-map-action-bar">
-                <span style="font-size:11px;font-weight:700;color:var(--text-primary);">${title || "Campus Location"}</span>
-                <button class="btn-show-map" onclick="window.UIController.triggerShowOnMap('${locationId}')">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                <div style="display:flex;flex-direction:column;gap:2px;">
+                  <span style="font-size:12px;font-weight:700;color:var(--text-primary);">${title || "Campus Location"}</span>
+                  <span style="font-size:10px;color:var(--text-muted);">Get dotted route & live ETAs</span>
+                </div>
+                <button class="btn-show-map" onclick="window.UIController && window.UIController.triggerShowOnMap ? window.UIController.triggerShowOnMap('${safeLocId}', '${safeTitle}') : null">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
                   Show on Map
                 </button>
               </div>

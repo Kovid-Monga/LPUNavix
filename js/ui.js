@@ -239,27 +239,47 @@ class UIController {
   /* ==========================================================================
      Active Navigation ETA Floating Bar
      ========================================================================== */
-  startActiveNavigation(destinationName = "Block 18", duration = "6 min", distance = "450 m") {
+  startActiveNavigation(destinationName = "Block 25 (CSE)", duration = "5 min", distance = "350 m", mode = "walking", routePath = null) {
     const etaBar = document.getElementById("mobile-nav-eta-bar");
-    if (!etaBar) return;
+    if (etaBar) {
+      const durationVal = document.getElementById("eta-duration-val");
+      const distanceVal = document.getElementById("eta-distance-val");
+      const targetVal = document.getElementById("eta-target-time");
 
-    const durationVal = document.getElementById("eta-duration-val");
-    const distanceVal = document.getElementById("eta-distance-val");
-    const targetVal = document.getElementById("eta-target-time");
+      const modeIcon = mode === "kart" ? "🛺" : "🚶";
+      if (durationVal) durationVal.textContent = `${modeIcon} ${duration}`;
+      if (distanceVal) distanceVal.textContent = `${distance} remaining`;
+      if (targetVal) targetVal.textContent = `Navigating to ${destinationName}`;
 
-    if (durationVal) durationVal.textContent = duration;
-    if (distanceVal) distanceVal.textContent = `${distance} remaining`;
-    if (targetVal) targetVal.textContent = `Navigating to ${destinationName}`;
+      etaBar.classList.add("active");
+    }
 
-    etaBar.classList.add("active");
-    this.closeLeftPanels();
+    // Close drawers so the dotted path and map are fully visible
+    document.querySelectorAll(".side-panel-drawer:not(#assistant-panel)").forEach(p => p.classList.remove("active"));
+    this.currentActivePanel = null;
+    this.toggleAssistant(false);
+
+    // Draw dotted route on map and focus
+    if (window.CampusMap) {
+      if (routePath && routePath.length >= 2) {
+        window.CampusMap.drawRoute(routePath, false, null, {
+          mode: mode || "walking",
+          originName: "Your Current Location",
+          destName: destinationName
+        });
+        const startPt = routePath[0];
+        window.CampusMap.flyToLocation(startPt[0], startPt[1], 17.5);
+      } else if (window.Directions) {
+        window.Directions.showDirections("Your Current Location", destinationName);
+      }
+    }
   }
 
   endActiveNavigation() {
     const etaBar = document.getElementById("mobile-nav-eta-bar");
     if (etaBar) etaBar.classList.remove("active");
-    if (window.Directions) {
-      window.Directions.clearRoute();
+    if (window.CampusMap) {
+      window.CampusMap.clearRoutes();
     }
   }
 
@@ -487,7 +507,7 @@ class UIController {
     const getDirectionsBtn = document.getElementById("detail-get-directions-btn");
     if (getDirectionsBtn) {
       getDirectionsBtn.onclick = () => {
-        const originVal = document.getElementById("direction-origin-input")?.value || "Main Gate (Students)";
+        const originVal = document.getElementById("direction-origin-input")?.value || "Your Current Location";
         this.switchView("directions", originVal, group.name);
       };
     }
@@ -543,7 +563,7 @@ class UIController {
     const getDirectionsBtn = document.getElementById("detail-get-directions-btn");
     if (getDirectionsBtn) {
       getDirectionsBtn.onclick = () => {
-        const originVal = document.getElementById("direction-origin-input")?.value || "Main Gate (Students)";
+        const originVal = document.getElementById("direction-origin-input")?.value || "Your Current Location";
         this.switchView("directions", originVal, loc.name);
       };
     }
@@ -555,17 +575,42 @@ class UIController {
     }
   }
 
-  triggerShowOnMap(locationId) {
-    // Check if it is a group
-    const group = CAMPUS_GROUPS.find(g => g.id === locationId);
-    if (group) {
-      this.showGroupDetails(group);
-      return;
+  triggerShowOnMap(locationId, targetTitle = null) {
+    let destName = targetTitle || locationId;
+
+    if (locationId) {
+      const allLocs = (typeof getAllCampusLocations === "function") ? getAllCampusLocations() : (window.CAMPUS_LOCATIONS || []);
+      const matchedLoc = allLocs.find(l => 
+        (l.id && l.id.toLowerCase() === String(locationId).toLowerCase()) ||
+        (l.name && l.name.toLowerCase() === String(locationId).toLowerCase())
+      );
+      if (matchedLoc) {
+        destName = matchedLoc.name;
+      } else if (typeof CAMPUS_GROUPS !== "undefined" && Array.isArray(CAMPUS_GROUPS)) {
+        const matchedGroup = CAMPUS_GROUPS.find(g => 
+          (g.id && g.id.toLowerCase() === String(locationId).toLowerCase()) ||
+          (g.name && g.name.toLowerCase() === String(locationId).toLowerCase())
+        );
+        if (matchedGroup) {
+          destName = matchedGroup.name;
+        }
+      }
     }
 
-    const loc = getAllCampusLocations().find(l => l.id === locationId);
-    if (loc) {
-      this.showLocationDetails(loc);
+    if (!destName) {
+      destName = "Block 25 (CSE)";
+    }
+
+    // 1. Close or collapse assistant drawer so the user can see the map and route clearly
+    this.toggleAssistant(false);
+
+    // 2. Open directions view with "Your Current Location" as origin
+    const origin = "Your Current Location";
+    this.switchView("directions", origin, destName);
+
+    // 3. Trigger immediate route calculation & dot-route rendering on map
+    if (window.Directions) {
+      window.Directions.showDirections(origin, destName);
     }
   }
 

@@ -1,6 +1,13 @@
 import unittest
 
-from api.rag import CAMPUS_RECORDS, build_context_block, load_campus_records, retrieve_relevant_records
+from api.rag import (
+    CAMPUS_RECORDS,
+    build_context_block,
+    generate_chat_reply,
+    generate_direct_reply,
+    load_campus_records,
+    retrieve_relevant_records,
+)
 
 
 class TestRAGRetrieval(unittest.TestCase):
@@ -26,51 +33,30 @@ class TestRAGRetrieval(unittest.TestCase):
         self.assertTrue(top_records)
         self.assertEqual(top_records[0]["id"], "office-admin-28-209")
 
-    def test_custom_records_retrieval(self):
-        records = [
-            {
-                "id": "cse-dept",
-                "kind": "group",
-                "name": "School of Computer Science & Engineering (CSE)",
-                "category": "academics",
-                "type": "Department Zone",
-                "tags": ["cse", "computer science", "it", "coding", "software"],
-                "desc": "Houses the School of Computer Science & Engineering.",
-                "groupName": "",
-                "facilities": [],
-            },
-            {
-                "id": "block-31",
-                "kind": "block",
-                "name": "Block 31 (Admin)",
-                "groupId": "cse-dept",
-                "groupName": "School of Computer Science & Engineering (CSE)",
-                "category": "offices",
-                "type": "Administrative & Academic Block",
-                "tags": ["block 31", "admin", "administration", "cse"],
-                "desc": "Block 31 - Administrative Block & CSE Department.",
-                "facilities": ["Administrative Offices", "Classrooms", "Computer Labs"],
-            },
-            {
-                "id": "office-admin-28-209",
-                "kind": "office",
-                "name": "Administrative Office (Block 28, Room 209)",
-                "groupId": "cse-dept",
-                "groupName": "School of Computer Science & Engineering (CSE)",
-                "category": "offices",
-                "type": "Administrative Office",
-                "parentBlockIds": ["block-27", "block-28"],
-                "tags": ["administrative office", "admin office", "block 27", "block 28", "room 209", "lost and found", "infrastructure", "faculty details"],
-                "desc": "Administrative office serving Blocks 27 and 28 for lost and found, infrastructure queries, faculty details, and general queries.",
-                "facilities": ["Lost and Found", "Infrastructure Queries", "Faculty Details", "General Queries"],
-                "hours": "8:00 AM - 5:30 PM",
-            },
-        ]
-
-        top_records = retrieve_relevant_records("where can I report a lost item", records)
+    def test_block_number_retrieval(self):
+        top_records = retrieve_relevant_records("Where is Block 28?")
         self.assertTrue(top_records)
-        self.assertEqual(top_records[0]["id"], "office-admin-28-209")
-        self.assertIn("lost", top_records[0]["search_text"].lower())
+        # Block 28 or administrative office 28 should be at the top
+        matched_ids = [r["id"] for r in top_records[:2]]
+        self.assertTrue("block-28" in matched_ids or "office-admin-28-209" in matched_ids)
+
+    def test_health_center_retrieval(self):
+        top_records = retrieve_relevant_records("Where is Uni Health Center?")
+        self.assertTrue(top_records)
+        self.assertEqual(top_records[0]["id"], "uni-health-center")
+
+    def test_generate_direct_reply(self):
+        records = retrieve_relevant_records("where can I report a lost item")
+        reply = generate_direct_reply("where can I report a lost item", records)
+        self.assertIn("Administrative Office", reply)
+        self.assertIn("Lost and Found", reply)
+        self.assertIn("Room 209", reply)
+
+    def test_generate_chat_reply_fallback(self):
+        records = retrieve_relevant_records("Where is CSE department?")
+        reply = generate_chat_reply("Where is CSE department?", records)
+        self.assertTrue(len(reply) > 0)
+        self.assertTrue("Computer Science" in reply or "CSE" in reply)
 
     def test_build_context_block(self):
         records = retrieve_relevant_records("where is CSE department")
@@ -81,4 +67,3 @@ class TestRAGRetrieval(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

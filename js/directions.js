@@ -14,7 +14,15 @@ class CampusRoadGraph {
 
   buildGraph() {
     if (this.initialized) return;
-    const roadData = (typeof CAMPUS_ROADS_DATA !== "undefined" && Array.isArray(CAMPUS_ROADS_DATA)) ? CAMPUS_ROADS_DATA : [];
+    const roadData = (typeof CAMPUS_ROADS_DATA !== "undefined" && Array.isArray(CAMPUS_ROADS_DATA) && CAMPUS_ROADS_DATA.length > 0)
+      ? CAMPUS_ROADS_DATA
+      : (typeof LPU_ROAD_NETWORK !== "undefined" && Array.isArray(LPU_ROAD_NETWORK))
+        ? LPU_ROAD_NETWORK.map(way => ({
+            id: way.id,
+            tags: { highway: way.highway, name: way.name || "", oneway: way.oneway || "", junction: way.junction || "" },
+            coords: way.geometry
+          }))
+        : [];
     if (roadData.length === 0) return;
 
     // Helper: Generate unique node id from lat/lng

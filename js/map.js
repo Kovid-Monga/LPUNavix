@@ -320,7 +320,17 @@ class CampusMapController {
     this.roadsLayer.clearLayers();
     this.footpathsLayer.clearLayers();
 
-    if (typeof CAMPUS_ROADS_DATA === "undefined" || !Array.isArray(CAMPUS_ROADS_DATA) || CAMPUS_ROADS_DATA.length === 0) {
+    const roadList = (typeof CAMPUS_ROADS_DATA !== "undefined" && Array.isArray(CAMPUS_ROADS_DATA) && CAMPUS_ROADS_DATA.length > 0)
+      ? CAMPUS_ROADS_DATA
+      : (typeof LPU_ROAD_NETWORK !== "undefined" && Array.isArray(LPU_ROAD_NETWORK))
+        ? LPU_ROAD_NETWORK.map(way => ({
+            id: way.id,
+            tags: { highway: way.highway, name: way.name || "", oneway: way.oneway || "", junction: way.junction || "" },
+            coords: way.geometry
+          }))
+        : [];
+
+    if (roadList.length === 0) {
       return;
     }
 
@@ -366,7 +376,7 @@ class CampusMapController {
       showArrows = false;
     }
 
-    CAMPUS_ROADS_DATA.forEach(way => {
+    roadList.forEach(way => {
       const highway = (way.tags && way.tags.highway) || 'road';
       const coords = way.coords;
 

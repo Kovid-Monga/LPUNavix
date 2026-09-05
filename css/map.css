@@ -524,41 +524,75 @@ body.assistant-collapsed .map-floating-controls {
    🔵 DOT FORMAT ROUTE & NAVIGATION STYLING
    ============================================================================ */
 
-/* Dotted Route Polyline */
-.route-dot-path {
+/* Solid Highlighted Route Polyline */
+.route-highlight-path {
   stroke-linecap: round !important;
   stroke-linejoin: round !important;
   pointer-events: none;
-  animation: routeDotFlow 2s linear infinite;
+  filter: drop-shadow(0 2px 8px rgba(37, 99, 235, 0.45));
 }
 
-@keyframes routeDotFlow {
-  from {
-    stroke-dashoffset: 36;
-  }
-  to {
-    stroke-dashoffset: 0;
-  }
+/* Route Casing / Outer Border */
+.route-casing-path {
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+  pointer-events: none;
 }
 
 /* Glowing Route Underlay Halo */
 .route-halo-underlay {
-  filter: blur(2px);
+  filter: blur(3px);
   pointer-events: none;
 }
 
-/* Intermediate Waypoint Dots */
+/* On-Route Floating ETA Badge (Google Maps Style Pill on Route) */
+.route-map-eta-wrapper {
+  background: transparent !important;
+  border: none !important;
+  overflow: visible !important;
+}
+
+.route-map-eta-badge {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%);
+  background: #1d4ed8;
+  color: #ffffff;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35), 0 0 0 1.5px rgba(255, 255, 255, 0.9);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: etaBadgePop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 2800;
+}
+
+@keyframes etaBadgePop {
+  0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+  100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+/* Intermediate Turn Waypoint Dots (Google Maps Turn Circle) */
 .waypoint-dot-wrapper {
-  background: transparent;
-  border: none;
+  background: transparent !important;
+  border: none !important;
+  overflow: visible !important;
 }
 
 .waypoint-route-dot {
-  width: 7px;
-  height: 7px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  border: 1.5px solid #ffffff;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  background: #ffffff;
+  border: 2px solid #2563eb;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 
 /* Start Location Origin Pin (Zero-Drift Centered Anchor) */

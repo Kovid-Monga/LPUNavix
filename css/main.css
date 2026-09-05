@@ -5,6 +5,7 @@
 :root {
   /* Brand Palette */
   --color-primary: #2563eb;
+  --brand-blue: #2563eb;
   --color-primary-hover: #1d4ed8;
   --color-primary-light: #eff6ff;
   --color-primary-glow: rgba(37, 99, 235, 0.25);

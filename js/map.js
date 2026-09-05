@@ -135,10 +135,17 @@ class CampusMapController {
     // Set default base layer (street fallback or satellite)
     this.setBaseLayer("satellite");
 
+    // Dedicated Navigation Route Pane with z-index 580 (strictly above roads/footpaths in overlayPane 400)
+    if (!this.map.getPane('routePane')) {
+      const rp = this.map.createPane('routePane');
+      rp.style.zIndex = '580';
+      rp.style.pointerEvents = 'none';
+    }
+
     // Initialize Layer Groups in strict visual order (Roads -> Footpaths -> Routes -> Markers)
     this.roadsLayer = L.layerGroup().addTo(this.map);
     this.footpathsLayer = L.layerGroup().addTo(this.map);
-    this.routesLayer = L.layerGroup().addTo(this.map);
+    this.routesLayer = L.layerGroup([], { pane: 'routePane' }).addTo(this.map);
     this.markersLayer = L.layerGroup().addTo(this.map);
     this.kartsLayer = L.layerGroup().addTo(this.map);
 
@@ -647,39 +654,65 @@ class CampusMapController {
       }
     }
 
-    // 2. Glowing Route Underlay Halo
+    // 2. Glowing Route Underlay Halo (Rendered on dedicated routePane above roads)
     L.polyline(validPath, {
+      pane: 'routePane',
       className: "route-halo-underlay",
-      color: glowColor,
-      weight: 16,
-      opacity: 0.35,
+      color: "#38bdf8",
+      weight: 20,
+      opacity: 0.45,
       lineCap: "round",
       lineJoin: "round"
     }).addTo(this.routesLayer);
 
-    // 3. Main DOT FORMAT Route Path
-    const routeDotLine = L.polyline(validPath, {
-      className: "route-dot-path",
-      color: dotColor,
-      weight: 9,
+    // 2.5 Route Casing / Dark Navy Border (Gives razor-sharp contrast over roads & roofs)
+    L.polyline(validPath, {
+      pane: 'routePane',
+      className: "route-casing-path",
+      color: "#0f172a",
+      weight: 15,
+      opacity: 0.98,
+      lineCap: "round",
+      lineJoin: "round"
+    }).addTo(this.routesLayer);
+
+    // 3. Main HIGHLIGHTED Route Path (Bold Vibrant Electric Blue, Strictly on routePane)
+    const routeMainLine = L.polyline(validPath, {
+      pane: 'routePane',
+      className: "route-highlight-path",
+      color: "#2563eb",
+      weight: 10,
       opacity: 1.0,
-      dashArray: "0, 18",
       lineCap: "round",
       lineJoin: "round"
     }).addTo(this.routesLayer);
 
-    // 4. Intermediate Waypoint Dots at turn points
-    if (validPath.length > 3) {
-      const stepInterval = Math.max(1, Math.floor(validPath.length / 6));
+    // 3.5 On-Route Floating ETA Badge (Google Maps Style Pill on Route)
+    if (validPath.length >= 2) {
+      const midIdx = Math.floor(validPath.length / 2);
+      const midPoint = validPath[midIdx];
+      const etaDuration = options.duration || (window.Directions && window.Directions.currentRouteData && window.Directions.currentRouteData.activeRoute ? window.Directions.currentRouteData.activeRoute.duration : "1 min");
+      const etaIcon = L.divIcon({
+        className: "route-map-eta-wrapper",
+        html: `<div class="route-map-eta-badge"><span class="route-eta-text">${etaDuration}</span></div>`,
+        iconSize: [0, 0],
+        iconAnchor: [0, 0]
+      });
+      L.marker(midPoint, { icon: etaIcon, interactive: false, zIndexOffset: 3800 }).addTo(this.routesLayer);
+    }
+
+    // 4. Intermediate Turn Waypoint Dots (Clean White Circles with Dark Border)
+    if (validPath.length > 2) {
+      const stepInterval = Math.max(1, Math.floor(validPath.length / 4));
       for (let i = stepInterval; i < validPath.length - 1; i += stepInterval) {
         const wp = validPath[i];
         const wpIcon = L.divIcon({
           className: "waypoint-dot-wrapper",
-          html: `<div class="waypoint-route-dot" style="background:${dotColor};"></div>`,
-          iconSize: [8, 8],
-          iconAnchor: [4, 4]
+          html: `<div class="waypoint-route-dot"></div>`,
+          iconSize: [14, 14],
+          iconAnchor: [7, 7]
         });
-        L.marker(wp, { icon: wpIcon, interactive: false, zIndexOffset: 1200 }).addTo(this.routesLayer);
+        L.marker(wp, { icon: wpIcon, interactive: false, zIndexOffset: 3600 }).addTo(this.routesLayer);
       }
     }
 
@@ -727,7 +760,7 @@ class CampusMapController {
     // 7. Auto-fit map bounds smoothly (only on first calculation)
     if (!skipFitBounds) {
       try {
-        this.map.fitBounds(routeDotLine.getBounds(), {
+        this.map.fitBounds(routeMainLine.getBounds(), {
           padding: [80, 80],
           maxZoom: 17.5,
           animate: true
@@ -741,6 +774,19 @@ class CampusMapController {
   clearRoutes() {
     this.currentRouteData = null;
     this.routesLayer.clearLayers();
+  }
+
+  clearRoute() {
+    this.clearRoutes();
+  }
+
+  resetView() {
+    if (typeof CAMPUS_CENTER !== "undefined" && typeof CAMPUS_DEFAULT_ZOOM !== "undefined") {
+      this.map.flyTo(CAMPUS_CENTER, CAMPUS_DEFAULT_ZOOM, {
+        animate: true,
+        duration: 1.0
+      });
+    }
   }
 
   flyToLocation(lat, lng, zoom = 17) {

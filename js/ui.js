@@ -8,6 +8,7 @@ class UIController {
     this.currentActivePanel = null;
     this.currentTheme = localStorage.getItem("lpu_theme") || "light";
     this.currentLayerMode = "satellite";
+    this.isHandlingPopState = false;
   }
 
   init() {
@@ -16,10 +17,154 @@ class UIController {
     this.bindMobileNavEvents();
     this.bindSearchAndFilters();
     this.bindFloatingMapControls();
-    this.toggleAssistant(false);
+    this.toggleAssistant(false, true);
+
+    // Ensure base root history state is set so back button never exits to browser home page
+    if (!history.state || history.state.type !== "map") {
+      try {
+        history.replaceState({ type: "map", depth: 0 }, "");
+      } catch (err) {}
+    }
+
+    // Centralized Hierarchical Browser / Phone Back Button Handler across ALL slides
+    window.addEventListener("popstate", (e) => {
+      this.isHandlingPopState = true;
+      const state = e.state || { type: "map", depth: 0 };
+
+      // 1. Hide route preview if moving to non-route state
+      if (state.type !== "route") {
+        if (window.Directions) {
+          window.Directions.hideRoutePreview();
+          if (window.CampusMap) window.CampusMap.clearRoute();
+        }
+      }
+
+      // 2. Close search suggestions if open
+      const suggestionsPanel = document.getElementById("search-suggestions");
+      if (suggestionsPanel) suggestionsPanel.classList.remove("active");
+
+      // 3. Dispatch to target state cleanly
+      switch (state.type) {
+        case "details":
+          if (state.loc) {
+            this.showLocationDetails(state.loc, true);
+          } else if (state.group) {
+            this.showGroupDetails(state.group, true);
+          }
+          break;
+
+        case "directions":
+          this.openLeftPanel("directions-panel", null, true);
+          document.querySelectorAll(".mobile-nav-item").forEach(btn => {
+            btn.classList.toggle("active", btn.dataset.view === "directions");
+          });
+          document.querySelectorAll(".nav-item-btn:not([data-view='assistant'])").forEach(btn => {
+            btn.classList.toggle("active", btn.dataset.view === "directions");
+          });
+          break;
+
+        case "route":
+          if (window.Directions && state.dest) {
+            window.Directions.showDirections(state.origin || "Your location", state.dest, true);
+          }
+          break;
+
+        case "karts":
+          this.openLeftPanel("karts-panel", null, true);
+          document.querySelectorAll(".mobile-nav-item").forEach(btn => {
+            btn.classList.toggle("active", btn.dataset.view === "karts");
+          });
+          document.querySelectorAll(".nav-item-btn:not([data-view='assistant'])").forEach(btn => {
+            btn.classList.toggle("active", btn.dataset.view === "karts");
+          });
+          if (window.KartTracker) {
+            window.KartTracker.renderKartsOnMap();
+          }
+          break;
+
+        case "alerts":
+          this.openLeftPanel("alerts-panel", null, true);
+          document.querySelectorAll(".nav-item-btn:not([data-view='assistant'])").forEach(btn => {
+            btn.classList.toggle("active", btn.dataset.view === "alerts");
+          });
+          break;
+
+        case "settings":
+          this.openLeftPanel("settings-panel", null, true);
+          document.querySelectorAll(".nav-item-btn:not([data-view='assistant'])").forEach(btn => {
+            btn.classList.toggle("active", btn.dataset.view === "settings");
+          });
+          break;
+
+        case "filters":
+          this.openLeftPanel("search-filter-panel", null, true);
+          break;
+
+        case "assistant":
+          this.toggleAssistant(true, true);
+          break;
+
+        case "map":
+        default:
+          this.closeLeftPanels();
+          this.toggleAssistant(false, true);
+          document.querySelectorAll(".mobile-nav-item").forEach(btn => {
+            btn.classList.toggle("active", btn.dataset.view === "map");
+          });
+          document.querySelectorAll(".nav-item-btn:not([data-view='assistant'])").forEach(btn => {
+            btn.classList.toggle("active", btn.dataset.view === "map" || btn.dataset.view === "home");
+          });
+          break;
+      }
+
+      this.isHandlingPopState = false;
+    });
 
     const layerBtn = document.getElementById("ctrl-layer-toggle");
     if (layerBtn) layerBtn.classList.add("active");
+  }
+
+  setNavState(type, data = {}, forceReplace = false) {
+    const isRoot = type === "map";
+    // Depth: root=0. Route from details or directions=2. Top-level panel=1.
+    let depth = 1;
+    if (isRoot) {
+      depth = 0;
+    } else if (type === "route") {
+      const prevType = history.state?.type;
+      depth = (prevType === "details" || prevType === "directions") ? 2 : 1;
+    }
+
+    const newState = { type, depth, ...data };
+
+    try {
+      // Sibling replacement rule:
+      // If currently at depth 1 and opening another depth 1 item (e.g. from Location A directly to Location B, or Karts to Settings),
+      // we replaceState so pressing Back immediately redirects to Map / Home without looping!
+      const isSibling = history.state && history.state.depth === depth && depth > 0;
+      if (forceReplace || isSibling) {
+        history.replaceState(newState, "");
+      } else {
+        history.pushState(newState, "");
+      }
+    } catch (err) {
+      console.warn("[LPUNavix] History navigation state error:", err);
+    }
+  }
+
+  closePanelWithHistory() {
+    if (history.state && history.state.depth > 0) {
+      try {
+        history.back();
+        return;
+      } catch (err) {}
+    }
+    this.closeLeftPanels();
+    this.toggleAssistant(false, true);
+    if (window.Directions) {
+      window.Directions.hideRoutePreview();
+      if (window.CampusMap) window.CampusMap.clearRoute();
+    }
   }
 
   /* ==========================================================================
@@ -47,15 +192,16 @@ class UIController {
     if (assistantCloseBtn) {
       assistantCloseBtn.addEventListener("click", (e) => {
         e.stopPropagation();
-        this.toggleAssistant(false);
+        this.closePanelWithHistory();
       });
     }
 
-    // Left Panel close buttons
+    // Left Panel close buttons (Universal close with history synchronization)
     const leftCloseBtns = document.querySelectorAll(".side-panel-drawer:not(#assistant-panel) .panel-close-btn");
     leftCloseBtns.forEach(btn => {
-      btn.addEventListener("click", () => {
-        this.closeLeftPanels();
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this.closePanelWithHistory();
       });
     });
   }
@@ -135,32 +281,38 @@ class UIController {
   /* ==========================================================================
      Navigation & Panel Switching
      ========================================================================== */
-  toggleAssistant(forceState = null) {
+  toggleAssistant(forceState = null, skipHistory = false) {
     const panel = document.getElementById("assistant-panel");
     if (!panel) return;
 
     const isMobile = window.innerWidth <= 768;
+    const willBeOpen = forceState !== null ? forceState : (
+      isMobile ? !panel.classList.contains("active") : panel.classList.contains("collapsed")
+    );
 
     if (isMobile) {
-      // Mobile: use active/inactive pattern (same as Campus Status, Directions, Karts)
-      const isOpen = forceState !== null ? forceState : !panel.classList.contains("active");
-      // Close all other drawers first
-      document.querySelectorAll(".side-panel-drawer:not(#assistant-panel)").forEach(p => p.classList.remove("active"));
-      panel.classList.toggle("active", isOpen);
-      panel.classList.toggle("collapsed", !isOpen);
-      document.body.classList.toggle("assistant-collapsed", !isOpen);
+      if (willBeOpen) {
+        document.querySelectorAll(".side-panel-drawer:not(#assistant-panel)").forEach(p => p.classList.remove("active"));
+      }
+      panel.classList.toggle("active", willBeOpen);
+      panel.classList.toggle("collapsed", !willBeOpen);
+      document.body.classList.toggle("assistant-collapsed", !willBeOpen);
     } else {
-      // Desktop: use collapsed/slide-right pattern
-      const isCollapsed = forceState !== null ? !forceState : !panel.classList.contains("collapsed");
-      panel.classList.toggle("collapsed", isCollapsed);
-      document.body.classList.toggle("assistant-collapsed", isCollapsed);
+      panel.classList.toggle("collapsed", !willBeOpen);
+      document.body.classList.toggle("assistant-collapsed", !willBeOpen);
     }
 
-    // Update assistant nav button active state
     const assistantNavBtn = document.querySelector('.nav-item-btn[data-view="assistant"]');
     if (assistantNavBtn) {
-      const isNowOpen = panel.classList.contains("active") || !panel.classList.contains("collapsed");
-      assistantNavBtn.classList.toggle("active", isNowOpen);
+      assistantNavBtn.classList.toggle("active", willBeOpen);
+    }
+
+    if (!skipHistory) {
+      if (willBeOpen) {
+        this.setNavState("assistant");
+      } else if (history.state && history.state.type === "assistant") {
+        this.closePanelWithHistory();
+      }
     }
   }
 
@@ -180,9 +332,19 @@ class UIController {
       btn.classList.toggle("active", btn.dataset.view === viewName);
     });
 
-    this.closeLeftPanels();
-
     if (viewName === "home" || viewName === "map") {
+      if (history.state && history.state.depth > 0) {
+        try {
+          history.go(-history.state.depth);
+          return;
+        } catch (err) {}
+      }
+      this.closeLeftPanels();
+      this.toggleAssistant(false, true);
+      if (window.Directions) {
+        window.Directions.hideRoutePreview();
+        if (window.CampusMap) window.CampusMap.clearRoute();
+      }
       if (window.CampusMap) {
         window.CampusMap.renderLocationMarkers("all");
       }
@@ -190,15 +352,28 @@ class UIController {
     }
 
     if (viewName === "directions") {
-      this.openLeftPanel("directions-panel");
-      if (window.Directions) {
-        const originInput = document.getElementById("direction-origin-input");
-        const destInput = document.getElementById("direction-dest-input");
-        const o = customOrigin || (originInput ? originInput.value : "Main Gate (Students)");
-        const d = customDest || (destInput ? destInput.value : "Block 25 (CSE)");
+      const originInput = document.getElementById("direction-origin-input");
+      const destInput = document.getElementById("direction-dest-input");
+      const o = customOrigin || (originInput && originInput.value ? originInput.value : "Your location");
+
+      if (customDest && customDest.trim() !== "") {
         if (originInput) originInput.value = o;
-        if (destInput) destInput.value = d;
-        window.Directions.showDirections(o, d);
+        if (destInput) destInput.value = customDest;
+        this.closeLeftPanels(true);
+        if (window.Directions) {
+          window.Directions.showDirections(o, customDest);
+        }
+      } else {
+        if (originInput) originInput.value = o;
+        const currentDest = (customDest !== undefined) ? customDest : (destInput ? destInput.value : "");
+        this.openLeftPanel("directions-panel");
+        if (window.CampusMap && (!currentDest || currentDest.trim() === "")) {
+          window.CampusMap.clearRoute();
+        }
+        if (window.Directions) {
+          window.Directions.hideRoutePreview();
+          window.Directions.updateDestinationState(currentDest);
+        }
       }
     } else if (viewName === "karts") {
       this.openLeftPanel("karts-panel");
@@ -215,16 +390,28 @@ class UIController {
     }
   }
 
-  openLeftPanel(panelId) {
-    this.closeLeftPanels();
+  openLeftPanel(panelId, data = null, skipHistory = false) {
+    this.closeLeftPanels(true);
     const panel = document.getElementById(panelId);
     if (panel) {
       panel.classList.add("active");
       this.currentActivePanel = panelId;
+
+      if (!skipHistory) {
+        let type = "map";
+        if (panelId === "directions-panel") type = "directions";
+        else if (panelId === "karts-panel") type = "karts";
+        else if (panelId === "alerts-panel") type = "alerts";
+        else if (panelId === "settings-panel") type = "settings";
+        else if (panelId === "search-filter-panel") type = "filters";
+        else if (panelId === "details-panel") type = "details";
+
+        this.setNavState(type, data || {});
+      }
     }
   }
 
-  closeLeftPanels() {
+  closeLeftPanels(isOpeningAnother = false) {
     document.querySelectorAll(".side-panel-drawer:not(#assistant-panel)").forEach(p => p.classList.remove("active"));
     this.currentActivePanel = null;
     if (window.CampusMap) {
@@ -455,7 +642,7 @@ class UIController {
   /* ==========================================================================
      Group / Department Details Modal (Panel 5)
      ========================================================================== */
-  showGroupDetails(group) {
+  showGroupDetails(group, skipHistory = false) {
     const detailsPanel = document.getElementById("details-panel");
     if (!detailsPanel) return;
 
@@ -512,9 +699,13 @@ class UIController {
       };
     }
 
-    this.openLeftPanel("details-panel");
+    if (!skipHistory) {
+      this.setNavState("details", { group: group, groupId: group.id });
+    }
 
-    if (window.CampusMap && group.centerCoords) {
+    this.openLeftPanel("details-panel", { group }, true);
+
+    if (!skipHistory && window.CampusMap && group.centerCoords) {
       window.CampusMap.flyToLocation(group.centerCoords[0], group.centerCoords[1], 16.5);
     }
   }
@@ -522,7 +713,7 @@ class UIController {
   /* ==========================================================================
      Location Details Modal (Panel 5)
      ========================================================================== */
-  showLocationDetails(loc) {
+  showLocationDetails(loc, skipHistory = false) {
     const detailsPanel = document.getElementById("details-panel");
     if (!detailsPanel) return;
 
@@ -568,9 +759,13 @@ class UIController {
       };
     }
 
-    this.openLeftPanel("details-panel");
+    if (!skipHistory) {
+      this.setNavState("details", { loc: loc, locId: loc.id });
+    }
 
-    if (window.CampusMap && loc.lat && loc.lng) {
+    this.openLeftPanel("details-panel", { loc }, true);
+
+    if (!skipHistory && window.CampusMap && loc.lat && loc.lng) {
       window.CampusMap.flyToLocation(loc.lat, loc.lng, 17.5);
     }
   }
@@ -604,14 +799,9 @@ class UIController {
     // 1. Close or collapse assistant drawer so the user can see the map and route clearly
     this.toggleAssistant(false);
 
-    // 2. Open directions view with "Your Current Location" as origin
+    // 2. Open directions view with "Your Current Location" as origin (which calculates route & displays preview)
     const origin = "Your Current Location";
     this.switchView("directions", origin, destName);
-
-    // 3. Trigger immediate route calculation & dot-route rendering on map
-    if (window.Directions) {
-      window.Directions.showDirections(origin, destName);
-    }
   }
 
   /* ==========================================================================
@@ -700,7 +890,7 @@ class UIController {
     if (filterPanel) {
       const closeBtn = filterPanel.querySelector(".panel-close-btn");
       if (closeBtn) {
-        closeBtn.addEventListener("click", () => this.closeLeftPanels());
+        closeBtn.addEventListener("click", () => this.closePanelWithHistory());
       }
     }
 
@@ -742,8 +932,8 @@ class UIController {
       if (matchingChip) matchingChip.click();
     }
 
-    // Close the panel
-    this.closeLeftPanels();
+    // Close the panel with history synchronization
+    this.closePanelWithHistory();
   }
 
   _showFilterBadge(show) {

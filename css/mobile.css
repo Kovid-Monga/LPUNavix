@@ -617,16 +617,16 @@
     transform: scale(0.92);
   }
 
-  /* Active Navigation Item */
+  /* Active Navigation Item (Orange Brand Accent) */
   .mobile-nav-item.active {
-    color: #2563eb;
+    color: var(--color-accent);
     font-weight: 800;
   }
 
   .mobile-nav-item.active svg {
     stroke-width: 2.6;
     transform: translateY(-1px);
-    color: #2563eb;
+    color: var(--color-accent);
   }
 
   /* Mobile controls follow the selected theme. */
@@ -690,7 +690,7 @@
   .nav-active-dot {
     width: 4px;
     height: 4px;
-    background: #2563eb;
+    background: var(--color-accent);
     border-radius: 50%;
     position: absolute;
     bottom: 3px;
@@ -710,7 +710,7 @@
   }
 
   .mobile-nav-item[data-view="directions"].active svg {
-    color: #2563eb;
+    color: var(--color-accent);
   }
 
   /* ==========================================================================
@@ -1004,14 +1004,26 @@
   /* ==========================================================================
      10. GOOGLE MAPS ACTIVE ROUTE NAVIGATION OVERRIDES (MOBILE)
      ========================================================================== */
-  body.gmaps-route-active .mobile-app-header,
   body.gmaps-route-active .app-topbar,
-  body.gmaps-route-active .mobile-bottom-nav,
   body.gmaps-route-active .app-feature-bar,
   body.gmaps-route-active .floating-search-bar,
   body.gmaps-route-active .side-panel-drawer,
   body.gmaps-route-active .mobile-nav-eta-bar,
-  body.gmaps-route-active .floating-weather-card {
+  body.gmaps-route-active .floating-weather-card,
+  body.gmaps-route-active .map-layer-toggle-card {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  body.gmaps-route-active .mobile-app-header {
+    display: flex !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    z-index: 100002 !important;
+  }
+
+  body.gmaps-route-active .mobile-bottom-nav {
     display: none !important;
     visibility: hidden !important;
     pointer-events: none !important;
@@ -1021,12 +1033,12 @@
     display: block !important;
     visibility: visible !important;
     position: fixed !important;
-    top: calc(10px + env(safe-area-inset-top, 0px)) !important;
-    left: 12px !important;
-    right: 12px !important;
+    top: calc(56px + env(safe-area-inset-top, 0px)) !important;
+    left: 14px !important;
+    right: 14px !important;
     max-width: 440px !important;
     margin: 0 auto !important;
-    z-index: 99999 !important;
+    z-index: 100000 !important;
     pointer-events: auto !important;
   }
 
@@ -1043,16 +1055,29 @@
     z-index: 99999 !important;
     pointer-events: auto !important;
     box-sizing: border-box !important;
-    border-radius: 24px 24px 0 0 !important;
-    padding: 8px 16px calc(14px + env(safe-area-inset-bottom, 0px)) !important;
+    border-radius: 28px 28px 0 0 !important;
+    padding: 6px 18px calc(14px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  body.gmaps-route-active .map-floating-controls {
+    bottom: calc(240px + env(safe-area-inset-bottom, 0px)) !important;
+    right: 14px !important;
+    gap: 12px !important;
+    z-index: 100000 !important;
+  }
+
+  body.gmaps-route-active #ctrl-zoom-in,
+  body.gmaps-route-active #ctrl-zoom-out,
+  body.gmaps-route-active #ctrl-assistant-fab {
+    display: none !important;
   }
 
   body.gmaps-route-active .leaflet-top.leaflet-right {
-    top: calc(120px + env(safe-area-inset-top, 0px)) !important;
+    top: calc(140px + env(safe-area-inset-top, 0px)) !important;
   }
 
   body.gmaps-route-active .leaflet-bottom.leaflet-right {
-    bottom: calc(230px + env(safe-area-inset-bottom, 0px)) !important;
+    bottom: calc(290px + env(safe-area-inset-bottom, 0px)) !important;
   }
 }
 

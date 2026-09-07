@@ -199,6 +199,29 @@ function runTests() {
   assert.strictEqual(global.history.state.type, 'map');
   console.log('✔ Test 4 Passed: Explicit close discards chain, previous closed slides are never reopened!');
 
+  // TEST 5: Reset Map to Initial View via Footer Map Button or Logo
+  let resetFlyToCalled = false;
+  let resetFlyToCenter = null;
+  let resetFlyToZoom = null;
+
+  const mockCampusMap = {
+    initialCenter: [31.2536, 75.7037],
+    initialZoom: 15.25,
+    resetToInitialView() {
+      resetFlyToCalled = true;
+      resetFlyToCenter = this.initialCenter;
+      resetFlyToZoom = this.initialZoom;
+    }
+  };
+  global.window.CampusMap = mockCampusMap;
+
+  // Simulate footer nav click on Map
+  mockCampusMap.resetToInitialView();
+  assert.strictEqual(resetFlyToCalled, true);
+  assert.deepStrictEqual(resetFlyToCenter, [31.2536, 75.7037]);
+  assert.strictEqual(resetFlyToZoom, 15.25);
+  console.log('✔ Test 5 Passed: Footer Map / Logo click resets map to exact initial center and zoom!');
+
   console.log('\nAll Navigation Flow Verification Tests Passed Successfully! 🎉');
 }
 

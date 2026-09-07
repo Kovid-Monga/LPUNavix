@@ -175,9 +175,23 @@ class UIController {
     navButtons.forEach(btn => {
       btn.addEventListener("click", () => {
         const view = btn.dataset.view;
+        if (view === "home" || view === "map") {
+          if (window.CampusMap && typeof window.CampusMap.resetToInitialView === "function") {
+            window.CampusMap.resetToInitialView();
+          }
+        }
         this.switchView(view);
       });
     });
+
+    // Sidebar logo / brand area
+    const sidebarBrand = document.querySelector(".sidebar-brand");
+    if (sidebarBrand) {
+      sidebarBrand.addEventListener("click", (e) => {
+        e.preventDefault();
+        this.handleLogoClick();
+      });
+    }
 
     // Theme toggle button in sidebar
     const themeBtn = document.getElementById("theme-toggle-btn");
@@ -211,9 +225,34 @@ class UIController {
     mobileNavItems.forEach(btn => {
       btn.addEventListener("click", () => {
         const view = btn.dataset.view;
+        if (view === "map") {
+          if (window.CampusMap && typeof window.CampusMap.resetToInitialView === "function") {
+            window.CampusMap.resetToInitialView();
+          }
+        }
         this.switchView(view);
       });
     });
+
+    // Mobile top header logo / branding area
+    const mobileBrand = document.querySelector(".mobile-brand-pill");
+    if (mobileBrand) {
+      mobileBrand.addEventListener("click", (e) => {
+        e.preventDefault();
+        this.handleLogoClick();
+      });
+    }
+  }
+
+  handleLogoClick() {
+    const now = Date.now();
+    if (this._lastLogoClick && now - this._lastLogoClick < 300) return;
+    this._lastLogoClick = now;
+
+    if (window.CampusMap && typeof window.CampusMap.resetToInitialView === "function") {
+      window.CampusMap.resetToInitialView();
+    }
+    this.switchView("map");
   }
 
   toggleTheme() {
@@ -813,6 +852,7 @@ class UIController {
     const zoomOutBtn = document.getElementById("ctrl-zoom-out");
     const recenterBtn = document.getElementById("ctrl-recenter");
     const layerBtn = document.getElementById("ctrl-layer-toggle");
+    const floatLayerBtn = document.getElementById("ctrl-floating-layers");
 
     // 1. Compass Button (resets orientation to North, does NOT recenter/locateUser)
     if (compassBtn) {
@@ -850,21 +890,24 @@ class UIController {
       });
     }
 
-    // Desktop layer toggle button (if present)
-    if (layerBtn) {
-      layerBtn.addEventListener("click", () => {
-        if (!window.CampusMap) return;
-        if (this.currentLayerMode === "street") {
-          window.CampusMap.setBaseLayer("satellite");
-          this.currentLayerMode = "satellite";
-          layerBtn.classList.add("active");
-        } else {
-          window.CampusMap.setBaseLayer("street");
-          this.currentLayerMode = "street";
-          layerBtn.classList.remove("active");
-        }
-      });
-    }
+    // Desktop/floating layer toggle button (if present)
+    const toggleMapBaseLayer = () => {
+      if (!window.CampusMap) return;
+      if (this.currentLayerMode === "street") {
+        window.CampusMap.setBaseLayer("satellite");
+        this.currentLayerMode = "satellite";
+        if (layerBtn) layerBtn.classList.add("active");
+        if (floatLayerBtn) floatLayerBtn.classList.add("active");
+      } else {
+        window.CampusMap.setBaseLayer("street");
+        this.currentLayerMode = "street";
+        if (layerBtn) layerBtn.classList.remove("active");
+        if (floatLayerBtn) floatLayerBtn.classList.remove("active");
+      }
+    };
+
+    if (layerBtn) layerBtn.addEventListener("click", toggleMapBaseLayer);
+    if (floatLayerBtn) floatLayerBtn.addEventListener("click", toggleMapBaseLayer);
 
     // Init filter panel interactions
     this.initFilterPanel();

@@ -524,66 +524,130 @@ body.assistant-collapsed .map-floating-controls {
    🔵 DOT FORMAT ROUTE & NAVIGATION STYLING
    ============================================================================ */
 
-/* Solid Highlighted Route Polyline */
+/* Solid Highlighted Route Polyline (Brand Orange) */
 .route-highlight-path {
   stroke-linecap: round !important;
   stroke-linejoin: round !important;
   pointer-events: none;
-  filter: drop-shadow(0 2px 8px rgba(37, 99, 235, 0.45));
+  filter: drop-shadow(0 2px 8px rgba(249, 115, 22, 0.45));
 }
 
-/* Route Casing / Outer Border */
+/* Route Casing / Outer White Border */
 .route-casing-path {
   stroke-linecap: round !important;
   stroke-linejoin: round !important;
   pointer-events: none;
 }
 
-/* Glowing Route Underlay Halo */
-.route-halo-underlay {
-  filter: blur(3px);
+/* Floating Circular Dots Connector Line (Off-road / Building access) */
+.route-connector-outline {
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
   pointer-events: none;
 }
 
-/* On-Route Floating ETA Badge (Google Maps Style Pill on Route) */
-.route-map-eta-wrapper {
+.route-connector-dots {
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+  pointer-events: none;
+}
+
+/* Road Network Transition Junction Marker (White disc with dark border) */
+.route-junction-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 3px solid #334155;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+/* Map Route Markers and Attached Pill Badges */
+.map-route-marker-icon {
   background: transparent !important;
   border: none !important;
   overflow: visible !important;
 }
 
-.route-map-eta-badge {
+.map-route-marker {
   position: absolute;
   left: 0;
   top: 0;
-  transform: translate(-50%, -50%);
-  background: #1d4ed8;
-  color: #ffffff;
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  font-size: 12px;
-  font-weight: 700;
-  white-space: nowrap;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35), 0 0 0 1.5px rgba(255, 255, 255, 0.9);
-  pointer-events: none;
+  display: inline-flex;
+  align-items: center;
+  pointer-events: auto;
+  user-select: none;
+}
+
+/* Origin Marker: White Disc with Orange Rim */
+.origin-ring-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 4px solid var(--color-accent);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+/* Destination Pin Wrap */
+.dest-pin-svg-wrap {
+  width: 24px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: etaBadgePop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  z-index: 2800;
+  filter: drop-shadow(0 3px 8px rgba(220, 38, 38, 0.45));
+  flex-shrink: 0;
 }
 
-@keyframes etaBadgePop {
-  0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
-  100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+.dest-pin-svg-wrap svg {
+  width: 24px;
+  height: 30px;
+  display: block;
 }
 
-/* Intermediate Turn Waypoint Dots (Google Maps Turn Circle) */
-.waypoint-dot-wrapper {
-  background: transparent !important;
-  border: none !important;
-  overflow: visible !important;
+/* Labeled pill badges directly on the map (dark background, white text) */
+.route-marker-pill {
+  margin-left: 8px;
+  background: #0f172a;
+  color: #ffffff;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3.5px 9px;
+  border-radius: 9999px;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  letter-spacing: -0.1px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.route-marker-pill.dest-pill {
+  background: #7f1d1d;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+/* Intermediate Stop / Waypoint Marker (Amber / Orange disc) */
+.stop-dot-marker {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #f59e0b;
+  border: 3px solid #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.route-marker-pill.stop-pill {
+  background: #78350f;
+  border-color: rgba(245, 158, 11, 0.5);
 }
 
 .waypoint-route-dot {

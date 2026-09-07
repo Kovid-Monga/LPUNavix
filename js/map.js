@@ -82,6 +82,8 @@ class CampusMapController {
     this.overlayRenderFrame = null;
     this.mapResizeObserver = null;
     this.revealedLocationIds = new Set();
+    this.initialCenter = null;
+    this.initialZoom = null;
   }
 
   init() {
@@ -113,6 +115,11 @@ class CampusMapController {
       paddingTopLeft: isMobile ? [95, 10] : [70, 70],
       paddingBottomRight: isMobile ? [10, 85] : [390, 70]
     });
+
+    // Store exact initial center coordinates and zoom level captured on fresh page load
+    const initialPos = this.map.getCenter();
+    this.initialCenter = [initialPos.lat, initialPos.lng];
+    this.initialZoom = this.map.getZoom();
 
     // 1. Clean OpenStreetMap Standard Tile Layer (Guaranteed universal availability)
     this.tileLayers.street = L.tileLayer(
@@ -654,106 +661,147 @@ class CampusMapController {
       }
     }
 
-    // 2. Glowing Route Underlay Halo (Rendered on dedicated routePane above roads)
-    L.polyline(validPath, {
-      pane: 'routePane',
-      className: "route-halo-underlay",
-      color: "#38bdf8",
-      weight: 20,
-      opacity: 0.45,
-      lineCap: "round",
-      lineJoin: "round"
-    }).addTo(this.routesLayer);
+    // Determine effective road polyline coordinates
+    const roadCoords = (options.roadPath && Array.isArray(options.roadPath) && options.roadPath.length >= 2)
+      ? options.roadPath.filter(pt => Array.isArray(pt) && pt.length >= 2)
+      : validPath;
 
-    // 2.5 Route Casing / Dark Navy Border (Gives razor-sharp contrast over roads & roofs)
-    L.polyline(validPath, {
+    // 2. Route Outer White Casing (Provides crisp boundary against terrain/roads)
+    L.polyline(roadCoords, {
       pane: 'routePane',
       className: "route-casing-path",
-      color: "#0f172a",
-      weight: 15,
-      opacity: 0.98,
+      color: "#ffffff",
+      weight: 12,
+      opacity: 0.95,
       lineCap: "round",
       lineJoin: "round"
     }).addTo(this.routesLayer);
 
-    // 3. Main HIGHLIGHTED Route Path (Bold Vibrant Electric Blue, Strictly on routePane)
-    const routeMainLine = L.polyline(validPath, {
+    // 3. Main HIGHLIGHTED Route Path (Brand Accent Orange #f97316)
+    const routeMainLine = L.polyline(roadCoords, {
       pane: 'routePane',
       className: "route-highlight-path",
-      color: "#2563eb",
-      weight: 10,
+      color: "#f97316",
+      weight: 7.5,
       opacity: 1.0,
       lineCap: "round",
       lineJoin: "round"
     }).addTo(this.routesLayer);
 
-    // 3.5 On-Route Floating ETA Badge (Google Maps Style Pill on Route)
-    if (validPath.length >= 2) {
-      const midIdx = Math.floor(validPath.length / 2);
-      const midPoint = validPath[midIdx];
-      const etaDuration = options.duration || (window.Directions && window.Directions.currentRouteData && window.Directions.currentRouteData.activeRoute ? window.Directions.currentRouteData.activeRoute.duration : "1 min");
-      const etaIcon = L.divIcon({
-        className: "route-map-eta-wrapper",
-        html: `<div class="route-map-eta-badge"><span class="route-eta-text">${etaDuration}</span></div>`,
-        iconSize: [0, 0],
-        iconAnchor: [0, 0]
+    // 3b. Off-road Floating Circular Dots Connectors (Origin, Stops, Destination)
+    if (options.connectors && Array.isArray(options.connectors)) {
+      options.connectors.forEach(conn => {
+        if (Array.isArray(conn) && conn.length >= 2) {
+          // Layer 1: Dark subtle outline bead dots
+          L.polyline(conn, {
+            pane: 'routePane',
+            className: 'route-connector-outline',
+            color: '#334155',
+            weight: 7,
+            dashArray: '0.1, 13',
+            lineCap: 'round',
+            lineJoin: 'round'
+          }).addTo(this.routesLayer);
+
+          // Layer 2: White circular bead dots
+          L.polyline(conn, {
+            pane: 'routePane',
+            className: 'route-connector-dots',
+            color: '#ffffff',
+            weight: 4.5,
+            dashArray: '0.1, 13',
+            lineCap: 'round',
+            lineJoin: 'round'
+          }).addTo(this.routesLayer);
+        }
       });
-      L.marker(midPoint, { icon: etaIcon, interactive: false, zIndexOffset: 3800 }).addTo(this.routesLayer);
     }
 
-    // 4. Intermediate Turn Waypoint Dots (Clean White Circles with Dark Border)
-    if (validPath.length > 2) {
-      const stepInterval = Math.max(1, Math.floor(validPath.length / 4));
-      for (let i = stepInterval; i < validPath.length - 1; i += stepInterval) {
-        const wp = validPath[i];
-        const wpIcon = L.divIcon({
-          className: "waypoint-dot-wrapper",
-          html: `<div class="waypoint-route-dot"></div>`,
-          iconSize: [14, 14],
-          iconAnchor: [7, 7]
-        });
-        L.marker(wp, { icon: wpIcon, interactive: false, zIndexOffset: 3600 }).addTo(this.routesLayer);
-      }
+    // 3c. Road Transition Junction Markers (White disc with dark border)
+    if (options.junctions && Array.isArray(options.junctions)) {
+      options.junctions.forEach(junc => {
+        if (Array.isArray(junc) && junc.length >= 2) {
+          const juncIcon = L.divIcon({
+            className: 'route-junction-icon',
+            html: '<div class="route-junction-dot"></div>',
+            iconSize: [0, 0],
+            iconAnchor: [7, 7]
+          });
+          L.marker(junc, { icon: juncIcon, zIndexOffset: 2600 }).addTo(this.routesLayer);
+        }
+      });
     }
 
-    // 5. Origin / Start Location Marker (Pulsing Green Dot Pin - Zero-Drift Anchor)
+    // 4. Origin Marker (Hollow Orange/White Disc with Labeled Pill Badge to the right)
     const startCoords = validPath[0];
     const startIconHtml = `
-      <div class="start-marker-pin">
-        <div class="start-pin-tag">${originName}</div>
-        <div class="start-pin-pulse" style="border-color:${dotColor};"></div>
-        <div class="start-pin-dot">
-          <div class="start-pin-inner"></div>
-        </div>
+      <div class="map-route-marker start-route-marker">
+        <div class="origin-ring-dot"></div>
+        <div class="route-marker-pill origin-pill">${originName}</div>
       </div>
     `;
     const startIcon = L.divIcon({
-      className: "start-icon-div",
+      className: "map-route-marker-icon",
       html: startIconHtml,
       iconSize: [0, 0],
-      iconAnchor: [0, 0]
+      iconAnchor: [9, 9]
     });
     L.marker(startCoords, { icon: startIcon, zIndexOffset: 2500 }).addTo(this.routesLayer);
 
-    // 6. Destination Target Pin (Red Drop Pin with Destination Tag - Zero-Drift Bottom Tip Anchor)
+    // 4b. Multiple Intermediate Waypoint / Stop Markers (Amber Discs with Labeled Pill Badges)
+    if (options.waypoints && Array.isArray(options.waypoints) && options.waypoints.length > 0) {
+      options.waypoints.forEach(wp => {
+        if (wp && typeof wp.lat === 'number' && typeof wp.lon === 'number') {
+          const wpName = wp.display || wp.originalName || `Stop ${wp.stopIndex}`;
+          const stopIconHtml = `
+            <div class="map-route-marker stop-route-marker">
+              <div class="stop-dot-marker">${wp.stopIndex || ''}</div>
+              <div class="route-marker-pill stop-pill">${wpName}</div>
+            </div>
+          `;
+          const stopIcon = L.divIcon({
+            className: "map-route-marker-icon",
+            html: stopIconHtml,
+            iconSize: [0, 0],
+            iconAnchor: [8, 8]
+          });
+          L.marker([wp.lat, wp.lon], { icon: stopIcon, zIndexOffset: 2800 }).addTo(this.routesLayer);
+        }
+      });
+    } else if (options.viaName && options.viaCoords && Array.isArray(options.viaCoords) && options.viaCoords.length >= 2) {
+      const stopIconHtml = `
+        <div class="map-route-marker stop-route-marker">
+          <div class="stop-dot-marker"></div>
+          <div class="route-marker-pill stop-pill">${options.viaName}</div>
+        </div>
+      `;
+      const stopIcon = L.divIcon({
+        className: "map-route-marker-icon",
+        html: stopIconHtml,
+        iconSize: [0, 0],
+        iconAnchor: [8, 8]
+      });
+      L.marker(options.viaCoords, { icon: stopIcon, zIndexOffset: 2800 }).addTo(this.routesLayer);
+    }
+
+    // 5. Destination Target Pin (Red Pin with Labeled Pill Badge to the right)
     const destCoords = validPath[validPath.length - 1];
     const destIconHtml = `
-      <div class="destination-marker-pin">
-        <div class="dest-pin-badge">${destName}</div>
+      <div class="map-route-marker dest-route-marker">
         <div class="dest-pin-svg-wrap">
-          <svg class="dest-pin-svg" width="30" height="40" viewBox="0 0 30 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M15 0C6.71573 0 0 6.71573 0 15C0 26.25 15 40 15 40C15 40 30 26.25 30 15C30 6.71573 23.2843 0 15 0Z" fill="#EF4444"/>
-            <path d="M15 0C6.71573 0 0 6.71573 0 15C0 26.25 15 40 15 40C15 40 30 26.25 30 15C30 6.71573 23.2843 0 15 0Z" stroke="#B91C1C" stroke-width="1.5"/>
-            <circle cx="15" cy="15" r="5" fill="#FFFFFF"/>
+          <svg width="24" height="30" viewBox="0 0 24 30" fill="none">
+            <path d="M12 0C5.37 0 0 5.37 0 12C0 21 12 30 12 30C12 30 24 21 24 12C24 5.37 18.63 0 12 0Z" fill="#DC2626"/>
+            <circle cx="12" cy="11" r="4.5" fill="#FFFFFF"/>
           </svg>
         </div>
+        <div class="route-marker-pill dest-pill">${destName}</div>
       </div>
     `;
     const destIcon = L.divIcon({
-      className: "dest-icon-div",
+      className: "map-route-marker-icon",
       html: destIconHtml,
       iconSize: [0, 0],
-      iconAnchor: [0, 0]
+      iconAnchor: [12, 30]
     });
     L.marker(destCoords, { icon: destIcon, zIndexOffset: 3000 }).addTo(this.routesLayer);
 
@@ -853,6 +901,19 @@ class CampusMapController {
     } else {
       this.map.flyTo(CAMPUS_CENTER, isMobile ? 15.8 : 15.5, { animate: true, duration: 1 });
     }
+  }
+
+  resetToInitialView() {
+    if (!this.map) return;
+    if (typeof this.resetOrientation === "function") {
+      this.resetOrientation();
+    }
+    const center = this.initialCenter || (typeof CAMPUS_CENTER !== "undefined" ? CAMPUS_CENTER : [31.2536, 75.7037]);
+    const zoom = (this.initialZoom !== null && this.initialZoom !== undefined) ? this.initialZoom : 15.25;
+    this.map.flyTo(center, zoom, {
+      animate: true,
+      duration: 0.8
+    });
   }
 
   zoomIn() {

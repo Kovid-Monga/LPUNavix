@@ -206,7 +206,17 @@ class CampusRoadGraph {
 
     if (!startNodeId || !endNodeId) return null;
     if (startNodeId === endNodeId) {
-      return [[startLat, startLng], [endLat, endLng]];
+      const node = this.nodes.get(startNodeId);
+      const dStart = this.haversineDistance(startLat, startLng, node.lat, node.lng);
+      const dEnd = this.haversineDistance(node.lat, node.lng, endLat, endLng);
+      return {
+        path: [[startLat, startLng], [node.lat, node.lng], [endLat, endLng]],
+        roadPath: [[node.lat, node.lng], [node.lat, node.lng]],
+        startConnector: dStart > 6 ? [[startLat, startLng], [node.lat, node.lng]] : null,
+        endConnector: dEnd > 6 ? [[node.lat, node.lng], [endLat, endLng]] : null,
+        startJunction: dStart > 6 ? [node.lat, node.lng] : null,
+        endJunction: dEnd > 6 ? [node.lat, node.lng] : null
+      };
     }
 
     const openSet = new Set([startNodeId]);
@@ -233,17 +243,35 @@ class CampusRoadGraph {
 
       if (current === endNodeId) {
         // Reconstruct path
-        const pathCoords = [];
+        const roadPath = [];
         let curr = current;
         while (curr) {
           const n = this.nodes.get(curr);
-          pathCoords.unshift([n.lat, n.lng]);
+          roadPath.unshift([n.lat, n.lng]);
           curr = cameFrom.get(curr);
         }
-        // Include exact start and destination points
-        pathCoords.unshift([startLat, startLng]);
-        pathCoords.push([endLat, endLng]);
-        return pathCoords;
+
+        const startNode = this.nodes.get(startNodeId);
+        const dStart = this.haversineDistance(startLat, startLng, startNode.lat, startNode.lng);
+        const dEnd = this.haversineDistance(endNode.lat, endNode.lng, endLat, endLng);
+
+        const startConnector = dStart > 6 ? [[startLat, startLng], [startNode.lat, startNode.lng]] : null;
+        const endConnector = dEnd > 6 ? [[endNode.lat, endNode.lng], [endLat, endLng]] : null;
+
+        const pathCoords = [
+          ...(startConnector ? [[startLat, startLng]] : []),
+          ...roadPath,
+          ...(endConnector ? [[endLat, endLng]] : [])
+        ];
+
+        return {
+          path: pathCoords,
+          roadPath: roadPath.length >= 2 ? roadPath : pathCoords,
+          startConnector,
+          endConnector,
+          startJunction: startConnector ? [startNode.lat, startNode.lng] : null,
+          endJunction: endConnector ? [endNode.lat, endNode.lng] : null
+        };
       }
 
       openSet.delete(current);
@@ -269,7 +297,15 @@ class CampusRoadGraph {
     }
 
     // Direct interpolation fallback if graph disconnected
-    return [[startLat, startLng], [(startLat + endLat) / 2, (startLng + endLng) / 2], [endLat, endLng]];
+    const fallbackPath = [[startLat, startLng], [(startLat + endLat) / 2, (startLng + endLng) / 2], [endLat, endLng]];
+    return {
+      path: fallbackPath,
+      roadPath: fallbackPath,
+      startConnector: null,
+      endConnector: null,
+      startJunction: null,
+      endJunction: null
+    };
   }
 }
 
@@ -278,9 +314,11 @@ class CampusRoadGraph {
    ============================================================================ */
 class DirectionsController {
   constructor() {
-    this.currentMode = "drive";
+    this.currentMode = "walking";
     this.currentOrigin = "Your location";
     this.currentDestination = "";
+    this.currentStops = [];
+    this.cloudAlertTimer = null;
     this.debounceTimer = null;
     this.activeRequestId = 0;
     this.roadGraph = new CampusRoadGraph();
@@ -386,15 +424,37 @@ class DirectionsController {
      ========================================================================== */
   async fetchRoute(start, end, mode = "walking") {
     // 1. Calculate mode-aware route (footpaths for walking, vehicle roads for kart/cars)
-    const roadPath = this.roadGraph.findPath(start.lat, start.lon, end.lat, end.lon, mode);
-    
+    const rawResult = this.roadGraph.findPath(start.lat, start.lon, end.lat, end.lon, mode);
+
+    let pathCoords = null;
+    let roadPathCoords = null;
+    let startConnector = null;
+    let endConnector = null;
+    let startJunction = null;
+    let endJunction = null;
+
+    if (rawResult && Array.isArray(rawResult)) {
+      pathCoords = rawResult;
+      roadPathCoords = rawResult;
+    } else if (rawResult && typeof rawResult === "object") {
+      pathCoords = rawResult.path;
+      roadPathCoords = rawResult.roadPath;
+      startConnector = rawResult.startConnector;
+      endConnector = rawResult.endConnector;
+      startJunction = rawResult.startJunction;
+      endJunction = rawResult.endJunction;
+    }
+
+    const effectivePath = pathCoords || [[start.lat, start.lon], [end.lat, end.lon]];
+    const effectiveRoadPath = roadPathCoords || effectivePath;
+
     // Calculate total path distance
     let totalDist = 0;
-    if (roadPath && roadPath.length >= 2) {
-      for (let i = 0; i < roadPath.length - 1; i++) {
+    if (effectivePath && effectivePath.length >= 2) {
+      for (let i = 0; i < effectivePath.length - 1; i++) {
         totalDist += this.roadGraph.haversineDistance(
-          roadPath[i][0], roadPath[i][1],
-          roadPath[i + 1][0], roadPath[i + 1][1]
+          effectivePath[i][0], effectivePath[i][1],
+          effectivePath[i + 1][0], effectivePath[i + 1][1]
         );
       }
     } else {
@@ -410,13 +470,20 @@ class DirectionsController {
     const durationMin = Math.max(1, Math.round(distMeters / speedMpm));
 
     // Generate smart turn steps along the path
-    const steps = this.generateTurnSteps(start, end, roadPath, distMeters, mode);
+    const steps = this.generateTurnSteps(start, end, effectivePath, distMeters, mode);
 
     return {
-      path: roadPath || [[start.lat, start.lon], [end.lat, end.lon]],
+      path: effectivePath,
+      roadPath: effectiveRoadPath,
+      startConnector,
+      endConnector,
+      startJunction,
+      endJunction,
       steps,
       distance: `${distMeters} m`,
-      duration: `${durationMin} min`
+      duration: `${durationMin} min`,
+      distMeters,
+      durationMin
     };
   }
 
@@ -463,11 +530,13 @@ class DirectionsController {
     const destInput = document.getElementById("direction-dest-input");
     const topOriginInput = document.getElementById("gmaps-topbar-origin-input");
     const topDestInput = document.getElementById("gmaps-topbar-dest-input");
+    const topStopInput = document.getElementById("gmaps-topbar-stop-input");
 
     if (originInput) this.attachAutocomplete(originInput, "origin");
     if (destInput) this.attachAutocomplete(destInput, "dest");
-    if (topOriginInput) this.attachAutocomplete(topOriginInput, "origin");
-    if (topDestInput) this.attachAutocomplete(topDestInput, "dest");
+    if (topOriginInput) this.attachAutocomplete(topOriginInput, "top-origin");
+    if (topDestInput) this.attachAutocomplete(topDestInput, "top-dest");
+    if (topStopInput) this.attachAutocomplete(topStopInput, "top-stop");
 
     document.addEventListener("click", (e) => {
       if (!e.target.closest(".directions-inputs-card") && !e.target.closest(".gmaps-topbar-card")) {
@@ -481,7 +550,7 @@ class DirectionsController {
     if (!wrapper) return;
     wrapper.style.position = "relative";
 
-    let dropdown = wrapper.querySelector(".directions-autocomplete-dropdown");
+    let dropdown = wrapper.querySelector(".gmaps-autocomplete-dropdown") || wrapper.querySelector(".directions-autocomplete-dropdown");
     if (!dropdown) {
       dropdown = document.createElement("div");
       dropdown.className = "directions-autocomplete-dropdown";
@@ -502,7 +571,7 @@ class DirectionsController {
       const suggestions = [];
 
       // Always offer "Your location" for origin
-      if (type === "origin" && ("your location".includes(q) || "my location".includes(q) || "current location".includes(q))) {
+      if ((type === "origin" || type === "top-origin") && ("your location".includes(q) || "my location".includes(q) || "current location".includes(q))) {
         suggestions.push({
           name: "Your location",
           sub: "Live GPS on campus",
@@ -565,21 +634,35 @@ class DirectionsController {
           }
           clearTimeout(this.debounceTimer);
           inputEl.value = item.name;
-          if (type === "origin") {
+          if (type === "origin" || type === "top-origin") {
             this.currentOrigin = item.name;
             const topO = document.getElementById("gmaps-topbar-origin-input");
             const panO = document.getElementById("direction-origin-input");
             if (topO) topO.value = item.name;
             if (panO) panO.value = item.name;
+            if (type === "top-origin" && this.currentDestination) {
+              this.showDirections(this.currentOrigin, this.currentDestination);
+            }
           }
-          if (type === "dest") {
+          if (type === "dest" || type === "top-dest") {
             this.currentDestination = item.name;
             const topD = document.getElementById("gmaps-topbar-dest-input");
             const panD = document.getElementById("direction-dest-input");
             if (topD) topD.value = item.name;
             if (panD) panD.value = item.name;
-            // Bug 4: selecting destination reveals Get Direction button, does not auto-calculate route
             this.updateDestinationState(item.name);
+            if (type === "top-dest" && this.currentDestination) {
+              this.showDirections(this.currentOrigin, this.currentDestination);
+            }
+          }
+          if (type.startsWith("top-stop")) {
+            const idxMatch = type.match(/\d+$/);
+            const idx = idxMatch ? parseInt(idxMatch[0], 10) : 0;
+            this.currentStops[idx] = item.name;
+            inputEl.value = item.name;
+            if (this.currentDestination) {
+              this.showDirections(this.currentOrigin, this.currentDestination);
+            }
           }
           dropdown.classList.remove("open");
         };
@@ -649,9 +732,14 @@ class DirectionsController {
 
     inputEl.addEventListener("input", () => {
       const val = (inputEl.value || "").trim();
-      if (type === "dest") {
+      if (type === "dest" || type === "top-dest") {
         this.currentDestination = inputEl.value;
         this.updateDestinationState(inputEl.value);
+      }
+      if (type.startsWith("top-stop")) {
+        const idxMatch = type.match(/\d+$/);
+        const idx = idxMatch ? parseInt(idxMatch[0], 10) : 0;
+        this.currentStops[idx] = inputEl.value;
       }
       // Bug 2: Only show suggestions when input contains at least one character, hide if empty
       if (val.length > 0) {
@@ -667,18 +755,116 @@ class DirectionsController {
         e.preventDefault();
         clearTimeout(this.debounceTimer);
         dropdown.classList.remove("open");
-        if (type === "origin") this.currentOrigin = inputEl.value;
-        if (type === "dest") {
+        if (type === "origin" || type === "top-origin") {
+          this.currentOrigin = inputEl.value;
+          const topO = document.getElementById("gmaps-topbar-origin-input");
+          const panO = document.getElementById("direction-origin-input");
+          if (topO) topO.value = inputEl.value;
+          if (panO) panO.value = inputEl.value;
+          if (type === "top-origin" && this.currentDestination) {
+            this.showDirections(this.currentOrigin, this.currentDestination);
+          }
+        }
+        if (type === "dest" || type === "top-dest") {
           this.currentDestination = inputEl.value;
+          const topD = document.getElementById("gmaps-topbar-dest-input");
+          const panD = document.getElementById("direction-dest-input");
+          if (topD) topD.value = inputEl.value;
+          if (panD) panD.value = inputEl.value;
           this.updateDestinationState(inputEl.value);
+          if (type === "top-dest" && this.currentDestination) {
+            this.showDirections(this.currentOrigin, this.currentDestination);
+          }
+        }
+        if (type.startsWith("top-stop")) {
+          const idxMatch = type.match(/\d+$/);
+          const idx = idxMatch ? parseInt(idxMatch[0], 10) : 0;
+          this.currentStops[idx] = inputEl.value;
+          if (this.currentDestination) {
+            this.showDirections(this.currentOrigin, this.currentDestination);
+          }
         }
       }
     });
   }
 
   closeAllAutocompleteDropdowns() {
-    document.querySelectorAll(".directions-autocomplete-dropdown").forEach(d => {
+    document.querySelectorAll(".directions-autocomplete-dropdown, .gmaps-autocomplete-dropdown").forEach(d => {
       d.classList.remove("open");
+    });
+  }
+
+  showCloudAlert(msg = "You can add up to 3 stops") {
+    const alertEl = document.getElementById("gmaps-add-stop-cloud-alert");
+    if (!alertEl) return;
+    const bodyEl = alertEl.querySelector(".cloud-alert-body");
+    if (bodyEl) bodyEl.textContent = msg;
+
+    alertEl.style.display = "block";
+    clearTimeout(this.cloudAlertTimer);
+    this.cloudAlertTimer = setTimeout(() => {
+      alertEl.style.display = "none";
+    }, 3000);
+  }
+
+  renderStopInputs() {
+    const container = document.getElementById("gmaps-topbar-stops-container");
+    if (!container) return;
+    container.innerHTML = "";
+
+    this.currentStops.forEach((stopVal, index) => {
+      const stopNum = index + 1;
+      const itemEl = document.createElement("div");
+      itemEl.className = "gmaps-stop-item";
+      itemEl.dataset.index = index;
+      itemEl.innerHTML = `
+        <div class="gmaps-topbar-connector">
+          <div class="gmaps-connector-dots">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+        <div class="gmaps-topbar-row gmaps-topbar-stop-row">
+          <div class="gmaps-topbar-indicator">
+            <div class="gmaps-dot-stop">${stopNum}</div>
+          </div>
+          <div class="gmaps-topbar-input-wrap">
+            <input id="gmaps-topbar-stop-input-${index}" class="gmaps-topbar-input gmaps-stop-input" type="search" value="${stopVal || ""}" placeholder="Add stop ${stopNum}..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-form-type="other" />
+            <div id="gmaps-topbar-stop-dropdown-${index}" class="gmaps-autocomplete-dropdown"></div>
+          </div>
+          <button class="gmaps-topbar-icon-btn gmaps-stop-remove-btn" data-index="${index}" title="Remove stop ${stopNum}" type="button">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+      `;
+
+      // Wire remove button
+      const removeBtn = itemEl.querySelector(".gmaps-stop-remove-btn");
+      if (removeBtn) {
+        removeBtn.addEventListener("click", (e) => {
+          if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+          this.currentStops.splice(index, 1);
+          this.renderStopInputs();
+          if (this.currentDestination) {
+            this.showDirections(this.currentOrigin, this.currentDestination);
+          }
+        });
+      }
+
+      // Wire input autocomplete
+      const inputEl = itemEl.querySelector(".gmaps-stop-input");
+      if (inputEl) {
+        this.attachAutocomplete(inputEl, `top-stop-${index}`);
+      }
+
+      container.appendChild(itemEl);
     });
   }
 
@@ -805,15 +991,24 @@ class DirectionsController {
     const handleShare = (e) => {
       if (e) e.preventDefault();
       console.log(`[LPUNavix] Share route clicked for: ${this.currentDestination}`);
+      const originStr = this.currentOrigin || "Your location";
+      const destStr = this.currentDestination || "Destination";
+      const shareText = `Campus route from ${originStr} to ${destStr} on LPUNavix`;
       if (navigator.share) {
         navigator.share({
-          title: `Directions to ${this.currentDestination || 'LPU Location'}`,
-          text: `Check out route to ${this.currentDestination} on LPUNavix!`,
+          title: `Route to ${destStr} - LPUNavix`,
+          text: shareText,
           url: window.location.href
         }).catch(() => {});
       } else {
-        navigator.clipboard?.writeText(window.location.href);
-        alert("Route link copied to clipboard!");
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(window.location.href);
+        }
+        if (window.UIController && typeof window.UIController.showToast === "function") {
+          window.UIController.showToast("Route link copied to clipboard!");
+        } else {
+          alert("Route link copied to clipboard!");
+        }
       }
     };
 
@@ -826,9 +1021,79 @@ class DirectionsController {
     if (addStopsBtn) {
       addStopsBtn.addEventListener("click", (e) => {
         if (e) e.preventDefault();
-        console.log(`[LPUNavix] Add stops clicked for destination: ${this.currentDestination}`);
-        alert("Add stops feature will be available in next release.");
+        console.log(`[LPUNavix] Add stops clicked. Current stops count: ${this.currentStops.length}`);
+        if (this.currentStops.length >= 3) {
+          this.showCloudAlert("You can add up to 3 stops");
+          return;
+        }
+
+        this.currentStops.push("");
+        this.renderStopInputs();
+
+        // Focus newly created stop input
+        const newIdx = this.currentStops.length - 1;
+        const newInput = document.getElementById(`gmaps-topbar-stop-input-${newIdx}`);
+        if (newInput) newInput.focus();
       });
+    }
+
+    const removeStopBtn = document.getElementById("gmaps-topbar-remove-stop-btn");
+    if (removeStopBtn) {
+      removeStopBtn.addEventListener("click", (e) => {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        this.currentStops = [];
+        this.renderStopInputs();
+        if (this.currentDestination) {
+          this.showDirections(this.currentOrigin, this.currentDestination);
+        }
+      });
+    }
+
+    // 3-dot Menu dropdown on top route card
+    const topMenuBtn = document.getElementById("gmaps-topbar-menu-btn");
+    const topMenuDropdown = document.getElementById("gmaps-topbar-menu-dropdown");
+    if (topMenuBtn && topMenuDropdown) {
+      topMenuBtn.addEventListener("click", (e) => {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        const isShown = topMenuDropdown.style.display !== "none";
+        topMenuDropdown.style.display = isShown ? "none" : "flex";
+      });
+
+      document.addEventListener("click", (e) => {
+        if (!e.target.closest("#gmaps-topbar-menu-btn") && !e.target.closest("#gmaps-topbar-menu-dropdown")) {
+          topMenuDropdown.style.display = "none";
+        }
+      });
+
+      const optSwap = document.getElementById("menu-opt-swap");
+      if (optSwap) {
+        optSwap.addEventListener("click", (e) => {
+          topMenuDropdown.style.display = "none";
+          handleSwap(e);
+        });
+      }
+
+      const optShare = document.getElementById("menu-opt-share");
+      if (optShare) {
+        optShare.addEventListener("click", (e) => {
+          topMenuDropdown.style.display = "none";
+          handleShare(e);
+        });
+      }
+
+      const optClear = document.getElementById("menu-opt-clear");
+      if (optClear) {
+        optClear.addEventListener("click", (e) => {
+          topMenuDropdown.style.display = "none";
+          this.exitDirections();
+        });
+      }
     }
 
     const tuneBtn = document.getElementById("gmaps-preview-tune-btn");
@@ -890,9 +1155,102 @@ class DirectionsController {
 
       if (reqId !== this.activeRequestId) return;
 
-      // 1. Calculate ONLY Car (drive) and Walk (walking) routes
-      const driveRoute = await this.fetchRoute(start, end, "drive");
-      const walkRoute = await this.fetchRoute(start, end, "walking");
+      // Extract valid stops (up to 3)
+      const validStops = (this.currentStops || []).filter(s => s && s.trim() !== "").slice(0, 3);
+      const waypoints = [];
+      for (let i = 0; i < validStops.length; i++) {
+        const geo = await this.geocodePlace(validStops[i]);
+        waypoints.push({ ...geo, stopIndex: i + 1, originalName: validStops[i] });
+      }
+
+      if (reqId !== this.activeRequestId) return;
+
+      const targetPoints = [start, ...waypoints, end];
+
+      const computeMultiLegRoute = async (mode) => {
+        let fullPath = [];
+        let roadPath = [];
+        const connectors = [];
+        const junctions = [];
+        let totalDistMeters = 0;
+        const steps = [];
+
+        for (let i = 0; i < targetPoints.length - 1; i++) {
+          const p1 = targetPoints[i];
+          const p2 = targetPoints[i + 1];
+          const leg = await this.fetchRoute(p1, p2, mode);
+
+          if (leg) {
+            totalDistMeters += leg.distMeters || 50;
+
+            if (fullPath.length === 0) {
+              fullPath = [...leg.path];
+            } else {
+              fullPath = [...fullPath, ...leg.path.slice(1)];
+            }
+
+            if (leg.roadPath && leg.roadPath.length > 0) {
+              if (roadPath.length === 0) {
+                roadPath = [...leg.roadPath];
+              } else {
+                roadPath = [...roadPath, ...leg.roadPath.slice(1)];
+              }
+            }
+
+            const addConnector = (conn) => {
+              if (!conn || conn.length < 2) return;
+              const isDup = connectors.some(existing => {
+                const same = Math.abs(existing[0][0] - conn[0][0]) < 1e-5 && Math.abs(existing[0][1] - conn[0][1]) < 1e-5 &&
+                             Math.abs(existing[1][0] - conn[1][0]) < 1e-5 && Math.abs(existing[1][1] - conn[1][1]) < 1e-5;
+                const rev = Math.abs(existing[0][0] - conn[1][0]) < 1e-5 && Math.abs(existing[0][1] - conn[1][1]) < 1e-5 &&
+                            Math.abs(existing[1][0] - conn[0][0]) < 1e-5 && Math.abs(existing[1][1] - conn[0][1]) < 1e-5;
+                return same || rev;
+              });
+              if (!isDup) connectors.push(conn);
+            };
+
+            const addJunction = (junc) => {
+              if (!junc || junc.length < 2) return;
+              const isDup = junctions.some(existing =>
+                Math.abs(existing[0] - junc[0]) < 1e-5 && Math.abs(existing[1] - junc[1]) < 1e-5
+              );
+              if (!isDup) junctions.push(junc);
+            };
+
+            if (leg.startConnector) addConnector(leg.startConnector);
+            if (leg.endConnector) addConnector(leg.endConnector);
+            if (leg.startJunction) addJunction(leg.startJunction);
+            if (leg.endJunction) addJunction(leg.endJunction);
+
+            if (leg.steps) {
+              if (i === 0) {
+                steps.push(...leg.steps);
+              } else {
+                steps.push(...leg.steps.slice(1));
+              }
+            }
+          }
+        }
+
+        const speedMpm = (mode === "drive") ? 250 : 75;
+        const durationMin = Math.max(1, Math.round(totalDistMeters / speedMpm));
+
+        return {
+          path: fullPath,
+          roadPath: roadPath.length >= 2 ? roadPath : fullPath,
+          connectors,
+          junctions,
+          waypoints,
+          steps,
+          distance: `${totalDistMeters} m`,
+          duration: `${durationMin} min`,
+          distMeters: totalDistMeters,
+          durationMin
+        };
+      };
+
+      const driveRoute = await computeMultiLegRoute("drive");
+      const walkRoute = await computeMultiLegRoute("walking");
 
       if (reqId !== this.activeRequestId) return;
 
@@ -904,16 +1262,21 @@ class DirectionsController {
         walkRoute,
         start,
         end,
+        waypoints,
         mode: this.currentMode
       };
 
-      // 2. DRAW SOLID HIGHLIGHTED ROUTE ON LEAFLET MAP (With on-route ETA badge)
+      // 2. DRAW SOLID HIGHLIGHTED ROUTE ON LEAFLET MAP (With roadPath, dotted connectors, junctions, and waypoints)
       if (window.CampusMap) {
         window.CampusMap.drawRoute(activeRoute.path, false, null, {
           mode: this.currentMode,
           originName: start.display,
           destName: end.display,
-          duration: activeRoute.duration
+          duration: activeRoute.duration,
+          roadPath: activeRoute.roadPath,
+          connectors: activeRoute.connectors,
+          junctions: activeRoute.junctions,
+          waypoints: activeRoute.waypoints
         });
       }
 
@@ -958,14 +1321,22 @@ class DirectionsController {
 
   renderGoogleMapsPreview(start, end, driveRoute, walkRoute, activeRoute) {
     document.body.classList.add("gmaps-route-active");
+    // Ensure Directions tab is active in footer nav
+    document.querySelectorAll(".mobile-nav-item").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.view === "directions");
+    });
     const topBar = document.getElementById("gmaps-route-topbar");
     const previewSheet = document.getElementById("gmaps-route-preview-sheet");
 
     if (topBar) {
       const topOrigin = document.getElementById("gmaps-topbar-origin-input");
       const topDest = document.getElementById("gmaps-topbar-dest-input");
+
       if (topOrigin) topOrigin.value = (start && start.display) || this.currentOrigin || "Your location";
       if (topDest) topDest.value = (end && end.display) || this.currentDestination;
+
+      this.renderStopInputs();
+
       topBar.style.display = "block";
     }
 
@@ -995,12 +1366,29 @@ class DirectionsController {
       if (distEl && activeRoute) distEl.textContent = `(${activeRoute.distance})`;
 
       previewSheet.style.display = "block";
+
+      requestAnimationFrame(() => {
+        const controls = document.querySelector(".map-floating-controls");
+        if (controls && previewSheet) {
+          const sheetH = previewSheet.offsetHeight || 225;
+          controls.style.setProperty("bottom", `calc(${sheetH + 14}px + env(safe-area-inset-bottom, 0px))`, "important");
+        }
+      });
     }
   }
 
   closeRouteAndReset() {
     clearTimeout(this.debounceTimer);
+    clearTimeout(this.cloudAlertTimer);
+    this.currentMode = "walking";
     this.currentRouteData = null;
+    this.currentStops = [];
+
+    const container = document.getElementById("gmaps-topbar-stops-container");
+    if (container) container.innerHTML = "";
+
+    const alertEl = document.getElementById("gmaps-add-stop-cloud-alert");
+    if (alertEl) alertEl.style.display = "none";
 
     // 1. Remove highlighted route polyline, waypoints, and ETA badge from map
     if (window.CampusMap) {
@@ -1036,6 +1424,9 @@ class DirectionsController {
     const previewSheet = document.getElementById("gmaps-route-preview-sheet");
     if (topBar) topBar.style.display = "none";
     if (previewSheet) previewSheet.style.display = "none";
+
+    const controls = document.querySelector(".map-floating-controls");
+    if (controls) controls.style.removeProperty("bottom");
   }
 
   updateModePillEstimates(distanceStr) {

@@ -83,6 +83,12 @@ class AssistantController {
   }
 
   async submitPrompt(queryText) {
+    // Remove recommendations/quick prompt suggestions after the first chat
+    const quickPrompts = document.getElementById("quick-prompts-row") || document.querySelector(".quick-prompts-row");
+    if (quickPrompts) {
+      quickPrompts.remove();
+    }
+
     this.appendMessage({ sender: "user", text: queryText });
 
     const assistantBubble = this.appendMessage({

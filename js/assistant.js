@@ -18,10 +18,23 @@ class AssistantController {
     const sendBtn = document.getElementById("send-chat-btn");
     const inputField = document.getElementById("chat-input-field");
 
-    if (sendBtn && inputField) {
-      sendBtn.addEventListener("click", () => this.handleSendMessage());
+    if (sendBtn) {
+      sendBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        this.handleSendMessage();
+      });
+      sendBtn.addEventListener("touchend", (e) => {
+        e.preventDefault();
+        this.handleSendMessage();
+      });
+    }
+
+    if (inputField) {
       inputField.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") this.handleSendMessage();
+        if (e.key === "Enter") {
+          e.preventDefault();
+          this.handleSendMessage();
+        }
       });
     }
 
@@ -65,20 +78,24 @@ class AssistantController {
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;");
+
+    // Clean up any unicode replacement artifact
+    html = html.replace(/\uFFFD/g, "-");
+
     // Bold: **text**
     html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
     // Italics: *text*
     html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
     // Bullet lines (e.g. • or - or *)
-    html = html.replace(/^[\s]*[•\-\*]\s+(.*)$/gm, '<li style="margin-bottom:4px;">$1</li>');
+    html = html.replace(/^[\s]*[\u2022\u25E6\u2023\-\*]\s+(.*)$/gm, '<li style="margin-bottom:6px;line-height:1.5;">$1</li>');
     // Wrap lists if <li> exists
     if (html.includes('<li')) {
-      html = html.replace(/(<li[\s\S]*?<\/li>)/g, '<ul style="padding-left:18px;margin:6px 0;">$1</ul>');
+      html = html.replace(/(<li[\s\S]*?<\/li>)/g, '<ul style="padding-left:18px;margin:8px 0;line-height:1.5;">$1</ul>');
       // Clean up adjacent </ul><ul>
-      html = html.replace(/<\/ul>\s*<ul style="padding-left:18px;margin:6px 0;">/g, '');
+      html = html.replace(/<\/ul>\s*<ul style="padding-left:18px;margin:8px 0;line-height:1.5;">/g, '');
     }
-    // Newlines to <br/>
-    html = html.replace(/\n/g, '<br/>');
+    // Paragraph breaks and newlines
+    html = html.replace(/\n\n+/g, '<div style="height:8px;"></div>').replace(/\n/g, '<br/>');
     return html;
   }
 
@@ -89,6 +106,11 @@ class AssistantController {
       quickPrompts.remove();
     }
 
+    const sendBtn = document.getElementById("send-chat-btn");
+    const inputField = document.getElementById("chat-input-field");
+    if (sendBtn) sendBtn.disabled = true;
+    if (inputField) inputField.disabled = true;
+
     this.appendMessage({ sender: "user", text: queryText });
 
     const assistantBubble = this.appendMessage({
@@ -96,12 +118,31 @@ class AssistantController {
       text: "Checking campus records..."
     });
 
+    const chatStream = document.getElementById("chat-messages-stream");
+    if (chatStream) {
+      const lastBubble = chatStream.querySelector(".chat-bubble-row.assistant:last-child .chat-bubble");
+      if (lastBubble) {
+        lastBubble.innerHTML = `
+          <div class="chat-typing-indicator">
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+            <span style="font-size:12px;color:var(--text-muted);margin-left:6px;">Finding the best answer for you...</span>
+          </div>
+        `;
+      }
+    }
+
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: queryText })
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error ${response.status}`);
+      }
 
       const data = await response.json();
       const reply = data && data.reply ? data.reply : "I couldn’t find a reliable answer in the campus records.";
@@ -122,7 +163,7 @@ class AssistantController {
                 <div class="ai-map-action-bar">
                   <div style="display:flex;flex-direction:column;gap:2px;">
                     <span style="font-size:12px;font-weight:700;color:var(--text-primary);">${title || "Campus Location"}</span>
-                    <span style="font-size:10px;color:var(--text-muted);">Get dotted route & live ETAs</span>
+                    <span style="font-size:10px;color:var(--text-muted);">🚶 Walk & 🛺 Kart • Dotted route & live ETAs</span>
                   </div>
                   <button class="btn-show-map" onclick="window.UIController && window.UIController.triggerShowOnMap ? window.UIController.triggerShowOnMap('${safeLocId}', '${safeTitle}') : null">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
@@ -136,6 +177,7 @@ class AssistantController {
         }
       }
     } catch (error) {
+      console.warn("Assistant /api/chat error, using fallback:", error);
       // Client-side fallback if backend server is unreachable
       const localMatch = this.findMatchingAnswer(queryText);
       const chatStream = document.getElementById("chat-messages-stream");
@@ -154,7 +196,7 @@ class AssistantController {
                 <div class="ai-map-action-bar">
                   <div style="display:flex;flex-direction:column;gap:2px;">
                     <span style="font-size:12px;font-weight:700;color:var(--text-primary);">${title || "Campus Location"}</span>
-                    <span style="font-size:10px;color:var(--text-muted);">Get dotted route & live ETAs</span>
+                    <span style="font-size:10px;color:var(--text-muted);">🚶 Walk & 🛺 Kart • Dotted route & live ETAs</span>
                   </div>
                   <button class="btn-show-map" onclick="window.UIController && window.UIController.triggerShowOnMap ? window.UIController.triggerShowOnMap('${safeLocId}', '${safeTitle}') : null">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
@@ -164,9 +206,18 @@ class AssistantController {
               </div>` : "";
             lastBubble.innerHTML = `<div>${formattedHtml}</div>${cardHtml}`;
           } else {
-            lastBubble.innerHTML = `<div>I’m unable to reach the campus assistant backend right now. Please make sure the Python server is running (<code>uvicorn api.main:app --port 8000</code>).</div>`;
+            lastBubble.innerHTML = `<div>I’m unable to reach the campus assistant backend right now. Please check that the server is running.</div>`;
           }
         }
+      }
+    } finally {
+      if (sendBtn) sendBtn.disabled = false;
+      if (inputField) {
+        inputField.disabled = false;
+        inputField.focus();
+      }
+      if (chatStream) {
+        chatStream.scrollTop = chatStream.scrollHeight;
       }
     }
   }

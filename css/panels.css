@@ -557,6 +557,30 @@
   box-shadow: var(--shadow-sm);
 }
 
+.chat-typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 0;
+}
+
+.typing-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  display: inline-block;
+  animation: typingBounce 1.4s infinite ease-in-out both;
+}
+
+.typing-dot:nth-child(1) { animation-delay: -0.32s; }
+.typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes typingBounce {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40% { transform: scale(1.1); opacity: 1; }
+}
+
 /* Assistant Rich Content (Map Preview & Action Card) */
 .ai-map-preview-card {
   margin-top: 10px;
@@ -648,15 +672,26 @@
   border-radius: 50%;
   background: var(--color-primary);
   color: #ffffff;
+  border: none;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: 0 3px 10px rgba(37, 99, 235, 0.35);
+  transition: all 0.2s ease;
+  pointer-events: auto;
 }
 
-.btn-send-chat:hover {
+.btn-send-chat:hover:not(:disabled) {
   background: var(--color-primary-hover);
   transform: scale(1.06);
+}
+
+.btn-send-chat:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 /* ==========================================================================
@@ -1640,13 +1675,32 @@ body.gmaps-route-active .map-floating-controls {
 
 .gmaps-mode-pill .mode-pill-label {
   font-weight: 700;
-  font-size: 12.5px;
+  font-size: 12px;
 }
 
 .gmaps-mode-pill .mode-pill-time {
   font-size: 12px;
   font-weight: 700;
   color: inherit;
+}
+
+.gmaps-mode-pill .mode-pill-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+}
+
+.gmaps-mode-pill .mode-pill-header {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.gmaps-mode-pill .mode-pill-dist {
+  font-size: 10px;
+  font-weight: 600;
+  opacity: 0.8;
 }
 
 /* Active Mode Pill: Light peach/orange background with orange text and icon */

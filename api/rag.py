@@ -350,8 +350,6 @@ def build_context_block(records: List[dict], all_records: Optional[List[dict]] =
             location_details.append(f"Floor/Location: {record['floor']}")
         if record.get("groupName"):
             location_details.append(f"Department/Cluster: {record['groupName']}")
-        if record.get("lat") is not None and record.get("lng") is not None:
-            location_details.append(f"Coordinates: {record['lat']}, {record['lng']}")
         if record.get("parentBlockIds"):
             formatted_parents = ", ".join(b.replace("block-", "Block ") for b in record["parentBlockIds"])
             location_details.append(f"Located in / Serving Blocks: {formatted_parents}")
@@ -386,19 +384,19 @@ def build_context_block(records: List[dict], all_records: Optional[List[dict]] =
 
 def generate_direct_reply(question: str, relevant_records: List[dict]) -> str:
     """
-    Directly synthesizes an accurate, clean, structured response from the fed campus records.
+    Directly synthesizes a clean, friendly, accurate, and structured response from the fed campus records.
     Used as an immediate fallback or when offline without needing an external API key.
     """
     if not relevant_records:
         return (
-            "I couldn't find any matching campus records in the system. "
-            "Please try asking about a specific block (e.g., Block 28, Block 1), "
-            "department (e.g., CSE, Fashion Design), office (e.g., Lost and Found, Room 209), "
-            "or facility (e.g., Uni Health Center, Parking)."
+            "Hello! I couldn't find any campus records matching your query. "
+            "Please try asking about a specific block (e.g. Block 25, Block 31), "
+            "department (e.g. CSE, Fashion Design), office (e.g. Lost and Found, Room 209), "
+            "or facility (e.g. Uni Health Center, Central Library, UniMall)."
         )
 
     top_item = relevant_records[0]
-    rec = top_item["record"]
+    rec = top_item.get("record", top_item)
     kind = rec.get("kind", "")
     name = rec.get("name", "Campus Location")
     desc = rec.get("desc", "")
@@ -411,12 +409,12 @@ def generate_direct_reply(question: str, relevant_records: List[dict]) -> str:
 
     # If top item is FAQ, format directly from answer
     if kind == "faq":
-        return f"💡 **{name}**\n\n{desc}"
+        return f"💡 **{name}**\n\n{desc}\n\n*Tip: Tap **Show on Map** below to navigate to this location.*"
 
-    lines = [f"📍 **{name}**"]
+    lines = [f"Hello! Here is the information for **{name}**:\n"]
 
     if rec.get("type"):
-        lines.append(f"• **Type:** {rec.get('type')}")
+        lines.append(f"• **Category:** {rec.get('type')}")
 
     if floor:
         lines.append(f"• **Location / Floor:** {floor}")
@@ -443,10 +441,11 @@ def generate_direct_reply(question: str, relevant_records: List[dict]) -> str:
 
     # If there are additional relevant records (e.g. secondary related blocks or offices)
     if len(relevant_records) > 1:
-        other_names = [f"**{r['name']}**" for r in relevant_records[1:3] if r["name"] != name]
+        other_names = [f"**{r.get('record', r).get('name')}**" for r in relevant_records[1:3] if r.get('record', r).get('name') != name]
         if other_names:
             lines.append(f"\n💡 *Related locations:* {', '.join(other_names)}")
 
+    lines.append("\n💡 *Tip: Tap **Show on Map** below to view walking and kart routes from your current location!*")
     return "\n".join(lines)
 
 
@@ -459,9 +458,16 @@ def _get_genai_client(api_key: str):
     global _GENAI_CLIENT
     if _GENAI_CLIENT is None and genai is not None:
         try:
-            _GENAI_CLIENT = genai.Client(api_key=api_key)
+            from google.genai import types
+            _GENAI_CLIENT = genai.Client(
+                api_key=api_key,
+                http_options=types.HttpOptions(client_args={"verify": False, "timeout": 12.0})
+            )
         except Exception:
-            _GENAI_CLIENT = None
+            try:
+                _GENAI_CLIENT = genai.Client(api_key=api_key)
+            except Exception:
+                _GENAI_CLIENT = None
     return _GENAI_CLIENT
 
 
@@ -469,13 +475,14 @@ def generate_chat_reply(question: str, relevant_records: List[dict]) -> str:
     """
     Generate a chatbot response for the user's question using Gemini AI if configured,
     or smoothly fallback to direct record synthesis.
-    Optimized for ultra-low latency.
+    Optimized for polite, helpful, beautiful, and ultra-fast answers.
     """
     if not relevant_records:
         return (
-            "I couldn't find any campus records that match your question. "
-            "Please ask about a specific block, office, department, or service "
-            "(such as CSE Department, Block 28, Lost and Found, or Health Center)."
+            "Hello! I couldn't find any campus records matching your query. "
+            "Please try asking about a specific block (e.g. Block 25, Block 31), "
+            "department (e.g. CSE, Fashion Design), office (e.g. Lost and Found, Room 209), "
+            "or facility (e.g. Uni Health Center, Central Library, UniMall)."
         )
 
     norm_q = _normalize_text(question)
@@ -488,7 +495,7 @@ def generate_chat_reply(question: str, relevant_records: List[dict]) -> str:
     top_item = relevant_records[0]
     top_rec = top_item.get("record", {})
     if top_rec.get("kind") == "faq" and top_rec.get("desc"):
-        reply = f"💡 **{top_rec.get('name', 'Campus Information')}**\n\n{top_rec.get('desc')}"
+        reply = f"💡 **{top_rec.get('name', 'Campus Information')}**\n\n{top_rec.get('desc')}\n\n💡 *Tip: Tap **Show on Map** below to view walking and kart routes from your current location!*"
         _CHAT_CACHE[norm_q] = reply
         return reply
 
@@ -506,52 +513,55 @@ def generate_chat_reply(question: str, relevant_records: List[dict]) -> str:
     if custom_model:
         candidate_models.append(custom_model)
     candidate_models.extend([
-        "gemini-3.5-flash",       # Ultra-fast (< 1s)
-        "gemini-3.1-flash-lite",  # Fast & efficient
-        "gemini-flash-latest",    # Flash fallback
-        "gemini-3.7-flash",       # Standard
+        "gemini-3.6-flash",
     ])
-    # Deduplicate while preserving order
     candidate_models = list(dict.fromkeys(candidate_models))
 
-    # Keep context compact (top 2-3 records) to minimize prompt token count & latency
     compact_records = relevant_records[:3]
     context_block = build_context_block(compact_records, CAMPUS_RECORDS)
     prompt = (
-        "You are LPUNavix AI, the smart campus assistant for Lovely Professional University (LPU).\n"
-        "Provide a concise, direct, helpful answer (3-5 bullet points) using ONLY the campus context below.\n"
-        "Rules:\n"
-        "- Highlight block numbers, room numbers, floor levels, operational hours, and key facilities in bold.\n"
-        "- If asked about CSE Department, list all associated blocks (Blocks 25, 26, 27, 28, 31, 32, 33, 34, 36, 37, 38) and the admin office in Room 209.\n"
-        "- If asked about lost items or admin queries, state Room 209 in Block 28 (8:00 AM – 5:30 PM).\n"
-        "- Be brief and immediately actionable.\n\n"
+        "You are LPUNavix AI, the friendly, smart campus guide for Lovely Professional University (LPU).\n"
+        "Your mission is to provide accurate, polite, well-structured, and helpful answers to students and visitors.\n\n"
+        "Guidelines:\n"
+        "1. Friendly Greeting & Overview: Begin with a polite greeting and a clear, direct summary of the requested location.\n"
+        "2. Clean Bullets: Present details using clean bullet points:\n"
+        "   • **Location & Zone**: Campus zone, floor, or nearby landmark blocks (DO NOT output raw GPS coordinates like 31.25...).\n"
+        "   • **What is Inside**: Schools, departments, classrooms, computer labs, or key facilities.\n"
+        "   • **Timings**: Standard hours (e.g. 8:00 AM - 5:30 PM).\n"
+        "3. Specificity:\n"
+        "   - If asked about Computer Science (CSE), list associated blocks (Blocks 25, 26, 27, 28, 31, 32, 33, 34, 36, 37, 38) and the admin office in Room 209.\n"
+        "   - If asked about Lost & Found, infrastructure queries, or administrative assistance, direct them to Block 28, Room 209.\n"
+        "   - Otherwise, answer specifically for what was asked without unnecessary disclaimers.\n"
+        "4. Navigation Tip: Always end with:\n"
+        "   💡 *Tip: Tap **Show on Map** below to view walking and kart routes from your current location!*\n"
+        "5. Tone: Polite, enthusiastic, encouraging, and clear.\n\n"
         f"Campus Context:\n{context_block}\n\n"
-        f"Question: {question}\n\n"
-        "Answer:"
+        f"User Question: {question}\n\n"
+        "Assistant Response:"
     )
 
-    # Try google.genai SDK with singleton client & fast config
     client = _get_genai_client(api_key)
     if client is not None:
         for model_name in candidate_models:
-            for cfg in [
-                {"max_output_tokens": 250, "temperature": 0.2, "thinking_config": {"thinking_budget": 0}},
-                {"max_output_tokens": 250, "temperature": 0.2}
-            ]:
-                try:
-                    response = client.models.generate_content(
-                        model=model_name,
-                        contents=prompt,
-                        config=cfg
-                    )
-                    if response and response.text:
-                        reply = response.text.strip()
-                        if len(_CHAT_CACHE) > 500:
-                            _CHAT_CACHE.clear()
-                        _CHAT_CACHE[norm_q] = reply
-                        return reply
-                except Exception:
-                    continue
+            try:
+                from google.genai import types
+                cfg = types.GenerateContentConfig(
+                    max_output_tokens=1500,
+                    temperature=0.3
+                )
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=prompt,
+                    config=cfg
+                )
+                if response and response.text:
+                    reply = response.text.strip()
+                    if len(_CHAT_CACHE) > 500:
+                        _CHAT_CACHE.clear()
+                    _CHAT_CACHE[norm_q] = reply
+                    return reply
+            except Exception:
+                continue
 
     # Fallback to direct synthesis for guaranteed speed & reliability
     reply = generate_direct_reply(question, relevant_records)

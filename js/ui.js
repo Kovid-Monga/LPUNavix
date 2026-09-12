@@ -465,14 +465,21 @@ class UIController {
   /* ==========================================================================
      Active Navigation ETA Floating Bar
      ========================================================================== */
-  startActiveNavigation(destinationName = "Block 25 (CSE)", duration = "5 min", distance = "350 m", mode = "walking", routePath = null) {
+  startActiveNavigation(destinationName = "Block 25 (CSE)", duration = "5 min", distance = "350 m", mode = "walking", routePath = null, routeData = null) {
+    // 1. Hide Google Maps route preview sheet & topbar so active navigation is fully visible
+    if (window.Directions && typeof window.Directions.hideRoutePreview === "function") {
+      window.Directions.hideRoutePreview();
+    }
+    document.body.classList.remove("gmaps-route-active");
+    document.body.classList.add("navigation-active");
+
     const etaBar = document.getElementById("mobile-nav-eta-bar");
     if (etaBar) {
       const durationVal = document.getElementById("eta-duration-val");
       const distanceVal = document.getElementById("eta-distance-val");
       const targetVal = document.getElementById("eta-target-time");
 
-      const modeIcon = mode === "kart" ? "🛺" : "🚶";
+      const modeIcon = (mode === "kart" || mode === "drive") ? "🛺" : "🚶";
       if (durationVal) durationVal.textContent = `${modeIcon} ${duration}`;
       if (distanceVal) distanceVal.textContent = `${distance} remaining`;
       if (targetVal) targetVal.textContent = `Navigating to ${destinationName}`;
@@ -480,21 +487,29 @@ class UIController {
       etaBar.classList.add("active");
     }
 
-    // Close drawers so the dotted path and map are fully visible
+    // Close drawers so the map is fully visible
     document.querySelectorAll(".side-panel-drawer:not(#assistant-panel)").forEach(p => p.classList.remove("active"));
     this.currentActivePanel = null;
     this.toggleAssistant(false);
 
-    // Draw dotted route on map and focus
+    // Draw dark highlighted route on map like normal Google Maps
     if (window.CampusMap) {
-      if (routePath && routePath.length >= 2) {
-        window.CampusMap.drawRoute(routePath, false, null, {
+      const activePath = routePath || (routeData && routeData.activeRoute ? routeData.activeRoute.path : null);
+      if (activePath && activePath.length >= 2) {
+        window.CampusMap.drawRoute(activePath, false, null, {
           mode: mode || "walking",
           originName: "Your Current Location",
-          destName: destinationName
+          destName: destinationName,
+          duration: duration,
+          distance: distance,
+          isNavigating: true, // Highlights in dark like in normal Google Maps
+          roadPath: (routeData && routeData.activeRoute && routeData.activeRoute.roadPath) ? routeData.activeRoute.roadPath : activePath,
+          connectors: (routeData && routeData.activeRoute) ? routeData.activeRoute.connectors : null,
+          junctions: (routeData && routeData.activeRoute) ? routeData.activeRoute.junctions : null,
+          waypoints: (routeData && routeData.activeRoute) ? routeData.activeRoute.waypoints : null
         });
-        const startPt = routePath[0];
-        window.CampusMap.flyToLocation(startPt[0], startPt[1], 17.5);
+        const startPt = activePath[0];
+        window.CampusMap.flyToLocation(startPt[0], startPt[1], 18);
       } else if (window.Directions) {
         window.Directions.showDirections("Your Current Location", destinationName);
       }
@@ -502,10 +517,14 @@ class UIController {
   }
 
   endActiveNavigation() {
+    document.body.classList.remove("navigation-active");
     const etaBar = document.getElementById("mobile-nav-eta-bar");
     if (etaBar) etaBar.classList.remove("active");
     if (window.CampusMap) {
       window.CampusMap.clearRoutes();
+    }
+    if (window.Directions && window.Directions.currentDestination) {
+      window.Directions.showDirections(window.Directions.currentOrigin || "Your location", window.Directions.currentDestination);
     }
   }
 
@@ -838,7 +857,16 @@ class UIController {
     // 1. Close or collapse assistant drawer so the user can see the map and route clearly
     this.toggleAssistant(false);
 
-    // 2. Open directions view with "Your Current Location" as origin (which calculates route & displays preview)
+    // 2. Request user location in background if available
+    if (window.CampusMap && !window.CampusMap.currentUserCoords && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((pos) => {
+        if (window.CampusMap) {
+          window.CampusMap.currentUserCoords = [pos.coords.latitude, pos.coords.longitude];
+        }
+      }, () => {}, { enableHighAccuracy: true, timeout: 4000 });
+    }
+
+    // 3. Open directions view with "Your Current Location" as origin (which calculates route & displays preview)
     const origin = "Your Current Location";
     this.switchView("directions", origin, destName);
   }

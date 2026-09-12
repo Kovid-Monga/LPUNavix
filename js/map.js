@@ -666,27 +666,99 @@ class CampusMapController {
       ? options.roadPath.filter(pt => Array.isArray(pt) && pt.length >= 2)
       : validPath;
 
+    const isNavigating = options.isNavigating === true;
+    const ROUTE_ACCENT_COLOR = '#f97316'; // Brand accent orange preserved for compatibility & kart mode
+
+    // In active navigation: solid bold dark line highlighted like normal Google Maps
+    // In preview mode: dotted format with circular beads
+    let mainLineColor;
+    let mainLineWeight;
+    let mainLineDashArray;
+
+    if (isNavigating) {
+      // Normal Google Maps style dark active navigation line
+      mainLineColor = "#0f172a"; // Deep high-contrast dark slate
+      mainLineWeight = 8.5;
+      mainLineDashArray = null; // Solid
+    } else {
+      // Dotted format for route preview
+      mainLineColor = (mode === "walking") ? "#2563eb" : ROUTE_ACCENT_COLOR;
+      mainLineWeight = 6.5;
+      mainLineDashArray = "0.1, 13"; // Round dotted beads
+    }
+
+    // Optional alternate route in preview if kart & walk differ
+    if (!isNavigating && options.alternateRoute && Array.isArray(options.alternateRoute.path) && options.alternateRoute.path.length >= 2) {
+      const altCoords = options.alternateRoute.path.filter(pt => Array.isArray(pt) && pt.length >= 2);
+      if (altCoords.length >= 2) {
+        L.polyline(altCoords, {
+          pane: 'routePane',
+          className: "route-alternate-dotted-path",
+          color: "#94a3b8",
+          weight: 5,
+          opacity: 0.75,
+          dashArray: "0.1, 13",
+          lineCap: "round",
+          lineJoin: "round"
+        }).addTo(this.routesLayer);
+      }
+    }
+
     // 2. Route Outer White Casing (Provides crisp boundary against terrain/roads)
     L.polyline(roadCoords, {
       pane: 'routePane',
       className: "route-casing-path",
       color: "#ffffff",
-      weight: 12,
+      weight: isNavigating ? 13 : 11,
       opacity: 0.95,
       lineCap: "round",
       lineJoin: "round"
     }).addTo(this.routesLayer);
 
-    // 3. Main HIGHLIGHTED Route Path (Brand Accent Orange #f97316)
+    // 3. Main Route Path: Dark Highlight when navigating, Dotted when previewing
     const routeMainLine = L.polyline(roadCoords, {
       pane: 'routePane',
-      className: "route-highlight-path",
-      color: "#f97316",
-      weight: 7.5,
+      className: isNavigating ? "route-highlight-path route-dark-nav-path" : "route-highlight-path route-dotted-preview-path",
+      color: mainLineColor,
+      weight: mainLineWeight,
       opacity: 1.0,
+      dashArray: mainLineDashArray,
       lineCap: "round",
       lineJoin: "round"
     }).addTo(this.routesLayer);
+
+    // 3a. On-Route Floating ETA Badge (Preview Mode showing both Walk & Kart with distances)
+    if (!isNavigating && roadCoords.length >= 2) {
+      const midIdx = Math.floor(roadCoords.length * 0.45);
+      const midCoord = roadCoords[midIdx];
+      const walkDur = options.walkDuration || options.duration || "16 min";
+      const walkDist = options.walkDistance || options.distance || "1.1 km";
+      const kartDur = options.kartDuration || "5 min";
+      const kartDist = options.kartDistance || options.distance || "1.2 km";
+
+      const etaPillHtml = `
+        <div class="map-route-floating-badge">
+          <div class="floating-badge-item ${mode === 'walking' ? 'active-item' : ''}">
+            <span class="badge-icon">🚶</span>
+            <span class="badge-time">${walkDur}</span>
+            <span class="badge-dist">(${walkDist})</span>
+          </div>
+          <span class="badge-divider">|</span>
+          <div class="floating-badge-item ${mode === 'drive' || mode === 'kart' ? 'active-item' : ''}">
+            <span class="badge-icon">🛺</span>
+            <span class="badge-time">${kartDur}</span>
+            <span class="badge-dist">(${kartDist})</span>
+          </div>
+        </div>
+      `;
+      const etaPillIcon = L.divIcon({
+        className: "route-eta-pill-badge-wrap",
+        html: etaPillHtml,
+        iconSize: [0, 0],
+        iconAnchor: [80, 18]
+      });
+      L.marker(midCoord, { icon: etaPillIcon, zIndexOffset: 2950 }).addTo(this.routesLayer);
+    }
 
     // 3b. Off-road Floating Circular Dots Connectors (Origin, Stops, Destination)
     if (options.connectors && Array.isArray(options.connectors)) {

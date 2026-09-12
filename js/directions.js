@@ -1232,8 +1232,11 @@ class DirectionsController {
           }
         }
 
-        const speedMpm = (mode === "drive") ? 250 : 75;
+        const speedMpm = (mode === "drive" || mode === "kart") ? 220 : 75;
         const durationMin = Math.max(1, Math.round(totalDistMeters / speedMpm));
+        const formattedDist = totalDistMeters >= 1000 
+          ? `${(totalDistMeters / 1000).toFixed(1)} km` 
+          : `${totalDistMeters} m`;
 
         return {
           path: fullPath,
@@ -1242,7 +1245,7 @@ class DirectionsController {
           junctions,
           waypoints,
           steps,
-          distance: `${totalDistMeters} m`,
+          distance: formattedDist,
           duration: `${durationMin} min`,
           distMeters: totalDistMeters,
           durationMin
@@ -1266,17 +1269,25 @@ class DirectionsController {
         mode: this.currentMode
       };
 
-      // 2. DRAW SOLID HIGHLIGHTED ROUTE ON LEAFLET MAP (With roadPath, dotted connectors, junctions, and waypoints)
+      // 2. DRAW DOTTED ROUTE ON LEAFLET MAP IN PREVIEW MODE (With Walk & Kart ETAs and distances)
       if (window.CampusMap) {
         window.CampusMap.drawRoute(activeRoute.path, false, null, {
           mode: this.currentMode,
           originName: start.display,
           destName: end.display,
           duration: activeRoute.duration,
+          distance: activeRoute.distance,
+          walkDuration: walkRoute.duration,
+          walkDistance: walkRoute.distance,
+          kartDuration: driveRoute.duration,
+          kartDistance: driveRoute.distance,
           roadPath: activeRoute.roadPath,
           connectors: activeRoute.connectors,
           junctions: activeRoute.junctions,
-          waypoints: activeRoute.waypoints
+          waypoints: activeRoute.waypoints,
+          isNavigating: false,
+          isDotted: true,
+          alternateRoute: (this.currentMode === "walking" ? driveRoute : walkRoute)
         });
       }
 
@@ -1344,14 +1355,19 @@ class DirectionsController {
       // Title
       const modeTitle = document.getElementById("gmaps-preview-mode-title");
       if (modeTitle) {
-        modeTitle.textContent = (this.currentMode === "walking") ? "Walk" : "Drive";
+        modeTitle.textContent = (this.currentMode === "walking") ? "Walk" : "Kart";
       }
 
-      // Mode Tab Times: ONLY Car and Walk
+      // Mode Tab Times & Distances: Kart and Walk
       const driveTime = document.getElementById("gmaps-tab-drive-time");
       const walkTime = document.getElementById("gmaps-tab-walk-time");
+      const driveDist = document.getElementById("gmaps-tab-drive-dist");
+      const walkDist = document.getElementById("gmaps-tab-walk-dist");
+
       if (driveTime && driveRoute) driveTime.textContent = driveRoute.duration;
       if (walkTime && walkRoute) walkTime.textContent = walkRoute.duration;
+      if (driveDist && driveRoute) driveDist.textContent = driveRoute.distance;
+      if (walkDist && walkRoute) walkDist.textContent = walkRoute.distance;
 
       // Active Tab Highlight
       const modeTabs = previewSheet.querySelectorAll(".gmaps-mode-tab");
@@ -1364,6 +1380,11 @@ class DirectionsController {
       const distEl = document.getElementById("gmaps-preview-dist");
       if (durationEl && activeRoute) durationEl.textContent = activeRoute.duration;
       if (distEl && activeRoute) distEl.textContent = `(${activeRoute.distance})`;
+
+      const subtitleEl = previewSheet.querySelector(".gmaps-preview-subtitle");
+      if (subtitleEl && driveRoute && walkRoute) {
+        subtitleEl.textContent = `Fastest by Kart: ${driveRoute.duration} (${driveRoute.distance}) • Walk: ${walkRoute.duration} (${walkRoute.distance})`;
+      }
 
       previewSheet.style.display = "block";
 

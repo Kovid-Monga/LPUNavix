@@ -21,8 +21,13 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // 4. Initialize AI Assistant Controller
-  if (window.Assistant) {
-    window.Assistant.init();
+  if (window.AssistantController) {
+    const assistant = new AssistantController({ uiController: window.UIController });
+    assistant.init();
+    window.assistant = assistant;
+    if (assistant.panel) {
+      assistant.panel.classList.add("assistant-panel--hidden");
+    }
   }
 
   // 5. Initialize Live Kart Tracking Controller

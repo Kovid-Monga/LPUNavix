@@ -13,7 +13,6 @@
 1. **Interactive Campus Map**: Leaflet-based map with custom layers (CartoDB Positron, OSM, Google Satellite), campus boundary geo-fencing, POI markers, and category filtering.
 2. **Turn-by-Turn Multimodal Routing**: Graph-based pathfinding (A*/Dijkstra) running entirely on an internal campus road/footpath network graph with walking and driving modes.
 3. **Real-Time Live Kart Tracker**: GPS telemetry ingestion server (FastAPI) and live frontend viewer with EMA (Exponential Moving Average) smoothing, deadband filtering, and animated interpolation for campus shuttles.
-4. **AI Campus Assistant (RAG + Gemini)**: Context-grounded campus AI chatbot leveraging `gemini-2.5-flash` with in-memory semantic/keyword retrieval over campus locations, offices, and FAQs, complete with clickable map pins.
 
 ---
 
@@ -24,8 +23,7 @@
 | **Frontend Core** | Vanilla HTML5, Vanilla CSS3 (modular stylesheets), Vanilla JavaScript (ES6+ modular controllers) |
 | **Mapping Engine** | [Leaflet.js 1.9.4](https://leafletjs.com/), `leaflet-rotate-src.js`, `leaflet.polylineDecorator.js` |
 | **Backend API** | Python 3.10+, [FastAPI](https://fastapi.tiangolo.com/), Uvicorn, Pydantic v2 |
-| **AI / LLM** | Google GenAI SDK (`google-genai` >= 2.0.0, model: `gemini-2.5-flash`), `python-dotenv`, `json5` |
-| **Testing** | `pytest`, `httpx` (for FastAPI test client) |
+| **Testing** | `unittest`, `pytest`, `httpx` (for FastAPI test client), Node test scripts |
 | **Deployment** | Render Web Service (`render.yaml`), Uvicorn on `$PORT` serving both API routes and static frontend |
 
 ---
@@ -36,14 +34,18 @@
 d:\LPUNavix\
 ├── api\
 │   ├── __init__.py
-│   ├── main.py              # FastAPI server: kart tracking endpoints, chat endpoint, static file mount
-│   └── rag.py               # Campus RAG engine: data.js parser, keyword/synonym matcher, Gemini client
+│   ├── main.py              # FastAPI server: kart tracking endpoints, static file mount
+│   ├── rag.py               # Campus Assistant RAG pipeline, cache hashing, and POST /api/chat router
+│   ├── data_loader.py       # Parses js/data.js into Record objects for embedding
+│   ├── retrieval.py         # Vector similarity search, ranking, and match classification
+│   ├── gemini_client.py     # Google Gemini GenAI SDK client for embedding and reply generation
+│   └── embeddings_cache.json # Zero-latency pre-computed embeddings cache
 ├── css\
 │   ├── main.css             # Theme variables, typography, animations, base resets
 │   ├── sidebar.css          # Left vertical navigation sidebar
 │   ├── topbar.css           # Top search bar, category pills, mobile header
 │   ├── map.css              # Leaflet map container, custom marker pins, pulse animations
-│   ├── panels.css           # Sliding drawers, location cards, directions sheet, AI assistant widget
+│   ├── panels.css           # Sliding drawers, location cards, directions sheet
 │   └── mobile.css           # Responsive breakpoints (<768px), mobile bottom sheets
 ├── js\
 │   ├── app.js               # Application bootstrap: calls init() across all controllers on DOMContentLoaded
@@ -55,11 +57,13 @@ d:\LPUNavix\
 │   ├── map.js               # CampusMap controller: Leaflet instance, tile switchers, markers, layers, click handler
 │   └── ui.js                # UIController: search suggestions, category filtering, drawer views, modals
 ├── tests\
-│   ├── test_api.py          # Pytest for /health, /api/location, /api/locations
-│   ├── test_queries.py      # Pytest query assertions for campus locations
-│   └── test_rag.py          # Pytest for record extraction and retrieval logic in rag.py
-├── .env                     # Local environment keys (e.g. GEMINI_API_KEY)
-├── index.html               # Main SPA markup: map canvas, sidebars, sheets, assistant dialog
+│   ├── test_api.py          # Unit tests for /health, /api/location, /api/locations
+│   ├── test_navigation_flow.js # Navigation state and back-button flow tests
+│   ├── test_restyle_directions.js # Directions UI and markup tests
+│   ├── test_stop_routing_flow.js  # Intermediate stops and connector tests
+│   └── verify_all.py        # Comprehensive project structural assertions
+├── .env                     # Local environment configuration
+├── index.html               # Main SPA markup: map canvas, sidebars, sheets
 ├── render.yaml              # Render deployment configuration
 ├── requirements.txt         # Python dependencies
 └── sync_campus_osm.py       # Developer script: queries Overpass API to refresh boundary and road nodes
@@ -77,7 +81,6 @@ DOMContentLoaded
        ├─► window.CampusMap.init()          (js/map.js)
        ├─► window.UIController.init()       (js/ui.js)
        ├─► window.Directions.init()         (js/directions.js)
-       ├─► window.Assistant.init()          (js/assistant.js)
        └─► window.KartTracker.init()        (js/karts.js)
 ```
 
@@ -100,18 +103,17 @@ DOMContentLoaded
      - `zoomIn()` / `zoomOut()` / `resetOrientation()`: Map control helpers.
 
 2. **`window.UIController` (`js/ui.js`)** — class: `UIController`:
-   - Manages sidebar views: `home`, `map`, `directions`, `karts`, `alerts`, `settings`, `assistant`.
+   - Manages sidebar views: `home`, `map`, `directions`, `karts`, `alerts`, `settings`.
    - Theme persisted in `localStorage` as `lpu_theme` (`light` | `dark`).
    - Key public methods:
      - `switchView(viewName, customOrigin, customDest)`: Routes to the correct panel; if `directions` with a dest, calls `window.Directions.showDirections()` immediately.
      - `showLocationDetails(loc)`: Populates and opens the `#details-panel` drawer with a CAMPUS_LOCATIONS/CAMPUS_OFFICES object.
      - `showGroupDetails(group)`: Same but for a `CAMPUS_GROUPS` entry; lists all child block members.
-     - `triggerShowOnMap(locationId, targetTitle)`: Called by the AI assistant's "Show on Map" button — resolves `locationId` → destination name, collapses assistant, then calls `switchView('directions', ..., destName)`.
+     - `triggerShowOnMap(locationId, targetTitle)`: Resolves `locationId` → destination name, then calls `switchView('directions', ..., destName)`.
      - `selectSearchResult(locationId)`: Called when user picks from search dropdown for a location.
      - `selectGroupSearchResult(groupId)`: Called when user picks from search dropdown for a department group.
      - `startActiveNavigation(destName, duration, distance, mode, routePath)`: Shows mobile ETA bar, closes drawers, draws route.
      - `endActiveNavigation()`: Hides ETA bar, clears route.
-     - `toggleAssistant(force)`: Opens/closes the AI assistant panel.
      - `applyTheme(theme)`: Applies theme to `<html data-theme>` and switches tile layer for contrast.
 
 3. **`window.Directions` (`js/directions.js`)**:
@@ -128,39 +130,17 @@ DOMContentLoaded
    - EMA smoothing (`EMA_ALPHA = 0.25`), deadband filter (`MIN_MOVE_DEG = 0.00003`, ~3 m), animated interpolation (`ANIM_DURATION_MS = 2500 ms`).
    - GPS positions glide smoothly to new coords via `requestAnimationFrame`.
 
-5. **`window.Assistant` (`js/assistant.js`)** — class: `AssistantController`:
-   - Chatbot drawer bound to `#send-chat-btn`, `#chat-input-field`, and `.prompt-chip-btn` elements.
-   - Sends queries to `POST /api/chat`, receives `{ reply, locationId, title }`, renders Markdown in bubble.
-   - Inline markdown formatter: `**bold**`, `*italic*`, `• lists` → HTML.
-   - **Offline fallback** (`findMatchingAnswer()`): If the backend is unreachable, it performs client-side keyword lookup against `AI_KNOWLEDGE_BASE`, then `CAMPUS_GROUPS`, then `CAMPUS_LOCATIONS`/`CAMPUS_OFFICES` in that priority order — no server needed.
-   - "Show on Map" button calls `window.UIController.triggerShowOnMap(locationId, title)`.
-
 ---
 
 ## 5. Backend Architecture & API Specifications
 
-The backend is built with **FastAPI** (`api/main.py`). It serves both the API and the frontend static files. There are **exactly 4 HTTP endpoints** — do not assume others exist.
+The backend is built with **FastAPI** (`api/main.py`). It serves both the API and the frontend static files. There are **exactly 3 HTTP endpoints**:
 
 ### 1. Health Check
 - **Route**: `GET /health`
 - **Response**: `{"status": "ok"}` — used by Render's `healthCheckPath`.
 
-### 2. AI Campus Assistant Chat
-- **Route**: `POST /api/chat`
-- **Pydantic model**: `ChatRequest { message: str }`
-- **Payload**: `{"message": "Where is the registrar office?"}`
-- **Response**:
-  ```json
-  {
-    "reply": "The Registrar Office is located in Block 28, Room 209...",
-    "locationId": "office-admin-28-209",
-    "title": "Administrative Office (Block 28, Room 209)"
-  }
-  ```
-- **No-match fallback**: Returns a fixed polite string with `locationId: null, title: null` when RAG finds nothing.
-- **Error fallback**: On Gemini API failure, calls `generate_direct_reply()` — still returns valid JSON.
-
-### 3. Kart Telemetry Ingestion
+### 2. Kart Telemetry Ingestion
 - **Route**: `GET /api/location` and `POST /api/location` (both handled by the same async function via `@app.api_route`)
 - **Purpose**: Receives live GPS from driver phones, Traccar clients, or GPS logger apps.
 - **Accepted field names** (any combination works):
@@ -173,7 +153,7 @@ The backend is built with **FastAPI** (`api/main.py`). It serves both the API an
 - **Active window**: `ACTIVE_WINDOW_SECONDS = 30`. Karts not seen for >30 s are excluded from `/api/locations`.
 - **Response**: `{"status": "ok"}`
 
-### 4. Active Karts Polling
+### 3. Active Karts Polling
 - **Route**: `GET /api/locations`
 - **Pydantic model**: `KartStatus { id: str, lat: float, lng: float, timestamp: str }`
 - **Response**: Array of currently active karts (seen within last 30 s):
@@ -194,25 +174,9 @@ The backend is built with **FastAPI** (`api/main.py`). It serves both the API an
 
 ---
 
-## 6. RAG & Retrieval Engine (`api/rag.py`)
+## 6. Data Schemas (`js/data.js`)
 
-### How RAG Works Without a Heavy Vector DB
-1. **Dynamic JS Data Extraction**:
-   - On startup, `api/rag.py` inspects `js/data.js` and extracts `CAMPUS_LOCATIONS`, `CAMPUS_GROUPS`, `CAMPUS_OFFICES`, and `AI_KNOWLEDGE_BASE` using regex and `json5`.
-   - Normalizes all records into uniform dictionaries with searchable fields: `name`, `type`, `category`, `facilities`, `tags`, `desc`, `keywords`.
-2. **Lexical & Synonym Matching**:
-   - Queries are cleaned of stopwords (`STOPWORDS`).
-   - Words are expanded via a curated domain map `SYNONYM_MAP` (e.g. "lost" $\rightarrow$ "belongings", "cse" $\rightarrow$ "computer science", "doctor" $\rightarrow$ "hospital/dispensary").
-   - Weighted score ranks top 4 relevant records.
-3. **Gemini 2.5 Flash Grounding**:
-   - Sends the retrieved records as strict context to `gemini-2.5-flash`.
-   - If `GEMINI_API_KEY` is missing or the external API call fails, it automatically falls back to deterministic in-house synthesis (`generate_direct_reply`).
-
----
-
-## 7. Data Schemas (`js/data.js`)
-
-`data.js` has **5 distinct sections**, each with its own schema. All variables are parsed by `api/rag.py` via regex — do not change their declaration syntax.
+`data.js` contains the core campus data dictionaries:
 
 ---
 
@@ -252,7 +216,7 @@ The backend is built with **FastAPI** (`api/main.py`). It serves both the API an
   lng: 75.702479,                          // Longitude (always ~75.70 for LPU campus)
   floor: "Multi-storey Block",             // Floor / level description
   facilities: ["Classrooms", "Computer Labs", "Faculty Cabins"],
-  tags: ["block 25", "cse", "computer science", "b25", "academic block"],  // Lowercase, drives search + RAG
+  tags: ["block 25", "cse", "computer science", "b25", "academic block"],  // Lowercase, drives search
   desc: "Block 25 - Department of Computer Science & Engineering.",
   hours: "8:00 AM - 5:30 PM",
   phone: "",
@@ -309,22 +273,6 @@ The backend is built with **FastAPI** (`api/main.py`). It serves both the API an
 
 ---
 
-### Section 5 — `AI_KNOWLEDGE_BASE` (Curated AI Q&A pairs)
-> Manually curated FAQ entries. The RAG engine in `api/rag.py` includes these records alongside `CAMPUS_LOCATIONS` and `CAMPUS_OFFICES` for semantic matching. If a user's query matches `triggers`, this record is scored higher.
-
-```javascript
-// const AI_KNOWLEDGE_BASE = [ ... ]
-{
-  triggers: ["cse", "computer science", "cse block"],  // Keywords that boost this record in RAG scoring
-  question: "Where is the CSE Department?",            // The archetypal question
-  answer: "The **School of Computer Science & Engineering (CSE)** is located in the CSE Zone.", // Markdown answer
-  groupId: "cse-dept",                                 // Points the map to this group on response
-  locationId: "block-28"                               // Specific block pin to highlight on map
-}
-```
-
----
-
 ### Campus Road Network Edge (`js/campus_roads.js`)
 > Raw OSM-derived road geometry. Used by `directions.js` to build the `CampusRoadGraph` adjacency list.
 
@@ -347,14 +295,13 @@ The backend is built with **FastAPI** (`api/main.py`). It serves both the API an
 
 ---
 
-## 8. Common Developer Workflows
+## 7. Common Developer Workflows
 
 ### A. Adding a New Building or Location
 1. Open `js/data.js`.
 2. Add a new object to `CAMPUS_LOCATIONS` (or `CAMPUS_OFFICES`) following the schema above.
 3. Ensure coordinates are `[lat, lng]` (latitude ~31.25, longitude ~75.70).
 4. Provide comprehensive search `tags` (lowercase) for instant search indexing.
-5. No backend restart is strictly required if running frontend statically, but restart `uvicorn` if you want the Python RAG engine to re-parse the new location from `data.js`.
 
 ### B. Updating Campus Road Graph
 1. If adding individual path segments, add them directly to `js/campus_roads.js` under `CAMPUS_ROADS_DATA` with appropriate `highway` tag (`service` for cars/karts, `footway` for walking-only paths).
@@ -371,27 +318,21 @@ The backend is built with **FastAPI** (`api/main.py`). It serves both the API an
 
 ---
 
-## 9. Critical Rules & Gotchas for Future AI Models
+## 8. Critical Rules & Gotchas for Future AI Models
 
 1. **Coordinate Format**:
    - Leaflet and this codebase use **`[latitude, longitude]`** format everywhere (`[lat, lng]`). Do NOT invert to `[lng, lat]` unless interfacing with GeoJSON raw specs.
-2. **`data.js` Parser Integrity**:
-   - `api/rag.py` parses `js/data.js` statically using regex patterns like `(?:const|var|let)?\s*CAMPUS_LOCATIONS\s*=...`.
-   - Do NOT change the variable declarations `var CAMPUS_LOCATIONS = window.CAMPUS_LOCATIONS = [...]` to unconventional syntax, or the Python RAG extractor will fail to parse them.
-3. **Zero-Cache / No Version Bumping Needed**:
+2. **Zero-Cache / No Version Bumping Needed**:
    - `api/main.py` has an HTTP middleware that automatically sets `Cache-Control: no-store, no-cache, must-revalidate, max-age=0` on all served files (HTML, CSS, JS).
    - Browsers and phones will always fetch the newest code on reload. Version bumping (`?v=...`) is no longer required.
-4. **Static Route Precedence in FastAPI**:
+3. **Static Route Precedence in FastAPI**:
    - In `api/main.py`, `app.mount("/", StaticFiles(...))` MUST remain the very last route registered. If registered earlier, it will intercept and block `/api/*` endpoints.
-5. **No Breaking Frontend State**:
-   - The app relies on state classes on `document.body` (such as `.assistant-collapsed`, `.sidebar-open`). Be mindful of existing CSS toggles when modifying HTML classes.
-6. **Local Development Port & Testing**:
+4. **Local Development Port & Testing**:
    - Local default server runs on `http://localhost:3000`. Run via:
      ```bash
      uvicorn api.main:app --host 0.0.0.0 --port 3000 --reload
      ```
    - Run automated test suite via:
      ```bash
-     python -m pytest
+     python -m unittest discover -s tests -p "test_*.py"
      ```
-

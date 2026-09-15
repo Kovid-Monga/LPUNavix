@@ -1,17 +1,19 @@
 """
 main.py — LPUNavix Backend & Live Kart Tracker Server (FastAPI)
 =================================================================
-Accepts location updates from driver phones / GPS Logger clients
-and serves the complete LPUNavix Smart Campus Navigation frontend.
+Accepts location updates from driver phones / GPS Logger clients,
+serves the AI Campus Assistant, and serves the complete LPUNavix frontend.
 
 Run it with:
     pip install -r requirements.txt
     uvicorn api.main:app --host 0.0.0.0 --port 3000
 """
 
+import hashlib
 import json
 import os
 import time
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Optional
@@ -32,9 +34,27 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from api.rag import CAMPUS_RECORDS, generate_chat_reply, load_campus_records, retrieve_relevant_records
+import api.rag as rag
+from api.rag import (
+    ChatRequest,
+    ChatResponse,
+    embed_query,
+    embed_texts,
+    generate_reply,
+    init_rag,
+    router as rag_router,
+    shutdown_rag,
+)
 
-app = FastAPI(title="LPUNavix Live Tracking & Campus Navigation")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_rag()
+    yield
+    shutdown_rag()
+
+
+app = FastAPI(title="LPUNavix Live Tracking & Campus Navigation", lifespan=lifespan)
 
 
 # Allow requests from any origin
@@ -63,6 +83,11 @@ async def add_no_cache_headers(request: Request, call_next):
 def health_check():
     return {"status": "ok"}
 
+
+# Mount the Campus Assistant RAG router
+app.include_router(rag_router)
+
+
 # In-memory store of the latest known location for each kart.
 # Shape: { "kart-1": {"lat": .., "lng": .., "timestamp": .., "last_seen": ..} }
 karts = {}
@@ -73,7 +98,6 @@ ACTIVE_WINDOW_SECONDS = 30
 
 class LocationUpdate(BaseModel):
     id: str
-    # Accept both the website format (lat/lng) and common GPS-app names.
     lat: Optional[float] = None
     lng: Optional[float] = None
     latitude: Optional[float] = None
@@ -87,48 +111,6 @@ class KartStatus(BaseModel):
     lat: float
     lng: float
     timestamp: str
-
-
-class ChatRequest(BaseModel):
-    message: str
-
-
-# -------- Campus assistant chat endpoint --------
-@app.post("/api/chat")
-def campus_chat(request: ChatRequest):
-    message = (request.message or "").strip()
-    if not message:
-        raise HTTPException(status_code=400, detail="Message cannot be empty.")
-
-    # Use preloaded in-memory campus records for zero-latency data access
-    relevant = retrieve_relevant_records(message, CAMPUS_RECORDS, limit=4)
-    if not relevant:
-        return {
-            "reply": "I couldn’t find any relevant campus records for that question. Please ask about a specific block, office, department, or service and I’ll help narrow it down.",
-            "locationId": None,
-            "title": None
-        }
-
-    top_rec = relevant[0]["record"] if relevant else {}
-    location_id = top_rec.get("id") or top_rec.get("locationId")
-    title = top_rec.get("name")
-
-    try:
-        reply = generate_chat_reply(message, relevant)
-        return {
-            "reply": reply,
-            "locationId": location_id,
-            "title": title
-        }
-    except Exception as exc:
-        # Fallback to direct synthesis on unexpected runtime error
-        from api.rag import generate_direct_reply
-        reply = generate_direct_reply(message, relevant)
-        return {
-            "reply": reply,
-            "locationId": location_id,
-            "title": title
-        }
 
 
 # -------- Senders and Traccar Client post location updates here --------

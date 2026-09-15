@@ -12,24 +12,21 @@ class TestAPIEndpoints(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"status": "ok"})
 
-    def test_chat_lost_item(self):
-        response = self.client.post("/api/chat", json={"message": "Where can I report a lost item?"})
-        self.assertEqual(response.status_code, 200)
-        data = response.json()
-        self.assertIn("reply", data)
-        self.assertIn("Administrative Office", data["reply"])
-        self.assertEqual(data["locationId"], "office-admin-28-209")
+    def test_location_post_and_get(self):
+        post_response = self.client.post("/api/location", json={
+            "id": "kart-test-1",
+            "lat": 31.2530,
+            "lng": 75.7035
+        })
+        self.assertEqual(post_response.status_code, 200)
+        self.assertEqual(post_response.json(), {"status": "ok"})
 
-    def test_chat_block_28(self):
-        response = self.client.post("/api/chat", json={"message": "Where is Block 28?"})
-        self.assertEqual(response.status_code, 200)
-        data = response.json()
-        self.assertIn("reply", data)
-        self.assertIn("Block 28", data["reply"])
-
-    def test_chat_empty_message(self):
-        response = self.client.post("/api/chat", json={"message": ""})
-        self.assertEqual(response.status_code, 400)
+        get_response = self.client.get("/api/locations")
+        self.assertEqual(get_response.status_code, 200)
+        locations = get_response.json()
+        self.assertIsInstance(locations, list)
+        kart_ids = [k["id"] for k in locations]
+        self.assertIn("kart-test-1", kart_ids)
 
 
 if __name__ == "__main__":

@@ -17,7 +17,6 @@ class UIController {
     this.bindMobileNavEvents();
     this.bindSearchAndFilters();
     this.bindFloatingMapControls();
-    this.toggleAssistant(false, true);
 
     // Ensure base root history state is set so back button never exits to browser home page
     if (!history.state || history.state.type !== "map") {
@@ -58,7 +57,7 @@ class UIController {
           document.querySelectorAll(".mobile-nav-item").forEach(btn => {
             btn.classList.toggle("active", btn.dataset.view === "directions");
           });
-          document.querySelectorAll(".nav-item-btn:not([data-view='assistant'])").forEach(btn => {
+          document.querySelectorAll(".nav-item-btn").forEach(btn => {
             btn.classList.toggle("active", btn.dataset.view === "directions");
           });
           break;
@@ -74,7 +73,7 @@ class UIController {
           document.querySelectorAll(".mobile-nav-item").forEach(btn => {
             btn.classList.toggle("active", btn.dataset.view === "karts");
           });
-          document.querySelectorAll(".nav-item-btn:not([data-view='assistant'])").forEach(btn => {
+          document.querySelectorAll(".nav-item-btn").forEach(btn => {
             btn.classList.toggle("active", btn.dataset.view === "karts");
           });
           if (window.KartTracker) {
@@ -84,14 +83,14 @@ class UIController {
 
         case "alerts":
           this.openLeftPanel("alerts-panel", null, true);
-          document.querySelectorAll(".nav-item-btn:not([data-view='assistant'])").forEach(btn => {
+          document.querySelectorAll(".nav-item-btn").forEach(btn => {
             btn.classList.toggle("active", btn.dataset.view === "alerts");
           });
           break;
 
         case "settings":
           this.openLeftPanel("settings-panel", null, true);
-          document.querySelectorAll(".nav-item-btn:not([data-view='assistant'])").forEach(btn => {
+          document.querySelectorAll(".nav-item-btn").forEach(btn => {
             btn.classList.toggle("active", btn.dataset.view === "settings");
           });
           break;
@@ -100,18 +99,13 @@ class UIController {
           this.openLeftPanel("search-filter-panel", null, true);
           break;
 
-        case "assistant":
-          this.toggleAssistant(true, true);
-          break;
-
         case "map":
         default:
           this.closeLeftPanels();
-          this.toggleAssistant(false, true);
           document.querySelectorAll(".mobile-nav-item").forEach(btn => {
             btn.classList.toggle("active", btn.dataset.view === "map");
           });
-          document.querySelectorAll(".nav-item-btn:not([data-view='assistant'])").forEach(btn => {
+          document.querySelectorAll(".nav-item-btn").forEach(btn => {
             btn.classList.toggle("active", btn.dataset.view === "map" || btn.dataset.view === "home");
           });
           break;
@@ -160,7 +154,6 @@ class UIController {
       } catch (err) {}
     }
     this.closeLeftPanels();
-    this.toggleAssistant(false, true);
     if (window.Directions) {
       window.Directions.hideRoutePreview();
       if (window.CampusMap) window.CampusMap.clearRoute();
@@ -201,18 +194,9 @@ class UIController {
       });
     }
 
-    // Assistant close/minimize button
-    const assistantCloseBtn = document.querySelector("#assistant-panel .panel-close-btn");
-    if (assistantCloseBtn) {
-      assistantCloseBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        this.closePanelWithHistory();
-      });
-    }
-
-    // Left Panel close buttons (Universal close with history synchronization)
-    const leftCloseBtns = document.querySelectorAll(".side-panel-drawer:not(#assistant-panel) .panel-close-btn");
-    leftCloseBtns.forEach(btn => {
+    // Panel close buttons (Universal close with history synchronization)
+    const panelCloseBtns = document.querySelectorAll(".side-panel-drawer .panel-close-btn");
+    panelCloseBtns.forEach(btn => {
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
         this.closePanelWithHistory();
@@ -320,49 +304,9 @@ class UIController {
   /* ==========================================================================
      Navigation & Panel Switching
      ========================================================================== */
-  toggleAssistant(forceState = null, skipHistory = false) {
-    const panel = document.getElementById("assistant-panel");
-    if (!panel) return;
-
-    const isMobile = window.innerWidth <= 768;
-    const willBeOpen = forceState !== null ? forceState : (
-      isMobile ? !panel.classList.contains("active") : panel.classList.contains("collapsed")
-    );
-
-    if (isMobile) {
-      if (willBeOpen) {
-        document.querySelectorAll(".side-panel-drawer:not(#assistant-panel)").forEach(p => p.classList.remove("active"));
-      }
-      panel.classList.toggle("active", willBeOpen);
-      panel.classList.toggle("collapsed", !willBeOpen);
-      document.body.classList.toggle("assistant-collapsed", !willBeOpen);
-    } else {
-      panel.classList.toggle("collapsed", !willBeOpen);
-      document.body.classList.toggle("assistant-collapsed", !willBeOpen);
-    }
-
-    const assistantNavBtn = document.querySelector('.nav-item-btn[data-view="assistant"]');
-    if (assistantNavBtn) {
-      assistantNavBtn.classList.toggle("active", willBeOpen);
-    }
-
-    if (!skipHistory) {
-      if (willBeOpen) {
-        this.setNavState("assistant");
-      } else if (history.state && history.state.type === "assistant") {
-        this.closePanelWithHistory();
-      }
-    }
-  }
-
   switchView(viewName, customOrigin = null, customDest = null) {
-    if (viewName === "assistant") {
-      this.toggleAssistant();
-      return;
-    }
-
     // Update sidebar buttons active state
-    document.querySelectorAll(".nav-item-btn:not([data-view='assistant'])").forEach(btn => {
+    document.querySelectorAll(".nav-item-btn").forEach(btn => {
       btn.classList.toggle("active", btn.dataset.view === viewName);
     });
 
@@ -370,6 +314,11 @@ class UIController {
     document.querySelectorAll(".mobile-nav-item").forEach(btn => {
       btn.classList.toggle("active", btn.dataset.view === viewName);
     });
+
+    if (viewName === "assistant") {
+      this.toggleAssistant(true);
+      return;
+    }
 
     if (viewName === "home" || viewName === "map") {
       if (history.state && history.state.depth > 0) {
@@ -379,7 +328,6 @@ class UIController {
         } catch (err) {}
       }
       this.closeLeftPanels();
-      this.toggleAssistant(false, true);
       if (window.Directions) {
         window.Directions.hideRoutePreview();
         if (window.CampusMap) window.CampusMap.clearRoute();
@@ -451,7 +399,7 @@ class UIController {
   }
 
   closeLeftPanels(isOpeningAnother = false) {
-    document.querySelectorAll(".side-panel-drawer:not(#assistant-panel)").forEach(p => p.classList.remove("active"));
+    document.querySelectorAll(".side-panel-drawer").forEach(p => p.classList.remove("active"));
     this.currentActivePanel = null;
     if (window.CampusMap) {
       window.CampusMap.clearRevealedLocations();
@@ -488,9 +436,8 @@ class UIController {
     }
 
     // Close drawers so the map is fully visible
-    document.querySelectorAll(".side-panel-drawer:not(#assistant-panel)").forEach(p => p.classList.remove("active"));
+    document.querySelectorAll(".side-panel-drawer").forEach(p => p.classList.remove("active"));
     this.currentActivePanel = null;
-    this.toggleAssistant(false);
 
     // Draw dark highlighted route on map like normal Google Maps
     if (window.CampusMap) {
@@ -854,7 +801,8 @@ class UIController {
       destName = "Block 25 (CSE)";
     }
 
-    // 1. Close or collapse assistant drawer so the user can see the map and route clearly
+
+    // 1. Hide assistant panel if open so the user can see the route clearly
     this.toggleAssistant(false);
 
     // 2. Request user location in background if available
@@ -937,8 +885,28 @@ class UIController {
     if (layerBtn) layerBtn.addEventListener("click", toggleMapBaseLayer);
     if (floatLayerBtn) floatLayerBtn.addEventListener("click", toggleMapBaseLayer);
 
+    // 5. AI Chatbot Assistant Floating Button
+    const assistantFab = document.getElementById("ctrl-assistant-fab");
+    if (assistantFab) {
+      assistantFab.addEventListener("click", () => {
+        this.toggleAssistant();
+      });
+    }
+
     // Init filter panel interactions
     this.initFilterPanel();
+  }
+
+  toggleAssistant(forceState = null) {
+    if (window.assistant && window.assistant.panel) {
+      const isHidden = window.assistant.panel.classList.contains("assistant-panel--hidden");
+      const shouldShow = forceState !== null ? forceState : isHidden;
+      window.assistant.panel.classList.toggle("assistant-panel--hidden", !shouldShow);
+      if (shouldShow) {
+        const input = window.assistant.panel.querySelector(".assistant-input");
+        if (input) setTimeout(() => input.focus(), 150);
+      }
+    }
   }
 
   /* ==========================================================================

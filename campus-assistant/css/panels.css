@@ -1,0 +1,186 @@
+/* Campus Assistant chat panel
+   MERGE NOTE: append this block to your real css/panels.css. It's scoped
+   under .assistant-* class names so it won't collide with existing rules. */
+
+:root {
+  --assistant-bg: #14181f;
+  --assistant-panel-border: #262c38;
+  --assistant-accent: #d98e3f;
+  --assistant-accent-text: #1a1206;
+  --assistant-text: #e7e9ee;
+  --assistant-text-muted: #9aa2b1;
+  --assistant-bubble-bot: #1d222c;
+  --assistant-bubble-user: #2a3444;
+}
+
+.assistant-panel {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  width: 340px;
+  max-height: 480px;
+  display: flex;
+  flex-direction: column;
+  background: var(--assistant-bg);
+  border: 1px solid var(--assistant-panel-border);
+  border-radius: 14px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.assistant-panel--hidden {
+  display: none;
+}
+
+.assistant-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--assistant-panel-border);
+}
+
+.assistant-title {
+  color: var(--assistant-text);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.assistant-close {
+  background: none;
+  border: none;
+  color: var(--assistant-text-muted);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+.assistant-close:hover {
+  color: var(--assistant-text);
+  background: var(--assistant-bubble-bot);
+}
+
+.assistant-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 220px;
+  max-height: 360px;
+}
+
+.assistant-msg {
+  max-width: 85%;
+  padding: 9px 12px;
+  border-radius: 12px;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--assistant-text);
+}
+
+.assistant-msg--bot {
+  background: var(--assistant-bubble-bot);
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+}
+
+.assistant-msg--user {
+  background: var(--assistant-bubble-user);
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+}
+
+.assistant-msg--typing .assistant-msg-text {
+  color: var(--assistant-text-muted);
+  letter-spacing: 2px;
+}
+
+.assistant-map-btn {
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--assistant-accent);
+  color: var(--assistant-accent-text);
+  border: none;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.assistant-map-btn:hover {
+  filter: brightness(1.08);
+}
+
+.assistant-input-row {
+  display: flex;
+  gap: 8px;
+  padding: 10px;
+  border-top: 1px solid var(--assistant-panel-border);
+}
+
+.assistant-input {
+  flex: 1;
+  background: var(--assistant-bubble-bot);
+  border: 1px solid var(--assistant-panel-border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: var(--assistant-text);
+  font-size: 13.5px;
+}
+
+.assistant-input:focus {
+  outline: none;
+  border-color: var(--assistant-accent);
+}
+
+.assistant-send {
+  background: var(--assistant-accent);
+  color: var(--assistant-accent-text);
+  border: none;
+  border-radius: 8px;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.assistant-send:hover {
+  filter: brightness(1.08);
+}
+
+/* Demo-only toast used by js/ui.js's stub triggerShowOnMap — remove
+   once this prototype is merged into the real project. */
+.demo-map-toast {
+  position: fixed;
+  left: 50%;
+  top: 20px;
+  transform: translateX(-50%);
+  background: var(--assistant-accent);
+  color: var(--assistant-accent-text);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  z-index: 2000;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+@media (max-width: 480px) {
+  .assistant-panel {
+    right: 10px;
+    left: 10px;
+    bottom: 10px;
+    width: auto;
+  }
+}

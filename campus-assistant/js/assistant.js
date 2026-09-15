@@ -36,19 +36,12 @@ class AssistantController {
         <button type="button" class="assistant-close" aria-label="Close assistant">&times;</button>
       </div>
       <div class="assistant-messages" role="log" aria-live="polite"></div>
-      <form class="assistant-input-row" autocomplete="off" data-lpignore="true" data-form-type="other">
+      <form class="assistant-input-row">
         <input
-          type="search"
-          name="campus_assistant_message"
+          type="text"
           class="assistant-input"
           placeholder="Ask about a block, hostel, office…"
           autocomplete="off"
-          autocorrect="off"
-          autocapitalize="off"
-          spellcheck="false"
-          enterkeyhint="send"
-          data-lpignore="true"
-          data-form-type="other"
         />
         <button type="submit" class="assistant-send" aria-label="Send">Send</button>
       </form>

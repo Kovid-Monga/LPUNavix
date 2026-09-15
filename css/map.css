@@ -18,16 +18,11 @@
 .map-floating-controls {
   position: absolute;
   bottom: 80px;
-  right: calc(380px + 36px);
+  right: 24px;
   z-index: 1000;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  transition: right var(--transition-normal);
-}
-
-body.assistant-collapsed .map-floating-controls {
-  right: 24px;
 }
 
 /* Floating Map Layer & Path Visibility Filter Card */
@@ -253,32 +248,64 @@ body.assistant-collapsed .map-floating-controls {
   transform: rotate(0deg) scale(0.92);
 }
 
-/* 5. AI Assistant Floating Button */
+/* AI Chatbot Floating Control Button (Positioned directly below Zoom +/-) */
 .ctrl-assistant-btn {
-  background: linear-gradient(135deg, #2563eb 0%, #7c3aed 50%, #f97316 100%);
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 50%, #4f46e5 100%);
   color: #ffffff;
-  border: 2px solid #ffffff;
-  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.45);
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.35), 0 2px 4px rgba(0, 0, 0, 0.08);
   position: relative;
+  overflow: visible;
+}
+
+.ctrl-assistant-btn svg {
+  width: 20px;
+  height: 20px;
+  stroke: #ffffff;
+  transition: transform var(--transition-bounce);
 }
 
 .ctrl-assistant-btn:hover {
-  background: linear-gradient(135deg, #1d4ed8 0%, #6d28d9 50%, #ea580c 100%);
+  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 50%, #4338ca 100%);
   color: #ffffff;
-  transform: scale(1.08);
-  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.6);
+  transform: scale(1.1);
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.5);
+}
+
+.ctrl-assistant-btn:hover svg {
+  transform: scale(1.12) rotate(-5deg);
+}
+
+.ctrl-assistant-btn:active {
+  transform: scale(0.92);
 }
 
 .ctrl-assistant-sparkle {
   position: absolute;
-  top: -1px;
-  right: -1px;
-  width: 10px;
-  height: 10px;
-  background: #f59e0b;
-  border: 2px solid #ffffff;
+  top: 1px;
+  right: 1px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
+  background: #38bdf8;
+  border: 1.5px solid #ffffff;
+  box-shadow: 0 0 8px #38bdf8;
+  pointer-events: none;
+  animation: assistant-sparkle-pulse 2.2s infinite ease-in-out;
 }
+
+@keyframes assistant-sparkle-pulse {
+  0%, 100% {
+    transform: scale(0.85);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.25);
+    opacity: 1;
+    box-shadow: 0 0 12px #38bdf8, 0 0 4px #60a5fa;
+  }
+}
+
 
 /* ==========================================================================
    Google Maps-Style Circular Marker Pins & Dynamic Zoom Labels

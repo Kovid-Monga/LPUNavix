@@ -15,8 +15,6 @@ def test_all():
         map_js = f.read()
     with open(os.path.join(base_dir, 'js', 'ui.js'), 'r', encoding='utf-8') as f:
         ui_js = f.read()
-    with open(os.path.join(base_dir, 'js', 'assistant.js'), 'r', encoding='utf-8') as f:
-        assistant_js = f.read()
     with open(os.path.join(base_dir, 'css', 'panels.css'), 'r', encoding='utf-8') as f:
         panels_css = f.read()
     with open(os.path.join(base_dir, 'css', 'map.css'), 'r', encoding='utf-8') as f:
@@ -110,8 +108,6 @@ def test_all():
     assert 'isNavigating: true' in ui_js
     print("✔ ui.js verified (triggerShowOnMap, startActiveNavigation)")
 
-    assert 'triggerShowOnMap' in assistant_js
-    print("✔ assistant.js verified")
 
     print("\n🎉 ALL TESTS AND ASSERTIONS PASSED PERFECTLY!")
 

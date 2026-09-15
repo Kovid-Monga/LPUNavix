@@ -375,7 +375,7 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
     lng: 75.70378526355849,
     floor: "Second Floor, Room 209",
     facilities: ["Lost and Found", "Infrastructure Queries", "Faculty Details", "General Queries"],
-    tags: ["administrative office", "admin office", "block 27", "block 28", "room 209", "lost and found", "infrastructure", "faculty details", "general queries"],
+    tags: ["administrative office", "admin office", "block 27", "block 28", "room 209", "lost and found", "lost items", "lost keys", "missing items", "lost property", "infrastructure", "faculty details", "general queries"],
     desc: "Administrative office serving Blocks 27 and 28 for lost and found, infrastructure queries, faculty details, and general queries.",
     hours: "8:00 AM - 5:30 PM",
     phone: "",

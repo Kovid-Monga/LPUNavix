@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Side Panels, Drawers, Chat Stream & Modals
+   Side Panels, Drawers, Navigation Sheets & Modals
    ========================================================================== */
 
 /* Universal Floating Side Panel Container */
@@ -469,230 +469,7 @@
   margin-top: 2px;
 }
 
-/* ==========================================================================
-   Panel 3: AI Campus Assistant (Permanent Right-Docked Panel)
-   ========================================================================== */
 
-#assistant-panel {
-  position: absolute;
-  top: 16px;
-  right: 20px;
-  bottom: 74px;
-  left: auto;
-  width: 380px;
-  max-width: calc(100vw - 120px);
-  background-color: var(--bg-surface-translucent);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: var(--glass-border);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-xl);
-  z-index: 1020;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  opacity: 1;
-  transform: translateX(0);
-  pointer-events: auto;
-  transition: transform var(--transition-normal), opacity var(--transition-normal);
-}
-
-#assistant-panel.collapsed {
-  transform: translateX(calc(100% + 40px));
-  opacity: 0;
-  pointer-events: none;
-}
-
-.chat-messages-stream {
-  flex: 1;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  padding: 4px 0;
-}
-
-.chat-bubble-row {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-}
-
-.chat-bubble-row.user {
-  flex-direction: row-reverse;
-}
-
-.ai-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
-}
-
-.chat-bubble {
-  max-width: 82%;
-  padding: 12px 16px;
-  border-radius: 18px;
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.chat-bubble-row.user .chat-bubble {
-  background: var(--color-primary);
-  color: #ffffff;
-  border-bottom-right-radius: 4px;
-}
-
-.chat-bubble-row.assistant .chat-bubble {
-  background: var(--bg-surface);
-  color: var(--text-primary);
-  border: 1px solid var(--border-light);
-  border-bottom-left-radius: 4px;
-  box-shadow: var(--shadow-sm);
-}
-
-.chat-typing-indicator {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 2px 0;
-}
-
-.typing-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--color-accent);
-  display: inline-block;
-  animation: typingBounce 1.4s infinite ease-in-out both;
-}
-
-.typing-dot:nth-child(1) { animation-delay: -0.32s; }
-.typing-dot:nth-child(2) { animation-delay: -0.16s; }
-
-@keyframes typingBounce {
-  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
-  40% { transform: scale(1.1); opacity: 1; }
-}
-
-/* Assistant Rich Content (Map Preview & Action Card) */
-.ai-map-preview-card {
-  margin-top: 10px;
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  border: 1px solid var(--border-light);
-  background: var(--bg-card);
-}
-
-.ai-map-preview-img {
-  width: 100%;
-  height: 110px;
-  object-fit: cover;
-  background: #e2e8f0;
-  display: block;
-}
-
-.ai-map-action-bar {
-  padding: 8px 12px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--bg-surface);
-}
-
-.btn-show-map {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--color-primary);
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-/* Preset Quick Prompt Suggestions */
-.quick-prompts-row {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-top: 6px;
-}
-
-.prompt-chip-btn {
-  background: var(--bg-pill);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-md);
-  padding: 8px 12px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--color-primary);
-  text-align: left;
-  transition: all var(--transition-fast);
-}
-
-.prompt-chip-btn:hover {
-  background: var(--color-primary-light);
-  border-color: var(--color-primary);
-  transform: translateX(3px);
-}
-
-/* Chat Input Bar */
-.chat-input-bar {
-  padding: 12px 16px;
-  border-top: 1px solid var(--border-light);
-  background: var(--bg-surface);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.chat-input-field {
-  flex: 1;
-  border: 1px solid var(--border-light);
-  background: var(--bg-app);
-  border-radius: var(--radius-full);
-  padding: 10px 16px;
-  font-size: 13px;
-  color: var(--text-primary);
-  outline: none;
-}
-
-.chat-input-field:focus {
-  border-color: var(--border-focus);
-}
-
-.btn-send-chat {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: var(--color-primary);
-  color: #ffffff;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 3px 10px rgba(37, 99, 235, 0.35);
-  transition: all 0.2s ease;
-  pointer-events: auto;
-}
-
-.btn-send-chat:hover:not(:disabled) {
-  background: var(--color-primary-hover);
-  transform: scale(1.06);
-}
-
-.btn-send-chat:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
 
 /* ==========================================================================
    Panel 4: Live Kart Tracking
@@ -1229,8 +1006,7 @@ body.gmaps-route-active .map-layer-toggle-card {
 
 /* Hide extra floating buttons in route preview mode so only the 3 mockup buttons show */
 body.gmaps-route-active #ctrl-zoom-in,
-body.gmaps-route-active #ctrl-zoom-out,
-body.gmaps-route-active #ctrl-assistant-fab {
+body.gmaps-route-active #ctrl-zoom-out {
   display: none !important;
 }
 
@@ -1882,4 +1658,270 @@ body.gmaps-route-active .map-floating-controls {
 [data-theme="dark"] .gmaps-action-pill.pill-secondary:hover,
 [data-theme="dark"] .gmaps-action-pill.pill-circle-share:hover {
   background: var(--bg-pill-hover);
+}
+
+/* ==========================================================================
+   Campus AI Chatbot Assistant Panel
+   Harmonized with LPUNavix Glassmorphic Design System
+   ========================================================================== */
+
+.assistant-panel {
+  position: fixed;
+  bottom: 84px;
+  right: 24px;
+  width: 380px;
+  max-width: calc(100vw - 36px);
+  height: 520px;
+  max-height: calc(100vh - 140px);
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-surface-translucent);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl), 0 0 0 1px rgba(255, 255, 255, 0.4);
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  z-index: 1040;
+  overflow: hidden;
+  transition: transform var(--transition-normal), opacity var(--transition-fast);
+}
+
+.assistant-panel--hidden {
+  display: none !important;
+}
+
+.assistant-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-light);
+  background: var(--bg-surface);
+  user-select: none;
+}
+
+.assistant-title {
+  color: var(--text-primary);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.assistant-title::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+}
+
+.assistant-close {
+  background: var(--bg-pill);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.assistant-close:hover {
+  color: var(--color-danger);
+  background: var(--color-danger-light);
+  transform: scale(1.08);
+}
+
+.assistant-close:active {
+  transform: scale(0.92);
+}
+
+.assistant-messages {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--bg-app);
+}
+
+.assistant-msg {
+  max-width: 85%;
+  padding: 10px 14px;
+  border-radius: 16px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  word-break: break-word;
+  animation: assistant-msg-pop 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes assistant-msg-pop {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.assistant-msg--bot {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+}
+
+.assistant-msg--user {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff;
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+}
+
+.assistant-msg--typing .assistant-msg-text {
+  color: var(--text-muted);
+  font-style: italic;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.assistant-map-btn {
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-primary);
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
+
+.assistant-map-btn::before {
+  content: '📍';
+  font-size: 13px;
+}
+
+.assistant-map-btn:hover {
+  background: var(--color-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+}
+
+.assistant-map-btn:active {
+  transform: translateY(0) scale(0.96);
+}
+
+.assistant-input-row {
+  display: flex;
+  gap: 8px;
+  padding: 12px 14px;
+  border-top: 1px solid var(--border-light);
+  background: var(--bg-surface);
+}
+
+.assistant-input {
+  flex: 1;
+  background: var(--bg-pill);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  padding: 10px 14px;
+  color: var(--text-primary);
+  font-size: 13.5px;
+  font-family: inherit;
+  transition: all var(--transition-fast);
+}
+
+.assistant-input:focus {
+  outline: none;
+  border-color: var(--border-focus);
+  background: var(--bg-surface);
+  box-shadow: 0 0 0 3px var(--color-primary-glow);
+}
+
+.assistant-send {
+  background: var(--color-primary);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
+
+.assistant-send:hover {
+  background: var(--color-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+}
+
+.assistant-send:active {
+  transform: translateY(0) scale(0.96);
+}
+
+/* Dark Theme Adjustments for Chatbot */
+[data-theme="dark"] .assistant-panel {
+  background: rgba(17, 24, 39, 0.95);
+  border-color: rgba(148, 163, 184, 0.2);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="dark"] .assistant-header {
+  background: #111827;
+  border-bottom-color: rgba(148, 163, 184, 0.16);
+}
+
+[data-theme="dark"] .assistant-messages {
+  background: #0b0f19;
+}
+
+[data-theme="dark"] .assistant-msg--bot {
+  background: #1e293b;
+  border-color: rgba(148, 163, 184, 0.2);
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .assistant-input-row {
+  background: #111827;
+  border-top-color: rgba(148, 163, 184, 0.16);
+}
+
+[data-theme="dark"] .assistant-input {
+  background: #1e293b;
+  border-color: rgba(148, 163, 184, 0.24);
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .assistant-close {
+  background: #1e293b;
+  border-color: rgba(148, 163, 184, 0.2);
+  color: #94a3b8;
 }

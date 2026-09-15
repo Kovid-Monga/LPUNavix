@@ -113,7 +113,7 @@ class CampusMapController {
     const isMobile = window.innerWidth <= 768;
     this.map.fitBounds(lpuBounds.pad(isMobile ? 0.04 : 0.12), { 
       paddingTopLeft: isMobile ? [95, 10] : [70, 70],
-      paddingBottomRight: isMobile ? [10, 85] : [390, 70]
+      paddingBottomRight: isMobile ? [10, 85] : [70, 70]
     });
 
     // Store exact initial center coordinates and zoom level captured on fresh page load
@@ -961,12 +961,11 @@ class CampusMapController {
 
   recenterCampus() {
     const isMobile = window.innerWidth <= 768;
-    const isAssistantOpen = !document.body.classList.contains("assistant-collapsed") && !isMobile;
     if (typeof LPU_BOUNDARY !== "undefined" && Array.isArray(LPU_BOUNDARY) && LPU_BOUNDARY.length > 0) {
       const bounds = L.latLngBounds(LPU_BOUNDARY);
       this.map.fitBounds(bounds.pad(isMobile ? 0.04 : 0.12), {
         paddingTopLeft: isMobile ? [95, 10] : [70, 70],
-        paddingBottomRight: isMobile ? [10, 85] : [isAssistantOpen ? 390 : 70, 70],
+        paddingBottomRight: isMobile ? [10, 85] : [70, 70],
         animate: true,
         duration: 1
       });

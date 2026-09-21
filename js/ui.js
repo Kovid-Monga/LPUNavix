@@ -548,10 +548,18 @@ class UIController {
       (g.desc && g.desc.toLowerCase().includes(q))
     ) : [];
 
-    // 2. Search in individual CAMPUS_LOCATIONS (Blocks, Labs, Shops)
+    // 2. Search in individual CAMPUS_LOCATIONS (Blocks, Labs, Shops, Personnel)
     const allLocations = getAllCampusLocations();
     const matchingLocations = allLocations.filter(loc =>
       loc.name.toLowerCase().includes(q) ||
+      (loc.uid && String(loc.uid).toLowerCase().includes(q)) ||
+      (loc.responsibility && loc.responsibility.toLowerCase().includes(q)) ||
+      (loc.role && loc.role.toLowerCase().includes(q)) ||
+      (loc.designation && loc.designation.toLowerCase().includes(q)) ||
+      (loc.department_or_subject && loc.department_or_subject.toLowerCase().includes(q)) ||
+      (loc.location_notation && loc.location_notation.toLowerCase().includes(q)) ||
+      (loc.room && loc.room.toLowerCase() === q) ||
+      (loc.block && (q === `block ${loc.block}` || q === `b${loc.block}`)) ||
       (loc.groupName && loc.groupName.toLowerCase().includes(q)) ||
       (Array.isArray(loc.facilities) && loc.facilities.some(f => f.toLowerCase().includes(q))) ||
       (Array.isArray(loc.tags) && loc.tags.some(t => t.toLowerCase().includes(q))) ||
@@ -588,24 +596,35 @@ class UIController {
       });
     }
 
-    // Render Individual Locations (Blocks, Shops, Labs)
+    // Render Individual Locations (Blocks, Shops, Labs, Personnel)
     if (matchingLocations.length > 0) {
       if (matchingGroups.length > 0) {
-        html += `<div style="padding:10px 14px 2px;font-size:10px;font-weight:800;letter-spacing:0.05em;color:var(--text-muted);text-transform:uppercase;border-top:1px solid var(--border-subtle);">Individual Blocks & Outlets</div>`;
+        html += `<div style="padding:10px 14px 2px;font-size:10px;font-weight:800;letter-spacing:0.05em;color:var(--text-muted);text-transform:uppercase;border-top:1px solid var(--border-subtle);">Locations & Personnel</div>`;
       }
       matchingLocations.forEach(loc => {
-        const subText = loc.groupName ? `${loc.floor || ""} • ${loc.groupName}` : (loc.floor || "");
+        const isPerson = Boolean(loc.uid);
+        const subText = isPerson
+          ? `${loc.designation || loc.role || "Faculty"} • ${loc.floor || ""}`
+          : (loc.groupName ? `${loc.floor || ""} • ${loc.groupName}` : (loc.floor || ""));
+
+        const typeBadge = isPerson
+          ? (loc.role || loc.responsibility || "Faculty")
+          : (loc.type || "Location");
+
+        const iconHtml = isPerson
+          ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`
+          : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>`;
 
         html += `
           <div class="suggestion-item" onclick="window.UIController.selectSearchResult('${loc.id}')">
-            <div class="suggestion-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            <div class="suggestion-icon" ${isPerson ? 'style="background:#fef3c7;color:#d97706;"' : ''}>
+              ${iconHtml}
             </div>
             <div class="suggestion-info">
               <span class="suggestion-title">${loc.name}</span>
               <span class="suggestion-sub">${subText}</span>
             </div>
-            <span class="suggestion-type">${loc.type || "Location"}</span>
+            <span class="suggestion-type" ${isPerson ? 'style="background:#fef3c7;color:#92400e;"' : ''}>${typeBadge}</span>
           </div>
         `;
       });
@@ -658,14 +677,12 @@ class UIController {
     if (titleEl) titleEl.textContent = group.name;
 
     const floorEl = document.getElementById("detail-floor");
-    if (floorEl) {
-      floorEl.textContent = group.blocks ? `${group.blocks.length} Blocks in this zone` : (group.shops ? `${group.shops.length} Outlets inside` : "Campus Zone");
-    }
+    if (floorEl) floorEl.textContent = group.type || "Department Zone";
 
-    // Get child member locations
-    const childLocations = group.blocks
-      ? CAMPUS_LOCATIONS.filter(l => group.blocks.includes(l.id))
-      : (group.shops ? CAMPUS_LOCATIONS.filter(l => l.groupId === group.id) : []);
+    // Members list (Blocks or Outlets)
+    const childLocations = (group.blocks || []).map(bId =>
+      getAllCampusLocations().find(l => l.id === bId)
+    ).filter(Boolean);
 
     let childMembersHtml = "";
     if (childLocations.length > 0) {
@@ -739,7 +756,7 @@ class UIController {
     if (Array.isArray(loc.facilities) && loc.facilities.length > 0) {
       facilitiesHtml = `
         <div style="margin-top:8px;">
-          <div style="font-weight:700;font-size:11px;color:var(--text-muted);margin-bottom:4px;">KEY FACILITIES / LABS:</div>
+          <div style="font-weight:700;font-size:11px;color:var(--text-muted);margin-bottom:4px;">KEY FACILITIES / DETAILS:</div>
           <div style="display:flex;flex-wrap:wrap;gap:4px;">
             ${loc.facilities.map(f => `<span style="padding:2px 8px;border-radius:12px;background:var(--bg-pill);font-size:11px;font-weight:600;color:var(--text-secondary);">${f}</span>`).join("")}
           </div>
@@ -747,8 +764,26 @@ class UIController {
       `;
     }
 
+    // Personnel structured info if available
+    let personnelHtml = "";
+    if (loc.uid) {
+      personnelHtml = `
+        <div style="margin-top:10px;padding:12px;background:var(--bg-pill);border-radius:var(--radius-md);display:flex;flex-direction:column;gap:6px;font-size:12px;">
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);font-weight:600;">UID:</span><span style="font-weight:700;color:var(--text-primary);">${loc.uid}</span></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);font-weight:600;">Designation:</span><span style="font-weight:700;color:var(--text-primary);">${loc.designation || "Faculty"}</span></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);font-weight:600;">Role:</span><span style="font-weight:700;color:var(--color-primary);">${loc.role || loc.responsibility || "Faculty"}</span></div>
+          ${loc.department_or_subject ? `<div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);font-weight:600;">Department:</span><span style="font-weight:700;color:var(--text-primary);">${loc.department_or_subject}</span></div>` : ""}
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);font-weight:600;">Block:</span><span style="font-weight:700;color:var(--text-primary);">Block ${loc.block}</span></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);font-weight:600;">Room:</span><span style="font-weight:700;color:var(--text-primary);">${loc.room}</span></div>
+          ${loc.seating ? `<div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);font-weight:600;">Cabin / Seating:</span><span style="font-weight:700;color:var(--text-primary);">Cabin ${loc.seating}</span></div>` : ""}
+          ${loc.office ? `<div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);font-weight:600;">Office:</span><span style="font-weight:700;color:var(--text-primary);">${loc.office}</span></div>` : ""}
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);font-weight:600;">Location Code:</span><span style="font-weight:700;color:var(--text-primary);">${loc.location_notation || `${loc.block}-${loc.room}`}</span></div>
+        </div>
+      `;
+    }
+
     const descEl = document.getElementById("detail-desc");
-    if (descEl) descEl.innerHTML = `${loc.desc || ""}${facilitiesHtml}`;
+    if (descEl) descEl.innerHTML = `${loc.desc || ""}${personnelHtml}${facilitiesHtml}`;
 
     const hoursEl = document.getElementById("detail-hours");
     if (hoursEl) hoursEl.textContent = loc.hours || "Open Daily";

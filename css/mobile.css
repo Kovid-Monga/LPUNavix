@@ -1092,9 +1092,42 @@
   }
 
   .assistant-msg {
-    max-width: 88% !important;
+    max-width: 92% !important;
     font-size: 13px !important;
     padding: 9px 13px !important;
+  }
+
+  .assistant-card {
+    padding: 9px 11px !important;
+    margin: 6px 0 !important;
+  }
+
+  .assistant-card-header {
+    font-size: 13px !important;
+  }
+
+  .assistant-card-meta {
+    font-size: 11.5px !important;
+  }
+
+  .assistant-card-loc {
+    font-size: 11.5px !important;
+    padding: 5px 8px !important;
+  }
+
+  .assistant-actions {
+    gap: 6px !important;
+    margin-top: 8px !important;
+  }
+
+  .assistant-action-btn {
+    font-size: 11.5px !important;
+    padding: 7px 11px !important;
+  }
+
+  .assistant-chip {
+    font-size: 11px !important;
+    padding: 4px 9px !important;
   }
 
   .assistant-input-row {

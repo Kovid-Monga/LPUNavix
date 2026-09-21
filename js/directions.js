@@ -355,10 +355,12 @@ class DirectionsController {
     // 2. Search Local Campus Locations
     const allLocs = (typeof getAllCampusLocations === "function") ? getAllCampusLocations() : (CAMPUS_LOCATIONS || []);
     
-    // Direct / ID Match
+    // Direct / ID / Location Notation / UID Match
     const exact = allLocs.find(l => 
       l.name.toLowerCase() === cleanName ||
-      l.id.toLowerCase() === cleanName
+      l.id.toLowerCase() === cleanName ||
+      (l.location_notation && l.location_notation.toLowerCase() === cleanName) ||
+      (l.uid && String(l.uid).toLowerCase() === cleanName)
     );
     if (exact) return { lat: exact.lat, lon: exact.lng, display: exact.name };
 

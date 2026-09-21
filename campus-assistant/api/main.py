@@ -121,7 +121,7 @@ async def chat(req: ChatRequest) -> ChatResponse:
         raise HTTPException(status_code=503, detail="Assistant is still starting up, try again shortly.")
 
     query_embedding = embed_query(question)
-    ranked = retriever.rank(query_embedding)
+    ranked = retriever.rank(query_embedding, query_text=question)
 
     if not ranked:
         reply = (
@@ -135,7 +135,14 @@ async def chat(req: ChatRequest) -> ChatResponse:
 
     context_records = [r.context | {"id": r.id, "name": r.name} for r, _ in ranked if classify_match(_) != "none"]
 
-    reply = generate_reply(question, context_records, match_quality=tier)
+    try:
+        reply = generate_reply(question, context_records, match_quality=tier)
+    except Exception:
+        try:
+            from api.gemini_client import _format_grounded_fallback
+            reply = _format_grounded_fallback(question, context_records, match_quality=tier)
+        except Exception:
+            reply = f"I couldn't reach the assistant service right now, but I can help you find campus blocks, faculty offices, and departments."
 
     if tier == "none":
         return ChatResponse(reply=reply, locationId=None, title=None)

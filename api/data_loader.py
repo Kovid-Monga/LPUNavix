@@ -121,6 +121,17 @@ class Record:
     category: str | None
     blob: str  # combined text used for embedding
     context: dict = field(default_factory=dict)  # fields shown to the LLM
+    uid: str | None = None
+    designation: str | None = None
+    responsibility: str | None = None
+    role: str | None = None
+    department_or_subject: str | None = None
+    block: str | None = None
+    room: str | None = None
+    seating: str | None = None
+    office: str | None = None
+    location_notation: str | None = None
+    parent_block_id: str | None = None
 
 
 def _blob(*parts: Any) -> str:
@@ -175,31 +186,83 @@ def normalize(raw: dict[str, list[dict]]) -> list[Record]:
 
     for loc_list, kind in ((raw["locations"], "location"), (raw["offices"], "office")):
         for loc in loc_list:
+            is_personnel = bool(loc.get("uid") or loc.get("role") or loc.get("responsibility"))
+            parent_block_id = loc.get("parentBlockIds", [None])[0] if loc.get("parentBlockIds") else None
+
+            ctx = {
+                "name": loc.get("name"),
+                "type": loc.get("type"),
+                "desc": loc.get("desc"),
+                "facilities": loc.get("facilities"),
+                "hours": loc.get("hours"),
+                "phone": loc.get("phone"),
+                "floor": loc.get("floor"),
+                "groupName": loc.get("groupName"),
+                "category": loc.get("category"),
+            }
+
+            if is_personnel:
+                if loc.get("uid"):
+                    ctx["uid"] = str(loc.get("uid"))
+                if loc.get("designation"):
+                    ctx["designation"] = loc.get("designation")
+                if loc.get("role") or loc.get("responsibility"):
+                    ctx["role"] = loc.get("role") or loc.get("responsibility")
+                    ctx["responsibility"] = loc.get("responsibility") or loc.get("role")
+                if loc.get("department_or_subject"):
+                    ctx["department_or_subject"] = loc.get("department_or_subject")
+                if loc.get("block"):
+                    ctx["block"] = str(loc.get("block"))
+                if loc.get("room"):
+                    ctx["room"] = str(loc.get("room"))
+                if loc.get("seating"):
+                    ctx["seating"] = str(loc.get("seating"))
+                if loc.get("office"):
+                    ctx["office"] = loc.get("office")
+                if loc.get("location_notation"):
+                    ctx["location_notation"] = loc.get("location_notation")
+                if parent_block_id:
+                    ctx["parentBlockId"] = parent_block_id
+
+            blob_parts = [
+                loc.get("name"),
+                f"UID {loc.get('uid')}" if loc.get("uid") else None,
+                loc.get("designation"),
+                loc.get("responsibility"),
+                loc.get("role"),
+                loc.get("department_or_subject"),
+                f"HOD of {loc.get('department_or_subject')}" if loc.get("department_or_subject") else None,
+                f"Block {loc.get('block')}" if loc.get("block") else None,
+                f"Room {loc.get('room')}" if loc.get("room") else None,
+                f"Cabin {loc.get('seating')}" if loc.get("seating") else None,
+                loc.get("office"),
+                loc.get("location_notation"),
+                loc.get("type"),
+                loc.get("desc"),
+                loc.get("facilities"),
+                loc.get("tags"),
+                loc.get("groupName"),
+            ]
+
             records.append(
                 Record(
                     id=loc["id"],
                     name=loc.get("name", ""),
                     kind=kind,
                     category=loc.get("category"),
-                    blob=_blob(
-                        loc.get("name"),
-                        loc.get("type"),
-                        loc.get("desc"),
-                        loc.get("facilities"),
-                        loc.get("tags"),
-                        loc.get("groupName"),
-                    ),
-                    context={
-                        "name": loc.get("name"),
-                        "type": loc.get("type"),
-                        "desc": loc.get("desc"),
-                        "facilities": loc.get("facilities"),
-                        "hours": loc.get("hours"),
-                        "phone": loc.get("phone"),
-                        "floor": loc.get("floor"),
-                        "groupName": loc.get("groupName"),
-                        "category": loc.get("category"),
-                    },
+                    blob=_blob(*blob_parts),
+                    context=ctx,
+                    uid=str(loc.get("uid")) if loc.get("uid") else None,
+                    designation=loc.get("designation"),
+                    responsibility=loc.get("responsibility"),
+                    role=loc.get("role"),
+                    department_or_subject=loc.get("department_or_subject"),
+                    block=str(loc.get("block")) if loc.get("block") else None,
+                    room=str(loc.get("room")) if loc.get("room") else None,
+                    seating=str(loc.get("seating")) if loc.get("seating") else None,
+                    office=loc.get("office"),
+                    location_notation=loc.get("location_notation"),
+                    parent_block_id=parent_block_id,
                 )
             )
 

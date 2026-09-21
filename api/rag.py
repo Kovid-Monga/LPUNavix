@@ -160,7 +160,10 @@ async def chat(req: ChatRequest) -> ChatResponse:
 
     # Greetings and general pleasantries do not ask for a map location
     if is_greeting_or_chitchat(question):
-        reply = generate_reply(question, [], match_quality="none")
+        try:
+            reply = generate_reply(question, [], match_quality="none")
+        except Exception:
+            reply = "Hello! 😊 I'm your LPUNavix Campus Assistant. How can I help you find buildings, faculty cabins, or departments today?"
         return ChatResponse(reply=reply, locationId=None, title=None)
 
     retriever: Optional[Retriever] = _state.get("retriever")
@@ -168,11 +171,11 @@ async def chat(req: ChatRequest) -> ChatResponse:
         raise HTTPException(status_code=503, detail="Assistant is still starting up, try again shortly.")
 
     query_embedding = embed_query(question)
-    ranked = retriever.rank(query_embedding)
+    ranked = retriever.rank(query_embedding, query_text=question)
 
     if not ranked:
         reply = (
-            f"I don't have any campus data loaded to answer that yet. "
+            f"Hmm, I don't have any campus data loaded to answer that yet. "
             f"Once it's set up I can help with {CAN_HELP_WITH}."
         )
         return ChatResponse(reply=reply, locationId=None, title=None)
@@ -182,7 +185,14 @@ async def chat(req: ChatRequest) -> ChatResponse:
 
     context_records = [r.context | {"id": r.id, "name": r.name} for r, _ in ranked if classify_match(_) != "none"]
 
-    reply = generate_reply(question, context_records, match_quality=tier)
+    try:
+        reply = generate_reply(question, context_records, match_quality=tier)
+    except Exception:
+        try:
+            from api.gemini_client import _format_grounded_fallback
+            reply = _format_grounded_fallback(question, context_records, match_quality=tier)
+        except Exception:
+            reply = f"I couldn't reach the assistant service right now, but I can help you find campus blocks, faculty offices, and departments."
 
     # Check if the generated reply explicitly states no information is available
     fallback_negative_phrases = (
@@ -192,11 +202,14 @@ async def chat(req: ChatRequest) -> ChatResponse:
         "no relevant records",
         "cannot find",
         "could not find",
+        "couldn't find",
+        "can't find",
         "not in my records",
         "not present in my records",
         "don't have any campus data",
         "do not have any campus data",
         "no records available",
+        "no matching",
     )
     is_negative_reply = any(phrase in reply.lower() for phrase in fallback_negative_phrases)
 

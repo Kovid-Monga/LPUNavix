@@ -13,6 +13,7 @@
 1. **Interactive Campus Map**: Leaflet-based map with custom layers (CartoDB Positron, OSM, Google Satellite), campus boundary geo-fencing, POI markers, and category filtering.
 2. **Turn-by-Turn Multimodal Routing**: Graph-based pathfinding (A*/Dijkstra) running entirely on an internal campus road/footpath network graph with walking and driving modes.
 3. **Real-Time Live Kart Tracker**: GPS telemetry ingestion server (FastAPI) and live frontend viewer with EMA (Exponential Moving Average) smoothing, deadband filtering, and animated interpolation for campus shuttles.
+4. **AI Campus Assistant**: RAG-powered chatbot with vector similarity matching (`gemini-embedding-exp-03-07` / local cache), grounded contextual responses via Gemini 2.5 Flash, and one-click "🗺️ Show on Map" routing integration.
 
 ---
 
@@ -22,7 +23,7 @@
 |---|---|
 | **Frontend Core** | Vanilla HTML5, Vanilla CSS3 (modular stylesheets), Vanilla JavaScript (ES6+ modular controllers) |
 | **Mapping Engine** | [Leaflet.js 1.9.4](https://leafletjs.com/), `leaflet-rotate-src.js`, `leaflet.polylineDecorator.js` |
-| **Backend API** | Python 3.10+, [FastAPI](https://fastapi.tiangolo.com/), Uvicorn, Pydantic v2 |
+| **Backend API** | Python 3.10+, [FastAPI](https://fastapi.tiangolo.com/), Uvicorn, Pydantic v2, Google GenAI SDK |
 | **Testing** | `unittest`, `pytest`, `httpx` (for FastAPI test client), Node test scripts |
 | **Deployment** | Render Web Service (`render.yaml`), Uvicorn on `$PORT` serving both API routes and static frontend |
 
@@ -34,7 +35,7 @@
 d:\LPUNavix\
 ├── api\
 │   ├── __init__.py
-│   ├── main.py              # FastAPI server: kart tracking endpoints, static file mount
+│   ├── main.py              # FastAPI server: kart tracking endpoints, static file mount, lifespan
 │   ├── rag.py               # Campus Assistant RAG pipeline, cache hashing, and POST /api/chat router
 │   ├── data_loader.py       # Parses js/data.js into Record objects for embedding
 │   ├── retrieval.py         # Vector similarity search, ranking, and match classification
@@ -45,10 +46,11 @@ d:\LPUNavix\
 │   ├── sidebar.css          # Left vertical navigation sidebar
 │   ├── topbar.css           # Top search bar, category pills, mobile header
 │   ├── map.css              # Leaflet map container, custom marker pins, pulse animations
-│   ├── panels.css           # Sliding drawers, location cards, directions sheet
+│   ├── panels.css           # Sliding drawers, location cards, directions sheet, assistant panel
 │   └── mobile.css           # Responsive breakpoints (<768px), mobile bottom sheets
 ├── js\
 │   ├── app.js               # Application bootstrap: calls init() across all controllers on DOMContentLoaded
+│   ├── assistant.js         # AssistantController: AI chat panel, cards, and Show on Map action dispatch
 │   ├── boundary.js          # GeoJSON polygon array for the LPU campus outer boundary
 │   ├── campus_roads.js      # Raw coordinate arrays and geometry tags for roads & footpaths
 │   ├── data.js              # Ground truth database: CAMPUS_LOCATIONS, CAMPUS_GROUPS, CAMPUS_OFFICES, etc.
@@ -58,11 +60,12 @@ d:\LPUNavix\
 │   └── ui.js                # UIController: search suggestions, category filtering, drawer views, modals
 ├── tests\
 │   ├── test_api.py          # Unit tests for /health, /api/location, /api/locations
+│   ├── test_personnel_rag.py # Unit tests for faculty/HOD RAG retrieval, chat API, and map triggers
 │   ├── test_navigation_flow.js # Navigation state and back-button flow tests
 │   ├── test_restyle_directions.js # Directions UI and markup tests
 │   ├── test_stop_routing_flow.js  # Intermediate stops and connector tests
 │   └── verify_all.py        # Comprehensive project structural assertions
-├── .env                     # Local environment configuration
+├── .env                     # Local environment configuration (GEMINI_API_KEY)
 ├── index.html               # Main SPA markup: map canvas, sidebars, sheets
 ├── render.yaml              # Render deployment configuration
 ├── requirements.txt         # Python dependencies
@@ -81,7 +84,8 @@ DOMContentLoaded
        ├─► window.CampusMap.init()          (js/map.js)
        ├─► window.UIController.init()       (js/ui.js)
        ├─► window.Directions.init()         (js/directions.js)
-       └─► window.KartTracker.init()        (js/karts.js)
+       ├─► window.KartTracker.init()        (js/karts.js)
+       └─► new AssistantController().init() (js/assistant.js)
 ```
 
 ### Module Roles & Interfaces
@@ -130,11 +134,18 @@ DOMContentLoaded
    - EMA smoothing (`EMA_ALPHA = 0.25`), deadband filter (`MIN_MOVE_DEG = 0.00003`, ~3 m), animated interpolation (`ANIM_DURATION_MS = 2500 ms`).
    - GPS positions glide smoothly to new coords via `requestAnimationFrame`.
 
+5. **`AssistantController` (`js/assistant.js`)**:
+   - Manages the floating AI Campus Assistant chat drawer (`.assistant-panel`).
+   - Interfaces directly with `POST /api/chat`.
+   - Formats replies with markdown parsing, bold/italics, and structured visual cards (faculty cabins, departments, facilities).
+   - **Direct Map Trigger**: For bot responses containing a matched `locationId`, renders a single, clean **"🗺️ Show on Map"** button (`.assistant-map-btn`) which delegates directly to `uiController.triggerShowOnMap(locationId, title)`.
+   - Clean UI: extraneous suggestion buttons/chips are suppressed so users are presented with only the actionable "Show on Map" button.
+
 ---
 
 ## 5. Backend Architecture & API Specifications
 
-The backend is built with **FastAPI** (`api/main.py`). It serves both the API and the frontend static files. There are **exactly 3 HTTP endpoints**:
+The backend is built with **FastAPI** (`api/main.py`). It serves both the API endpoints and the frontend static files. There are **4 primary HTTP endpoints**:
 
 ### 1. Health Check
 - **Route**: `GET /health`
@@ -167,6 +178,21 @@ The backend is built with **FastAPI** (`api/main.py`). It serves both the API an
     }
   ]
   ```
+
+### 4. Campus Assistant AI Chat
+- **Route**: `POST /api/chat`
+- **Pydantic models**:
+  - Request: `ChatRequest { message: str }`
+  - Response: `ChatResponse { reply: str, locationId: Optional[str], title: Optional[str], chips: Optional[List[str]] }`
+- **RAG Pipeline & Embeddings (`api/rag.py`, `api/retrieval.py`, `api/data_loader.py`)**:
+  - Parses 65+ campus locations, blocks, and personnel records (HODs, faculty cabins, admin officers) from `js/data.js`.
+  - Embeds queries using `gemini-embedding-exp-03-07`.
+  - Ranks with vector cosine similarity via `Retriever` and classifies confidence (`confident`, `probable`, `none`).
+  - Synthesizes grounded natural language reply using Gemini 2.5 Flash (`gemini-2.5-flash`).
+  - On confident location matches, passes `locationId` and `title` to activate the "🗺️ Show on Map" action button.
+  - Gracefully falls back to deterministic rule-based matching if Gemini API is unreachable.
+- **Zero-Latency Embeddings Cache (`api/embeddings_cache.json`)**:
+  - Loaded during FastAPI `lifespan(app)`. Validates SHA256 hash of `data.js` and model; startup takes <15ms from cache.
 
 ### Static File Serving
 - `app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")` is mounted **last** (after all API routes). `STATIC_DIR` is the project root (`d:\LPUNavix\`).
@@ -226,8 +252,9 @@ The backend is built with **FastAPI** (`api/main.py`). It serves both the API an
 
 ---
 
-### Section 3 — `CAMPUS_OFFICES` (Room-level offices inside blocks)
-> Fine-grained office locations visible only at high zoom (zoom ≥ `visibleFromZoom`). Declared as `var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [...]` — merged with `CAMPUS_LOCATIONS` by `getAllCampusLocations()`.
+### Section 3 — `CAMPUS_OFFICES` (Faculty Cabins, HODs, & Room-level Offices)
+> Fine-grained office and personnel locations visible at high zoom (zoom ≥ `visibleFromZoom`). Declared as `var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [...]` — merged with `CAMPUS_LOCATIONS` by `getAllCampusLocations()`.
+> Contains general administrative offices, school leadership, and individual faculty cabins/personnel.
 
 ```javascript
 // var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [ ... ]
@@ -246,6 +273,26 @@ The backend is built with **FastAPI** (`api/main.py`). It serves both the API an
   facilities: ["Lost and Found", "Infrastructure Queries", "Faculty Details", "General Queries"],
   tags: ["administrative office", "admin office", "block 28", "room 209", "lost and found"],
   desc: "Administrative office serving Blocks 27 and 28.",
+  hours: "8:00 AM - 5:30 PM",
+  phone: "",
+  image: ""
+},
+// Faculty / Personnel Cabin Record Schema:
+{
+  id: "faculty-timan-kumar-admin",
+  name: "Timan Kumar (Admin Officer)",
+  groupId: "cse-dept",
+  groupName: "School of Computer Science & Engineering (CSE)",
+  category: "offices",
+  type: "Faculty Cabin",
+  parentBlockIds: ["block-26"],
+  visibleFromZoom: 19,
+  lat: 31.252700,
+  lng: 75.703200,
+  floor: "Floor 2, Room 204 (Notation: 26-204)",
+  facilities: ["Cabin Consultation", "Faculty Seating"],
+  tags: ["timan kumar", "admin officer", "block 26", "room 204", "26-204", "uid 13815"],
+  desc: "Timan Kumar, Officer. Role: Admin Officer. Office: Admin Office. Located in Block 26, Room 204.",
   hours: "8:00 AM - 5:30 PM",
   phone: "",
   image: ""
@@ -303,11 +350,16 @@ The backend is built with **FastAPI** (`api/main.py`). It serves both the API an
 3. Ensure coordinates are `[lat, lng]` (latitude ~31.25, longitude ~75.70).
 4. Provide comprehensive search `tags` (lowercase) for instant search indexing.
 
-### B. Updating Campus Road Graph
+### B. Adding or Updating Faculty & HOD Cabin Records
+1. Open `js/data.js`.
+2. Add or modify the personnel entry under `CAMPUS_OFFICES` with `tags` including faculty name, cabin notation (e.g. `34-402`), block, and UID.
+3. On server restart, `api/main.py` detects changes in `data.js` via SHA256 hashing and automatically refreshes `api/embeddings_cache.json`.
+
+### C. Updating Campus Road Graph
 1. If adding individual path segments, add them directly to `js/campus_roads.js` under `CAMPUS_ROADS_DATA` with appropriate `highway` tag (`service` for cars/karts, `footway` for walking-only paths).
 2. To regenerate from OpenStreetMap: run `python sync_campus_osm.py` (queries Overpass API for LPU bounding box and outputs updated JS arrays).
 
-### C. Adding or Simulating a Kart
+### D. Adding or Simulating a Kart
 1. To send a live GPS coordinate to the tracker:
    ```bash
    curl -X POST "http://localhost:3000/api/location" \
@@ -315,6 +367,16 @@ The backend is built with **FastAPI** (`api/main.py`). It serves both the API an
      -d '{"id": "kart-test", "lat": 31.2536, "lng": 75.7037}'
    ```
 2. The frontend `js/karts.js` will automatically pick up `kart-test` on the next 3-second poll and render a marker.
+
+### E. Running Tests
+- **All Backend & RAG Tests**:
+  ```bash
+  python -m pytest tests/test_api.py tests/test_personnel_rag.py -q
+  ```
+- **Structural Sanity Verification**:
+  ```bash
+  python tests/verify_all.py
+  ```
 
 ---
 
@@ -327,12 +389,17 @@ The backend is built with **FastAPI** (`api/main.py`). It serves both the API an
    - Browsers and phones will always fetch the newest code on reload. Version bumping (`?v=...`) is no longer required.
 3. **Static Route Precedence in FastAPI**:
    - In `api/main.py`, `app.mount("/", StaticFiles(...))` MUST remain the very last route registered. If registered earlier, it will intercept and block `/api/*` endpoints.
-4. **Local Development Port & Testing**:
+4. **Chatbot Action Buttons Policy**:
+   - In the Campus Assistant chat interface, **only the "🗺️ Show on Map" action button** should be displayed when a campus location or cabin is matched. Do not display extraneous suggestion chips or duplicate buttons in the chat message stream.
+5. **Gemini API Key & Offline Resilience**:
+   - Configure `GEMINI_API_KEY` in `.env`.
+   - If the API key is absent, depleted, or unreachable, `api/gemini_client.py` and `api/rag.py` transparently fall back to deterministic grounded record matching without throwing 500 errors.
+6. **ngrok & Campus Wi-Fi / Proxy TLS Gotcha**:
+   - When running `ngrok http 3000` on university/enterprise networks (such as LPU Wireless with Fortinet / Cyberoam / Sophos deep packet inspection), ngrok may fail with:  
+     `tls: failed to verify certificate: x509: certificate signed by unknown authority`.
+   - **Workarounds**: Connect via mobile hotspot (which has no institutional SSL proxy), or use an SSH-based tunnel like Pinggy (`ssh -p 443 -R0:localhost:3000 a.pinggy.io`) or Cloudflare Tunnel (`cloudflared`).
+7. **Local Development Port & Server Command**:
    - Local default server runs on `http://localhost:3000`. Run via:
      ```bash
      uvicorn api.main:app --host 0.0.0.0 --port 3000 --reload
-     ```
-   - Run automated test suite via:
-     ```bash
-     python -m unittest discover -s tests -p "test_*.py"
      ```

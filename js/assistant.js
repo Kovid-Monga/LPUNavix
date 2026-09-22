@@ -60,15 +60,7 @@ class AssistantController {
     });
 
     this._addBotMessage(
-      "Hi there! 😊 I'm your LPUNavix Campus Assistant.\n\nAsk me about faculty cabins, academic departments, blocks, hostels, or campus services!",
-      {
-        chips: [
-          'Where is Block 34?',
-          'HOD of AI and ML',
-          'Who is the HOS?',
-          'Uni Health Center',
-        ],
-      }
+      "Hey there! 👋 I'm your LPUNavix Campus Guide ✨\n\nNeed to find a faculty cabin, academic block, food spot, or department? Ask me anything!"
     );
   }
 
@@ -155,7 +147,7 @@ class AssistantController {
         .map((l) => l.trim())
         .filter(Boolean);
       const firstLine = lines[0] || '';
-      const hasCardEmoji = /^(👩‍🏫|🏢|🏛️|📌|👨‍🏫)/.test(firstLine);
+      const hasCardEmoji = /^(👩‍🏫|🏢|🏛️|📌|👨‍🏫|🍕|🍔|🏥|🩺|🔬|💻|📚)/.test(firstLine);
       const hasLocationPin = lines.some((l) => l.includes('📍'));
 
       if (hasCardEmoji || (hasLocationPin && lines.length >= 2)) {
@@ -185,7 +177,7 @@ class AssistantController {
           </div>
         `);
       } else if (
-        /^(would you like|do you want|anything else|can i help|is there anything)/i.test(trimmed) ||
+        /^(would you like|do you want|anything else|can i help|is there anything|need directions|want to see|tap below)/i.test(trimmed) ||
         (trimmed.endsWith('?') && lines.length === 1)
       ) {
         htmlBlocks.push(`<p class="assistant-msg-followup">${this._formatInline(trimmed)}</p>`);
@@ -198,7 +190,7 @@ class AssistantController {
     return htmlBlocks.join('');
   }
 
-  _addBotMessage(text, { locationId = null, title = null, chips = null } = {}) {
+  _addBotMessage(text, { locationId = null, title = null } = {}) {
     const el = document.createElement('div');
     el.className = 'assistant-msg assistant-msg--bot';
 
@@ -229,38 +221,7 @@ class AssistantController {
       });
       actionsEl.appendChild(mapBtn);
 
-      const askBtn = document.createElement('button');
-      askBtn.className = 'assistant-action-btn assistant-ask-btn';
-      askBtn.type = 'button';
-      askBtn.innerHTML = '<span>🔍 Ask Another Query</span>';
-      askBtn.addEventListener('click', () => {
-        if (this.inputEl) {
-          this.inputEl.focus();
-          this.inputEl.select();
-        }
-      });
-      actionsEl.appendChild(askBtn);
-
       el.appendChild(actionsEl);
-    }
-
-    // Quick suggestion prompt chips
-    if (chips && Array.isArray(chips) && chips.length > 0) {
-      const chipsEl = document.createElement('div');
-      chipsEl.className = 'assistant-chips';
-      chips.forEach((query) => {
-        const chip = document.createElement('button');
-        chip.type = 'button';
-        chip.className = 'assistant-chip';
-        chip.textContent = query;
-        chip.addEventListener('click', () => {
-          if (this.sending) return;
-          this._addUserMessage(query);
-          this._sendMessage(query);
-        });
-        chipsEl.appendChild(chip);
-      });
-      el.appendChild(chipsEl);
     }
 
     this.messagesEl.appendChild(el);

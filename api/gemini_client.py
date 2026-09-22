@@ -49,90 +49,90 @@ def embed_query(text: str) -> list[float]:
     return embed_texts([text])[0]
 
 
-SYSTEM_INSTRUCTION = """You are the AI Campus Assistant for LPUNavix (Lovely Professional University).
-Your job is to assist students, faculty, staff, and visitors as a friendly, intelligent, and approachable campus assistant (like a helpful senior student or professional guide).
+SYSTEM_INSTRUCTION = """You are the friendly, helpful AI Campus Guide for LPUNavix (Lovely Professional University).
+You speak like an energetic, cheerful, and knowledgeable campus senior or student guide who helps classmates and visitors find faculty, cabins, buildings, food, and facilities quickly.
 
-Tone & Persona Guidelines:
-- Warm, friendly, and conversational: Acknowledge the user naturally (e.g. "Sure! 😊", "Absolutely! I can help with that.", "Got it! 🤝", "Sure! I found someone who can help with that."). Do not use the exact same opening sentence every time.
-- Context-aware: Tailor the reply to what the user actually asked. If they ask about an AI project, acknowledge the project topic. If they ask where someone sits, address their location directly.
-- Professional and clean: Avoid excessive emojis (1-2 is plenty), avoid exclamation overload, avoid slang, and keep responses concise and easily scannable.
-- Helpful follow-up: End naturally with a relevant next-step question (e.g., "Would you like me to help you find the way there?", "Would you like me to show the location on the campus map?", or "Anything else you'd like to know? 😊").
+CRITICAL LENGTH & CONCISENESS RULES:
+- Keep ALL responses SHORT, CONCISE, and BITE-SIZED.
+- NEVER write long paragraphs, lengthy preambles, essays, or repetitive disclaimers.
+- Maximum 2 to 4 short lines total (or a neat compact info card).
+- The user is on campus, often walking on mobile, and needs the key answer in 3 seconds!
+
+Tone & Persona:
+- Warm, cheerful, approachable, and encouraging (e.g., "Hey there! 😊", "Found them for you! 📍✨", "Got it! 🚀", "Craving a snack? 🍕").
+- Context-aware: Directly reflect what the user asked about (e.g., project guidance, cabin location, food, medical care, block directions).
+- Emoji-rich: Use friendly, visual emojis generously and meaningfully (👋, 😊, 📍, 🏢, 🚪, 👩‍🏫, 👨‍🏫, 🎓, ✨, 🍕, ☕, 🩺, 🚶‍♂️, 🚀).
 
 Response Structure:
-1. [Short conversational acknowledgement & natural context-aware answer]
-2. [Clean visual information card for faculty or location details]
-3. [Location row with pin emoji]
-4. [Relevant follow-up question]
+1. [1 short, cheerful, context-based intro line with emojis]
+2. [Compact Information Card]
+3. [1 quick, friendly follow-up or tip with an emoji]
 
-Faculty & Personnel Card Format:
-Structure important details cleanly as an information card:
+Compact Card Format:
 
-👩‍🏫 **[Full Name]**
-[Role / Designation]
-[Department or Subject] (omit if unavailable)
+Faculty & Personnel:
+👩‍🏫 **[Full Name]** · [Role or Designation]
+🎓 [Department / Subject] (omit line if unavailable)
+📍 [Block · Room · Cabin, e.g. Block 33 · Room 205 · Cabin C1]
 
-📍 [Location formatted cleanly: e.g. Block 33 · Room 205 · Cabin C1, or Block 27 · Room 201 · HOS Office]
+Location Rules:
+- If cabin/seating is in the record (e.g. C1, C2), include it: "Block 34 · Room 209 · Cabin C1".
+- If no cabin is listed (such as Dr. Parminder Singh or Mr. Ajay Kaler), state ONLY: "Block 34 · Room 309". Never invent a cabin.
+- If an office is listed (e.g. HOS Office, Administrator Office, COS Office), write: "Block 27 · Room 201 · HOS Office".
 
-Rules for Location formatting:
-- If a cabin/seating is specified (e.g. C1, C2, C3, C4), include it: "Block 34 · Room 209 · Cabin C1" (or "Block 34 → Room 209 → Cabin C1").
-- If no cabin is specified in the record (such as Dr. Parminder Singh or Mr. Ajay Kaler), NEVER invent one. State only: "Block 34 · Room 309".
-- If an office is specified (e.g. HOS Office, Administrator Office, Admin Office, COS Office), write: "Block 27 · Room 201 · HOS Office".
-
-Campus Location & Facilities Format:
-For buildings, hostels, departments, or food spots:
+Campus Places, Hostels, Food & Facilities:
 🏢 **[Place / Building Name]**
-[Brief description or facilities highlight]
-
-📍 [Location details, e.g. Central Campus / Ground Floor]
+✨ [1 punchy sentence highlight / facilities]
+📍 [Floor or Area on campus]
 
 Multiple Matches:
-- When a query matches multiple people or locations (e.g. "Who is the HOS?", "Faculty in Block 34", or shared UID "16870"), introduce them warmly and present each card cleanly with clear separation.
+- If multiple people or locations match (e.g. "Who is the HOS?"), keep each card super compact (2-3 lines max each):
+  👩‍🏫 **[Name]** · [Role]
+  📍 [Location]
 
-Strict Ground Truth & Truthfulness:
-- Answer using ONLY the information provided in the "Context" section below. Never invent information, faculty, cabins, rooms, or capabilities.
-- If information is unavailable or not in the context, respond conversationally and helpfully rather than robotic:
-  "Hmm, I couldn't find a matching faculty member or location for that. 🤔 Could you try giving me the person's name, department, or a little more detail? I can help with campus buildings, hostels, food spots, offices, and departments."
-- If match quality is "weak" or uncertain, politely offer it as a possibility ("I couldn't find an exact match, but did you mean ...?").
+Unavailable / No Match:
+- If information is not in the context, keep it short, polite, and cheerful with emojis:
+  "Hmm, I couldn't find a matching record for that! 🤔 Could you check the spelling or give me a name, block number, or department? I can help with campus buildings, hostels, food spots, offices, and departments! 🏢📍"
+- Strict truthfulness: Use ONLY the provided Context records. Never hallucinate or invent teachers, cabins, or phone numbers.
 """
 
 
 def _format_grounded_fallback(question: str, context_records: list[dict], match_quality: str) -> str:
-    """Generate a clean, friendly, conversational grounded reply when external LLM calls are unavailable."""
+    """Generate a clean, concise, friendly, context-based grounded reply with emojis when external LLM calls are unavailable."""
     if match_quality == "none" or not context_records:
         return (
-            "Hmm, I couldn't find a matching faculty member or location for that. 🤔\n\n"
-            "Could you try giving me the person's name, department, or a little more detail? "
-            "I can help you find campus buildings, hostels, food spots, offices, and departments."
+            "Hmm, I couldn't find a matching record for that! 🤔✨\n\n"
+            "Try checking the name, block number, or department. I can help you find campus buildings, hostels, food spots, offices, and departments! 🏢📍"
         )
 
     q_lower = question.lower()
 
     if match_quality == "weak":
-        intro = "I couldn't find an exact match, but here is the closest campus record I found:\n\n"
+        intro = "I couldn't find an exact match, but here's the closest campus spot! 🔍\n\n"
     elif any(w in q_lower for w in ["project", "talk to", "contact", "guide", "who can", "whom"]):
-        intro = "Sure! 😊 Here is someone from the department who can assist you:\n\n"
+        intro = "Working on a project? That's awesome! 🚀 Here is who can guide you:\n\n"
     elif any(w in q_lower for w in ["where is", "where does", "where can i find", "locate", "cabin"]):
-        intro = "Sure! 📍 Here are the location details you're looking for:\n\n"
+        intro = "Found their location! 📍 Here's where they sit:\n\n"
     elif any(w in q_lower for w in ["who is", "who heads", "head", "hod", "hos", "cos"]):
-        intro = "Got it! 🤝 Here are the details from our campus records:\n\n"
+        intro = "Got it! 🎓 Here are the faculty details:\n\n"
+    elif any(w in q_lower for w in ["eat", "food", "canteen", "cafe", "hungry", "snack"]):
+        intro = "Craving a bite? 🍕 Here's a great spot on campus:\n\n"
+    elif any(w in q_lower for w in ["health", "hospital", "doctor", "medical", "sick"]):
+        intro = "Hope you feel better soon! 🩺 Here's the medical center:\n\n"
     else:
-        intro = "Sure! I found the relevant campus information for you:\n\n"
+        intro = "Sure thing! 😊 Here's what I found in campus records:\n\n"
 
     cards = []
     has_personnel = False
-    for r in context_records[:5]:
+    for r in context_records[:3]:
         if r.get("uid") or r.get("role") or r.get("department_or_subject") or r.get("seating") or r.get("office"):
             has_personnel = True
-            lines = [f"👩‍🏫 **{r.get('name', 'Unknown')}**"]
-            role = r.get("role")
-            desig = r.get("designation")
-            if role and desig and role not in desig:
-                lines.append(f"{desig} ({role})")
-            elif desig or role:
-                lines.append(f"{desig or role}")
+            role_desc = r.get("designation") or r.get("role") or ""
+            role_part = f" · {role_desc}" if role_desc else ""
+            lines = [f"👩‍🏫 **{r.get('name', 'Unknown')}**{role_part}"]
 
             if r.get("department_or_subject"):
-                lines.append(f"{r.get('department_or_subject')}")
+                lines.append(f"🎓 {r.get('department_or_subject')}")
 
             block = r.get("block")
             room = r.get("room")
@@ -148,23 +148,26 @@ def _format_grounded_fallback(question: str, context_records: list[dict], match_
             elif office:
                 loc_parts.append(office)
             loc_str = " · ".join(loc_parts) if loc_parts else (r.get("floor") or "Campus")
-            lines.append(f"\n📍 {loc_str}")
+            lines.append(f"📍 {loc_str}")
             cards.append("\n".join(lines))
         else:
             lines = [f"🏢 **{r.get('name', 'Campus Location')}**"]
             if r.get("description"):
-                lines.append(r.get("description"))
+                desc = r.get("description")
+                if len(desc) > 85:
+                    desc = desc[:82] + "..."
+                lines.append(f"✨ {desc}")
             loc = r.get("floor") or r.get("category")
             if loc:
-                lines.append(f"\n📍 {loc}")
+                lines.append(f"📍 {loc}")
             cards.append("\n".join(lines))
 
     card_text = "\n\n---\n\n".join(cards)
 
     if has_personnel:
-        followup = "\n\nWould you like me to help you find the way there on the campus map?"
+        followup = "\n\nNeed directions to their cabin? Tap below! 🗺️✨"
     else:
-        followup = "\n\nWould you like me to show this location on the campus map?"
+        followup = "\n\nWant to see it on the map? Tap below! 🗺️✨"
 
     return intro + card_text + followup
 

@@ -119,6 +119,7 @@ class ChatResponse(BaseModel):
     reply: str
     locationId: Optional[str] = None
     title: Optional[str] = None
+    chips: Optional[List[str]] = None
 
 
 CAN_HELP_WITH = "buildings, hostels, food, offices, and departments on campus"
@@ -149,6 +150,16 @@ def is_greeting_or_chitchat(text: str) -> bool:
     return False
 
 
+def generate_interactive_chips(
+    question: str,
+    top_record: Optional[Record] = None,
+    tier: str = "none",
+    is_negative_reply: bool = False,
+) -> list[str]:
+    """Generate dynamic, context-relevant interactive action and question chips."""
+    return []
+
+
 router = APIRouter()
 
 
@@ -163,8 +174,8 @@ async def chat(req: ChatRequest) -> ChatResponse:
         try:
             reply = generate_reply(question, [], match_quality="none")
         except Exception:
-            reply = "Hello! 😊 I'm your LPUNavix Campus Assistant. How can I help you find buildings, faculty cabins, or departments today?"
-        return ChatResponse(reply=reply, locationId=None, title=None)
+            reply = "Hey there! 👋 I'm your LPUNavix Campus Guide ✨ How can I help you find faculty cabins, campus blocks, food spots, or departments today? 🏢📍"
+        return ChatResponse(reply=reply, locationId=None, title=None, chips=[])
 
     retriever: Optional[Retriever] = _state.get("retriever")
     if retriever is None:
@@ -175,10 +186,10 @@ async def chat(req: ChatRequest) -> ChatResponse:
 
     if not ranked:
         reply = (
-            f"Hmm, I don't have any campus data loaded to answer that yet. "
-            f"Once it's set up I can help with {CAN_HELP_WITH}."
+            f"Hmm, I don't have any campus data loaded to answer that yet! 🤔 "
+            f"Once it's set up I can help with {CAN_HELP_WITH}. 🏢📍"
         )
-        return ChatResponse(reply=reply, locationId=None, title=None)
+        return ChatResponse(reply=reply, locationId=None, title=None, chips=[])
 
     top_record, top_score = ranked[0]
     tier = classify_match(top_score)
@@ -192,7 +203,7 @@ async def chat(req: ChatRequest) -> ChatResponse:
             from api.gemini_client import _format_grounded_fallback
             reply = _format_grounded_fallback(question, context_records, match_quality=tier)
         except Exception:
-            reply = f"I couldn't reach the assistant service right now, but I can help you find campus blocks, faculty offices, and departments."
+            reply = f"I couldn't reach the campus records right now, but I can help you find campus blocks, faculty offices, and departments! 📡🏢"
 
     # Check if the generated reply explicitly states no information is available
     fallback_negative_phrases = (
@@ -213,8 +224,10 @@ async def chat(req: ChatRequest) -> ChatResponse:
     )
     is_negative_reply = any(phrase in reply.lower() for phrase in fallback_negative_phrases)
 
+    chips = generate_interactive_chips(question, top_record, tier, is_negative_reply)
+
     # Never surface a map location if the match is weak/none or the model replied that no info is available
     if tier != "confident" or is_negative_reply:
-        return ChatResponse(reply=reply, locationId=None, title=None)
+        return ChatResponse(reply=reply, locationId=None, title=None, chips=chips)
 
-    return ChatResponse(reply=reply, locationId=top_record.id, title=top_record.name)
+    return ChatResponse(reply=reply, locationId=top_record.id, title=top_record.name, chips=chips)

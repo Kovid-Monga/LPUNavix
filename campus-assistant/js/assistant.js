@@ -13,6 +13,8 @@ class AssistantController {
     this.inputEl = null;
     this.formEl = null;
     this.sending = false;
+    this.sessionHistory = [];
+    this.lastConfirmedEntity = null;
   }
 
   init() {
@@ -78,15 +80,43 @@ class AssistantController {
   async _sendMessage(message) {
     this.sending = true;
     const typingEl = this._addTypingIndicator();
+
+    // Track user message in session history (rolling last 10 turns)
+    this.sessionHistory.push({ role: 'user', content: message });
+    if (this.sessionHistory.length > 10) {
+      this.sessionHistory = this.sessionHistory.slice(-10);
+    }
+
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message }),
+        body: JSON.stringify({
+          message,
+          history: this.sessionHistory,
+          last_entity: this.lastConfirmedEntity,
+        }),
       });
       if (!res.ok) throw new Error(`Request failed (${res.status})`);
       const data = await res.json();
       typingEl.remove();
+
+      // Track confirmed entity from response
+      if (data.locationId) {
+        this.lastConfirmedEntity = {
+          id: data.locationId,
+          name: data.title || data.locationId,
+        };
+      }
+
+      // Track assistant reply in session history
+      if (data.reply) {
+        this.sessionHistory.push({ role: 'assistant', content: data.reply });
+        if (this.sessionHistory.length > 10) {
+          this.sessionHistory = this.sessionHistory.slice(-10);
+        }
+      }
+
       this._addBotMessage(data.reply, {
         locationId: data.locationId,
         title: data.title,

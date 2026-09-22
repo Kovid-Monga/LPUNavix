@@ -172,7 +172,12 @@ def _format_grounded_fallback(question: str, context_records: list[dict], match_
     return intro + card_text + followup
 
 
-def generate_reply(question: str, context_records: list[dict], match_quality: str) -> str:
+def generate_reply(
+    question: str,
+    context_records: list[dict],
+    match_quality: str,
+    history: list[dict] | None = None,
+) -> str:
     """Call Gemini to produce the final chat reply with multi-model fallback and deterministic safety net.
 
     match_quality: "confident" | "weak" | "none" — tells the model how
@@ -189,7 +194,23 @@ def generate_reply(question: str, context_records: list[dict], match_quality: st
             lines.append(f"- {fields}")
         context_block = "\n".join(lines)
 
+    history_block = ""
+    if history:
+        conv_turns = []
+        for turn in history[-6:]:
+            role = "User" if turn.get("role") == "user" else "Assistant"
+            content = (turn.get("content") or "").strip()
+            if content:
+                # Keep history lines compact
+                clean_content = " ".join(content.split())
+                if len(clean_content) > 160:
+                    clean_content = clean_content[:157] + "..."
+                conv_turns.append(f"{role}: {clean_content}")
+        if conv_turns:
+            history_block = "Recent conversation:\n" + "\n".join(conv_turns) + "\n\n"
+
     prompt = (
+        f"{history_block}"
         f"Match quality for this retrieval: {match_quality}\n\n"
         f"Context:\n{context_block}\n\n"
         f"User question: {question}"

@@ -211,13 +211,15 @@ def _fake_embed_query(text: str) -> list[float]:
     return _fake_embed_texts([text])[0]
 
 
-def _fake_generate_reply(question: str, context_records: list[dict], match_quality: str) -> str:
+def _fake_generate_reply(question: str, context_records: list[dict], match_quality: str, **kwargs) -> str:
     if match_quality == "none":
         return "I don't have anything on that in the campus data."
     if not context_records:
         return "No records found."
     first = context_records[0]
-    return f"{first.get('name')} is located in Block {first.get('block')}, Room {first.get('room')}."
+    hours = first.get("hours", "")
+    hours_info = f", Hours: {hours}" if hours else ""
+    return f"{first.get('name')} is located in Block {first.get('block')}, Room {first.get('room')}{hours_info}."
 
 
 @pytest.fixture
@@ -253,3 +255,104 @@ def test_chat_endpoint_retrieves_personnel_with_location_id(chat_client):
     data = resp.json()
     assert "Dr. Atul Malhotra" in data["reply"] or "Atul Malhotra" in data["title"]
     assert data["locationId"] is not None
+
+
+def test_standalone_ambiguous_question_triggers_clarification(chat_client):
+    """Requirement 3: An incomplete question without previous topic must not guess or invent a place."""
+    resp = chat_client.post("/api/chat", json={"message": "What are its opening hours?"})
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["locationId"] is None
+    assert "don't have" in data["reply"].lower() or "no records" in data["reply"].lower()
+
+    resp_map = chat_client.post("/api/chat", json={"message": "Show it on map"})
+    assert resp_map.status_code == 200
+    data_map = resp_map.json()
+    assert data_map["locationId"] is None
+
+
+def test_followup_question_correctly_uses_previous_topic(chat_client):
+    """Requirement 2: Follow-up questions resolve to the earlier topic naturally."""
+    # 1. Turn 1: Ask about Block 28
+    resp1 = chat_client.post("/api/chat", json={"message": "Where is Block 28?"})
+    assert resp1.status_code == 200
+    data1 = resp1.json()
+    assert data1["locationId"] == "block-28"
+
+    # 2. Turn 2: Follow-up asking for opening hours
+    resp2 = chat_client.post(
+        "/api/chat",
+        json={
+            "message": "What are its opening hours?",
+            "history": [
+                {"role": "user", "content": "Where is Block 28?"},
+                {"role": "assistant", "content": data1["reply"]},
+            ],
+            "last_entity": {"id": "block-28", "name": "Block 28"},
+        },
+    )
+    assert resp2.status_code == 200
+    data2 = resp2.json()
+    assert data2["locationId"] == "block-28"
+    assert "Block 28" in data2["title"]
+    assert "Hours: 8:00 AM - 5:30 PM" in data2["reply"] or "Block 28" in data2["reply"]
+
+    # 3. Turn 3: Follow-up asking to show on map
+    resp3 = chat_client.post(
+        "/api/chat",
+        json={
+            "message": "Show it on map",
+            "last_entity": {"id": "block-28", "name": "Block 28"},
+        },
+    )
+    assert resp3.status_code == 200
+    data3 = resp3.json()
+    assert data3["locationId"] == "block-28"
+    assert "Block 28" in data3["title"]
+
+
+def test_explicit_new_location_overrides_prior_context(chat_client):
+    """Requirement 4: An explicit new place or person in current message overrides prior context."""
+    # Even though last_entity was Block 28, user asks explicitly about Block 34
+    resp = chat_client.post(
+        "/api/chat",
+        json={
+            "message": "Where is Block 34?",
+            "history": [
+                {"role": "user", "content": "Where is Block 28?"},
+                {"role": "assistant", "content": "Block 28 is located in Block 28"},
+            ],
+            "last_entity": {"id": "block-28", "name": "Block 28"},
+        },
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["locationId"] == "block-34"
+    assert "Block 34" in data["title"]
+
+
+def test_faculty_cabin_conversational_context(chat_client):
+    """Requirement 2: Faculty/personnel follow-ups resolve cabin and directions."""
+    # Turn 1: Find HOD of DevOps
+    resp1 = chat_client.post("/api/chat", json={"message": "Where can I find the DevOps HOD?"})
+    assert resp1.status_code == 200
+    data1 = resp1.json()
+    assert data1["locationId"] is not None
+    assert "Richa Sharma" in data1["title"] or "Richa Sharma" in data1["reply"]
+
+    # Turn 2: Follow-up asking for cabin
+    resp2 = chat_client.post(
+        "/api/chat",
+        json={
+            "message": "Where is her cabin?",
+            "history": [
+                {"role": "user", "content": "Where can I find the DevOps HOD?"},
+                {"role": "assistant", "content": data1["reply"]},
+            ],
+            "last_entity": {"id": data1["locationId"], "name": "Dr. Richa Sharma"},
+        },
+    )
+    assert resp2.status_code == 200
+    data2 = resp2.json()
+    assert data2["locationId"] == data1["locationId"]
+    assert "Richa Sharma" in data2["title"] or "Richa Sharma" in data2["reply"]

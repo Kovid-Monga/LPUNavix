@@ -135,3 +135,43 @@ def test_greeting_does_not_show_map_button(client):
         assert data["locationId"] is None, f"Expected locationId to be None for greeting '{greeting}', got {data['locationId']}"
         assert data["title"] is None
         assert data["reply"]
+
+
+def test_placement_cell_is_retrieved(client):
+    """A question asking for placement cell or TPC should retrieve Block 32 or TPC office."""
+    resp = client.post(
+        "/api/chat",
+        json={"message": "Where is the placement cell / TPC?"},
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "32" in data["locationId"] or "tpc" in data["locationId"]
+    assert data["title"] is not None
+    assert data["reply"]
+
+
+def test_central_library_is_retrieved(client):
+    """A question asking for Central Library should retrieve central-library."""
+    resp = client.post(
+        "/api/chat",
+        json={"message": "Where is the Central Library?"},
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["locationId"] in ("central-library", "library")
+    assert "Central Library" in data["title"]
+    assert data["reply"]
+
+
+def test_block_37_retrieval(client):
+    """A question asking for Block 37 should retrieve block-37."""
+    resp = client.post(
+        "/api/chat",
+        json={"message": "Where is Block 37?"},
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["locationId"] == "block-37"
+    assert "Block 37" in data["title"]
+    assert data["reply"]
+

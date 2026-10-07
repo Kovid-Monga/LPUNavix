@@ -121,7 +121,7 @@ class ChatResponse(BaseModel):
     title: Optional[str] = None
 
 
-CAN_HELP_WITH = "buildings, hostels, food, offices, and departments on campus"
+CAN_HELP_WITH = "buildings, hostels, food, offices, placement cell (TPC), and departments on campus"
 
 GREETING_WORDS = {
     "hi", "hello", "hey", "heyy", "heyyy", "howdy", "greetings", "yo", "sup",
@@ -163,7 +163,7 @@ async def chat(req: ChatRequest) -> ChatResponse:
         try:
             reply = generate_reply(question, [], match_quality="none")
         except Exception:
-            reply = "Hello! 😊 I'm your LPUNavix Campus Assistant. How can I help you find buildings, faculty cabins, or departments today?"
+            reply = "Hello! 😊 I'm your LPUNavix Campus Assistant. How can I help you find buildings, placement cell (TPC), faculty cabins, or departments today?"
         return ChatResponse(reply=reply, locationId=None, title=None)
 
     retriever: Optional[Retriever] = _state.get("retriever")

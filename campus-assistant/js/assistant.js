@@ -37,7 +37,7 @@ class AssistantController {
           type="search"
           name="campus_assistant_message"
           class="assistant-input"
-          placeholder="Ask about faculty cabins, blocks, departments…"
+          placeholder="Ask about central library, placement cell, faculty cabins, blocks…"
           autocomplete="off"
           autocorrect="off"
           autocapitalize="off"
@@ -60,9 +60,12 @@ class AssistantController {
     });
 
     this._addBotMessage(
-      "Hi there! 😊 I'm your LPUNavix Campus Assistant.\n\nAsk me about faculty cabins, academic departments, blocks, hostels, or campus services!",
+      "Hi there! 😊 I'm your LPUNavix Campus Assistant.\n\nAsk me about the Central Library, placement cell (TPC), faculty cabins, academic departments, blocks, hostels, or campus services!",
       {
         chips: [
+          'Central Library',
+          'Placement Cell (TPC)',
+          'Where is Block 37?',
           'Where is Block 34?',
           'HOD of AI and ML',
           'Who is the HOS?',

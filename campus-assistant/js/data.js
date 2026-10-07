@@ -31,6 +31,17 @@ const CAMPUS_GROUPS = [
     centerCoords: [31.25252781150963, 75.7029864749583],
     desc: "Houses the School of Computer Science & Engineering.",
     image: ""
+  },
+  {
+    id: "library",
+    name: "Central Library",
+    category: "academics",
+    type: "Central Library",
+    tags: ["library", "central library", "central lib", "pathway", "pathway library", "books", "reading room", "study", "block 37", "b37"],
+    blocks: ["central-library", "block-37"],
+    centerCoords: [31.252203630459952, 75.70338942501698],
+    desc: "Central Library located in the pathway. The library is till 5th floor and from 6th floor it is Block 37.",
+    image: ""
   }
   // --- TEMPLATE EXAMPLE (Add your own groups below) ---
   //   {
@@ -222,17 +233,31 @@ var CAMPUS_LOCATIONS = window.CAMPUS_LOCATIONS = [
   },
   {
     id: "block-32",
-    name: "Block 32 (Admin)",
+    name: "Block 32 (CSE - TPC / Placement Cell)",
     groupId: "cse-dept",
     groupName: "School of Computer Science & Engineering (CSE)",
     category: "academics",
-    type: "Academic Block",
+    type: "Academic Block & Placement Cell",
     lat: 31.252169312144662,
     lng: 75.70476168618337,
-    floor: "Multi-storey Block",
-    facilities: ["Classrooms", "Computer Labs", "Faculty Cabins"],
-    tags: ["block 32", "cse", "computer science", "b32", "academic block"],
-    desc: "Block 32 - Department of Computer Science & Engineering.",
+    floor: "Floors 2, 3 & 4: TPC (Training and Placement Cell) | Multi-storey Block",
+    facilities: [
+      "TPC (Training and Placement Cell)",
+      "Placement Cell (Floors 2, 3 & 4)",
+      "Recruitment & Interview Rooms",
+      "Group Discussion (GD) Rooms",
+      "Classrooms",
+      "Computer Labs",
+      "Faculty Cabins"
+    ],
+    tags: [
+      "block 32", "cse", "computer science", "b32", "academic block",
+      "32nd cse block", "32 cse block", "block 32 cse", "tpc", "placement cell",
+      "training and placement cell", "placements", "tpc block 32", "cse tpc",
+      "placement drive", "recruitment drives", "interviews", "jobs", "internships",
+      "2nd floor", "3rd floor", "4th floor", "tpc 2nd floor", "tpc 3rd floor", "tpc 4th floor"
+    ],
+    desc: "Block 32 - Department of Computer Science & Engineering (CSE). Houses the TPC (Training and Placement Cell) across the 2nd, 3rd, and 4th floors for campus placements, corporate recruitment drives, and company interviews.",
     hours: "8:00 AM - 5:30 PM",
     phone: "",
     image: ""
@@ -289,6 +314,34 @@ var CAMPUS_LOCATIONS = window.CAMPUS_LOCATIONS = [
     image: ""
   },
   {
+    id: "central-library",
+    name: "Central Library",
+    groupId: "library",
+    groupName: "Central Library",
+    category: "academics",
+    type: "Central Library",
+    lat: 31.252203630459952,
+    lng: 75.70338942501698,
+    floor: "Ground to 5th Floor (From 6th floor onwards it is Block 37)",
+    facilities: [
+      "Central Library (Ground to 5th Floor)",
+      "Reading Halls & Study Areas",
+      "Book Circulation & Issue Desks",
+      "Reference Section",
+      "Digital Library & Computer Labs",
+      "Block 37 (6th Floor onwards)"
+    ],
+    tags: [
+      "central library", "library", "central lib", "pathway library", "pathway",
+      "books", "reading room", "study", "study area", "block 37", "b37",
+      "ground floor", "1st floor", "2nd floor", "3rd floor", "4th floor", "5th floor", "6th floor"
+    ],
+    desc: "Central Library located in the pathway. The library is till 5th floor and from 6th floor it is Block 37.",
+    hours: "8:00 AM - 10:00 PM",
+    phone: "",
+    image: ""
+  },
+  {
     id: "block-37",
     name: "Block 37 (CSE)",
     groupId: "cse-dept",
@@ -297,10 +350,10 @@ var CAMPUS_LOCATIONS = window.CAMPUS_LOCATIONS = [
     type: "Academic Block",
     lat: 31.251858851005732,
     lng: 75.70373201751212,
-    floor: "Multi-storey Block",
+    floor: "6th Floor onwards (Ground to 5th floor is Central Library) | Multi-storey Block",
     facilities: ["Classrooms", "Computer Labs", "Faculty Cabins"],
-    tags: ["block 37", "cse", "computer science", "b37", "academic block"],
-    desc: "Block 37 - Department of Computer Science & Engineering.",
+    tags: ["block 37", "cse", "computer science", "b37", "academic block", "central library", "pathway", "library"],
+    desc: "Block 37 - Department of Computer Science & Engineering. Located from the 6th floor onwards above the Central Library in the pathway (Ground to 5th floor is Central Library).",
     hours: "8:00 AM - 5:30 PM",
     phone: "",
     image: ""
@@ -362,6 +415,117 @@ var CAMPUS_LOCATIONS = window.CAMPUS_LOCATIONS = [
 // 3. 🏢 CAMPUS OFFICES (Shown on the map only at block-level zoom) - ADD YOURS HERE
 // ============================================================================
 var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
+  {
+    id: "office-tpc-32",
+    name: "Training & Placement Cell - TPC (Block 32)",
+    groupId: "cse-dept",
+    groupName: "School of Computer Science & Engineering (CSE)",
+    category: "offices",
+    type: "Placement Cell",
+    parentBlockIds: ["block-32"],
+    visibleFromZoom: 19,
+    lat: 31.252169312144662,
+    lng: 75.70476168618337,
+    floor: "2nd, 3rd & 4th Floor",
+    facilities: [
+      "Training & Placement Cell (TPC)",
+      "Campus Placements & Drives",
+      "Interview Rooms",
+      "Group Discussion Halls",
+      "Corporate Relations",
+      "Placement Coordination"
+    ],
+    tags: [
+      "tpc", "placement cell", "training and placement cell", "training & placement cell",
+      "placements", "block 32", "block 32 tpc", "b32 tpc", "tpc block 32", "cse tpc",
+      "32nd cse block", "32 cse", "block 32 cse", "placement cell block 32",
+      "2nd floor", "3rd floor", "4th floor",
+      "2nd floor tpc", "3rd floor tpc", "4th floor tpc",
+      "interviews", "recruitment", "recruitment drive", "jobs", "internships"
+    ],
+    desc: "Training & Placement Cell (TPC) located across the 2nd, 3rd, and 4th floors of Block 32 (CSE). Manages campus recruitment drives, company interviews, training sessions, and student placements.",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
+  },
+  {
+    id: "office-tpc-32-floor-2",
+    name: "TPC (Placement Cell) - 2nd Floor (Block 32)",
+    groupId: "cse-dept",
+    groupName: "School of Computer Science & Engineering (CSE)",
+    category: "offices",
+    type: "Placement Cell",
+    parentBlockIds: ["block-32"],
+    visibleFromZoom: 19,
+    lat: 31.252169312144662,
+    lng: 75.70476168618337,
+    floor: "Second Floor (2nd Floor)",
+    facilities: [
+      "TPC Student Registration & Helpdesk",
+      "Placement Verification",
+      "Interview Cabins"
+    ],
+    tags: [
+      "tpc", "placement cell", "2nd floor", "floor 2", "second floor",
+      "tpc 2nd floor", "block 32 2nd floor", "block 32 floor 2", "cse tpc"
+    ],
+    desc: "Training & Placement Cell (TPC) on the 2nd Floor of Block 32 (CSE). Student helpdesk, verification, and placement screening.",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
+  },
+  {
+    id: "office-tpc-32-floor-3",
+    name: "TPC (Placement Cell) - 3rd Floor (Block 32)",
+    groupId: "cse-dept",
+    groupName: "School of Computer Science & Engineering (CSE)",
+    category: "offices",
+    type: "Placement Cell",
+    parentBlockIds: ["block-32"],
+    visibleFromZoom: 19,
+    lat: 31.252169312144662,
+    lng: 75.70476168618337,
+    floor: "Third Floor (3rd Floor)",
+    facilities: [
+      "Corporate Interview Rooms",
+      "Group Discussion (GD) Halls",
+      "Technical Interview Panels"
+    ],
+    tags: [
+      "tpc", "placement cell", "3rd floor", "floor 3", "third floor",
+      "tpc 3rd floor", "block 32 3rd floor", "block 32 floor 3", "interview rooms"
+    ],
+    desc: "Training & Placement Cell (TPC) on the 3rd Floor of Block 32 (CSE). Company interview cabins, GD rooms, and recruitment drives.",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
+  },
+  {
+    id: "office-tpc-32-floor-4",
+    name: "TPC (Placement Cell) - 4th Floor (Block 32)",
+    groupId: "cse-dept",
+    groupName: "School of Computer Science & Engineering (CSE)",
+    category: "offices",
+    type: "Placement Cell",
+    parentBlockIds: ["block-32"],
+    visibleFromZoom: 19,
+    lat: 31.252169312144662,
+    lng: 75.70476168618337,
+    floor: "Fourth Floor (4th Floor)",
+    facilities: [
+      "Executive Placement Offices",
+      "Corporate Presentation Hall",
+      "Final Round Interview Rooms"
+    ],
+    tags: [
+      "tpc", "placement cell", "4th floor", "floor 4", "fourth floor",
+      "tpc 4th floor", "block 32 4th floor", "block 32 floor 4", "corporate relations"
+    ],
+    desc: "Training & Placement Cell (TPC) on the 4th Floor of Block 32 (CSE). Executive placement cabins, corporate relations, and final interview panels.",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
+  },
   {
     id: "office-admin-28-209",
     name: "Administrative Office (Block 28, Room 209)",

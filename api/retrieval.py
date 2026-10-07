@@ -185,6 +185,71 @@ def find_structured_matches(query: str, records: list[Record]) -> list[Record]:
         if matches:
             return matches
 
+    # 8. Placement Cell / TPC queries (e.g. "Where is the placement cell?", "Where is TPC?", "TPC Block 32")
+    is_tpc_query = bool(
+        re.search(r"\b(tpc|placement|placements|placement cell|training and placement)\b", clean_q)
+    )
+    if is_tpc_query:
+        floor_2 = bool(re.search(r"\b(2nd|second|2)\s*(?:floor)?\b", clean_q)) and any(w in clean_q for w in ["floor", "2nd", "second"])
+        floor_3 = bool(re.search(r"\b(3rd|third|3)\s*(?:floor)?\b", clean_q)) and any(w in clean_q for w in ["floor", "3rd", "third"])
+        floor_4 = bool(re.search(r"\b(4th|fourth|4)\s*(?:floor)?\b", clean_q)) and any(w in clean_q for w in ["floor", "4th", "fourth"])
+
+        if floor_2 and not floor_3 and not floor_4:
+            for r in records:
+                if r.id == "office-tpc-32-floor-2":
+                    add(r)
+        elif floor_3 and not floor_2 and not floor_4:
+            for r in records:
+                if r.id == "office-tpc-32-floor-3":
+                    add(r)
+        elif floor_4 and not floor_2 and not floor_3:
+            for r in records:
+                if r.id == "office-tpc-32-floor-4":
+                    add(r)
+        else:
+            for r in records:
+                if r.id == "office-tpc-32":
+                    add(r)
+            for r in records:
+                if r.id == "block-32":
+                    add(r)
+            for r in records:
+                if r.id in ("office-tpc-32-floor-2", "office-tpc-32-floor-3", "office-tpc-32-floor-4"):
+                    add(r)
+        if matches:
+            return matches
+
+    # 9. Central Library / Library queries (e.g. "Where is the central library?", "Library", "Library in pathway", "Which floor is the library?")
+    is_lib_query = bool(
+        re.search(r"\b(central\s+library|library|libraries|reading\s+room|study\s+room)\b", clean_q)
+    )
+    if is_lib_query:
+        for r in records:
+            if r.id == "central-library":
+                add(r)
+        for r in records:
+            if r.id == "library":
+                add(r)
+        for r in records:
+            if r.id == "block-37":
+                add(r)
+        if matches:
+            return matches
+
+    # 10. Block 37 queries (e.g. "Where is Block 37?", "Block 37", "B37")
+    if re.search(r"\b(block\s*37|b37)\b", clean_q):
+        for r in records:
+            if r.id == "block-37":
+                add(r)
+        for r in records:
+            if r.id == "central-library":
+                add(r)
+        for r in records:
+            if r.id == "library":
+                add(r)
+        if matches:
+            return matches
+
     return matches
 
 

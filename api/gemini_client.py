@@ -85,6 +85,20 @@ For buildings, hostels, departments, or food spots:
 
 📍 [Location details, e.g. Central Campus / Ground Floor]
 
+Training & Placement Cell (TPC):
+- When asked about the Placement Cell, TPC, campus placements, drives, or interviews:
+  • Clearly state that it is situated in Block 32 (School of Computer Science & Engineering - CSE).
+  • Highlight that it is located across the 2nd, 3rd, and 4th floors (2nd floor: student helpdesk, registration & verification; 3rd floor: GD & corporate interview rooms; 4th floor: executive placement cabins & corporate relations).
+
+Central Library & Block 37:
+- When asked about the Central Library or Library:
+  • Clearly state that it is situated in the pathway (coordinates: 31.2522036, 75.7033894).
+  • Clearly explain the floor division:
+    - The Central Library occupies up to the 5th floor (Ground floor to 5th floor).
+    - From the 6th floor onwards, the building houses Block 37 (School of Computer Science & Engineering - CSE).
+- When asked about Block 37:
+  • Clearly state that Block 37 (CSE) is situated from the 6th floor onwards in the same building above the Central Library in the pathway (Ground to 5th floor is the Central Library).
+
 Multiple Matches:
 - When a query matches multiple people or locations (e.g. "Who is the HOS?", "Faculty in Block 34", or shared UID "16870"), introduce them warmly and present each card cleanly with clear separation.
 
@@ -152,8 +166,9 @@ def _format_grounded_fallback(question: str, context_records: list[dict], match_
             cards.append("\n".join(lines))
         else:
             lines = [f"🏢 **{r.get('name', 'Campus Location')}**"]
-            if r.get("description"):
-                lines.append(r.get("description"))
+            desc = r.get("desc") or r.get("description")
+            if desc:
+                lines.append(desc)
             loc = r.get("floor") or r.get("category")
             if loc:
                 lines.append(f"\n📍 {loc}")

@@ -3104,4 +3104,4 @@ function getAllCampusLocations() {
 
 function getGroupById(groupId) {
   return CAMPUS_GROUPS.find(g => g.id === groupId);
-}
+}                                                                                                                                       

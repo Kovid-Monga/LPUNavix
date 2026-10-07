@@ -105,6 +105,7 @@ class ChatResponse(BaseModel):
     reply: str
     locationId: str | None = None
     title: str | None = None
+    chips: list[str] | None = None
 
 
 CAN_HELP_WITH = "buildings, hostels, food, offices, and departments on campus"

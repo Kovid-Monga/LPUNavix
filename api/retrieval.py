@@ -158,12 +158,22 @@ def find_structured_matches(query: str, records: list[Record]) -> list[Record]:
         if matches:
             return matches
 
-    # 6. Block-only queries asking about personnel (e.g. "Who sits in Block 27", "Who works in Block 28")
-    if block_m and any(w in clean_q for w in ["who", "works", "sits", "located", "people", "faculty", "staff"]):
+    # 6. Block queries (e.g. "Who sits in Block 27", "Where is Block 28", "Block 34")
+    if block_m:
         b_val = block_m.group(1)
-        for r in records:
-            if r.block == b_val and r.uid:
-                add(r)
+        if any(w in clean_q for w in ["who", "works", "sits", "people", "faculty", "staff"]):
+            for r in records:
+                if r.block == b_val and r.uid:
+                    add(r)
+        else:
+            # Query is asking about the block itself (e.g. "Where is Block 28?", "Block 34")
+            for r in records:
+                if r.id == f"block-{b_val}" or (r.id == f"block-{int(b_val)}" and r.kind == "location"):
+                    add(r)
+            if not matches:
+                for r in records:
+                    if r.block == b_val and r.kind == "location":
+                        add(r)
         if matches:
             return matches
 

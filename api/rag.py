@@ -343,13 +343,8 @@ async def chat(req: ChatRequest) -> ChatResponse:
         try:
             reply = generate_reply(raw_question, [], match_quality="none", history=history_payload)
         except Exception:
-<<<<<<< HEAD
-            reply = "Hello! 😊 I'm your LPUNavix Campus Assistant. How can I help you find buildings, placement cell (TPC), faculty cabins, or departments today?"
-        return ChatResponse(reply=reply, locationId=None, title=None)
-=======
             reply = "Hey there! 👋 I'm your LPUNavix Campus Guide ✨ How can I help you find faculty cabins, campus blocks, food spots, or departments today? 🏢📍"
         return ChatResponse(reply=reply, locationId=None, title=None, chips=[])
->>>>>>> ae717fee9a9fc080fe6887d5b52140df5765bdf1
 
     retriever: Optional[Retriever] = _state.get("retriever")
     if retriever is None:

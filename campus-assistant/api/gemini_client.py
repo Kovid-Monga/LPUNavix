@@ -166,17 +166,11 @@ def _format_grounded_fallback(question: str, context_records: list[dict], match_
             cards.append("\n".join(lines))
         else:
             lines = [f"🏢 **{r.get('name', 'Campus Location')}**"]
-<<<<<<< HEAD
             desc = r.get("desc") or r.get("description")
             if desc:
-                lines.append(desc)
-=======
-            if r.get("description"):
-                desc = r.get("description")
                 if len(desc) > 85:
                     desc = desc[:82] + "..."
                 lines.append(f"✨ {desc}")
->>>>>>> ae717fee9a9fc080fe6887d5b52140df5765bdf1
             loc = r.get("floor") or r.get("category")
             if loc:
                 lines.append(f"📍 {loc}")

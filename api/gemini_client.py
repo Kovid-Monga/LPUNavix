@@ -99,6 +99,12 @@ Central Library & Block 37:
 - When asked about Block 37:
   • Clearly state that Block 37 (CSE) is situated from the 6th floor onwards in the same building above the Central Library in the pathway (Ground to 5th floor is the Central Library).
 
+Shanti Devi Mittal Auditorium & Auditoriums:
+- When asked about Shanti Devi Mittal Auditorium (or auditoriums / audi / event venue):
+  • Clearly state that Shanti Devi Mittal Auditorium is located on the campus at coordinates 31.252058, 75.704112.
+  • Highlight that it is a premier venue for convocations, cultural fests, national conferences, academic symposiums, and university events.
+  • (If asked generally about auditoriums on campus, you can also mention Sh. Baldevraj Mittal Auditorium located near the main entrance/Block 1).
+
 Multiple Matches:
 - If multiple people or locations match (e.g. "Who is the HOS?"), keep each card super compact (2-3 lines max each):
   👩‍🏫 **[Name]** · [Role]
@@ -166,17 +172,11 @@ def _format_grounded_fallback(question: str, context_records: list[dict], match_
             cards.append("\n".join(lines))
         else:
             lines = [f"🏢 **{r.get('name', 'Campus Location')}**"]
-<<<<<<< HEAD
             desc = r.get("desc") or r.get("description")
             if desc:
-                lines.append(desc)
-=======
-            if r.get("description"):
-                desc = r.get("description")
                 if len(desc) > 85:
                     desc = desc[:82] + "..."
                 lines.append(f"✨ {desc}")
->>>>>>> ae717fee9a9fc080fe6887d5b52140df5765bdf1
             loc = r.get("floor") or r.get("category")
             if loc:
                 lines.append(f"📍 {loc}")

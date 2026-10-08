@@ -108,7 +108,7 @@ class ChatResponse(BaseModel):
     chips: list[str] | None = None
 
 
-CAN_HELP_WITH = "buildings, hostels, food, offices, and departments on campus"
+CAN_HELP_WITH = "buildings, auditoriums, hostels, food, offices, and departments on campus"
 
 
 @app.post("/api/chat", response_model=ChatResponse)

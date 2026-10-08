@@ -42,6 +42,21 @@ const CAMPUS_GROUPS = [
     centerCoords: [31.252203630459952, 75.70338942501698],
     desc: "Central Library located in the pathway. The library is till 5th floor and from 6th floor it is Block 37.",
     image: ""
+  },
+  {
+    id: "auditorium",
+    name: "Auditoriums",
+    category: "others",
+    type: "Auditorium",
+    tags: [
+      "auditorium", "auditoriums", "audi", "shanti devi mittal auditorium",
+      "shanti devi auditorium", "sdm auditorium", "baldevraj mittal auditorium",
+      "event venue", "auditorium hall", "events", "convocation"
+    ],
+    blocks: ["shanti-devi-mittal-auditorium", "sh-baldevraj-mittal-auditorium"],
+    centerCoords: [31.252057776287273, 75.70411166230906],
+    desc: "Auditoriums and event halls on the LPU campus.",
+    image: ""
   }
   // --- TEMPLATE EXAMPLE (Add your own groups below) ---
   //   {
@@ -116,17 +131,44 @@ var CAMPUS_LOCATIONS = window.CAMPUS_LOCATIONS = [
   {
     id: "sh-baldevraj-mittal-auditorium",
     name: "Sh. Baldevraj Mittal Auditorium",
-    groupId: null,
-    groupName: null,
+    groupId: "auditorium",
+    groupName: "Auditoriums",
     category: "others",
     type: "Auditorium",
     lat: 31.258442490636092,
     lng: 75.70785810764602,
     floor: "Ground Level",
     facilities: ["Auditorium Hall", "Event Venue"],
-    tags: ["sh baldevraj mittal auditorium", "baldevraj mittal auditorium", "auditorium", "event venue"],
+    tags: ["sh baldevraj mittal auditorium", "baldevraj mittal auditorium", "auditorium", "audi", "event venue"],
     desc: "Sh. Baldevraj Mittal Auditorium on the LPU campus.",
     hours: "Open on Campus Schedule",
+    phone: "",
+    image: ""
+  },
+  {
+    id: "shanti-devi-mittal-auditorium",
+    name: "Shanti Devi Mittal Auditorium",
+    groupId: "auditorium",
+    groupName: "Auditoriums",
+    category: "others",
+    type: "Auditorium",
+    lat: 31.252057776287273,
+    lng: 75.70411166230906,
+    floor: "Auditorium Complex",
+    facilities: [
+      "Main Auditorium Hall",
+      "Stage & Acoustic System",
+      "Convocation & Conferences",
+      "Cultural & Mega Events",
+      "Seating Gallery"
+    ],
+    tags: [
+      "shanti devi mittal auditorium", "shanti devi auditorium", "sdm auditorium",
+      "shanti devi", "mittal auditorium", "auditorium", "audi", "event venue",
+      "auditorium hall", "convocation hall", "events", "seminar hall"
+    ],
+    desc: "Shanti Devi Mittal Auditorium on the LPU campus — premier venue for convocations, cultural fests, national conferences, academic symposiums, and university events.",
+    hours: "Open on Event/Campus Schedule",
     phone: "",
     image: ""
   },

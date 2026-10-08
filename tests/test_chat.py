@@ -175,3 +175,29 @@ def test_block_37_retrieval(client):
     assert "Block 37" in data["title"]
     assert data["reply"]
 
+
+def test_shanti_devi_mittal_auditorium_retrieval(client):
+    """A question asking for Shanti Devi Mittal Auditorium should retrieve shanti-devi-mittal-auditorium."""
+    resp = client.post(
+        "/api/chat",
+        json={"message": "Where is Shanti Devi Mittal Auditorium?"},
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["locationId"] == "shanti-devi-mittal-auditorium"
+    assert "Shanti Devi Mittal Auditorium" in data["title"]
+    assert data["reply"]
+
+
+def test_auditorium_group_retrieval(client):
+    """A question asking for auditoriums should retrieve an auditorium venue."""
+    resp = client.post(
+        "/api/chat",
+        json={"message": "Where is the auditorium on campus?"},
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "auditorium" in data["locationId"]
+    assert data["title"] is not None
+    assert data["reply"]
+

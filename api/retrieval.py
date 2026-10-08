@@ -260,6 +260,37 @@ def find_structured_matches(query: str, records: list[Record]) -> list[Record]:
         if matches:
             return matches
 
+    # 11. Auditorium / Shanti Devi Mittal Auditorium queries
+    is_audi_query = bool(
+        re.search(
+            r"\b(shanti\s+devi(\s+mittal)?(\s+auditorium)?|shanti\s+devi|sdm\s+auditorium|auditorium|auditoriums|audi)\b",
+            clean_q,
+        )
+    )
+    if is_audi_query:
+        if re.search(r"\b(baldev\s*raj|baldevraj)\b", clean_q):
+            for r in records:
+                if r.id == "sh-baldevraj-mittal-auditorium":
+                    add(r)
+            for r in records:
+                if r.id == "auditorium":
+                    add(r)
+            for r in records:
+                if r.id == "shanti-devi-mittal-auditorium":
+                    add(r)
+        else:
+            for r in records:
+                if r.id == "shanti-devi-mittal-auditorium":
+                    add(r)
+            for r in records:
+                if r.id == "auditorium":
+                    add(r)
+            for r in records:
+                if r.id == "sh-baldevraj-mittal-auditorium":
+                    add(r)
+        if matches:
+            return matches
+
     return matches
 
 

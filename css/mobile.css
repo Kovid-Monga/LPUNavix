@@ -152,7 +152,7 @@
 
   /* 3. Floating Search Bar & Filter Row */
   .app-topbar {
-    top: calc(48px + env(safe-area-inset-top, 0px));
+    top: calc(50px + env(safe-area-inset-top, 0px));
     left: 12px;
     right: 12px;
     gap: 8px;

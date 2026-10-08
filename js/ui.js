@@ -1001,9 +1001,13 @@ class UIController {
       document.querySelectorAll(".category-chips-row .chip-btn").forEach(btn => {
         btn.classList.toggle("active", btn.dataset.category === category);
       });
-      // Trigger the existing chip click to fire any search handler
+      // Trigger the existing chip click to fire any search handler, or apply directly to map
       const matchingChip = document.querySelector(`.category-chips-row .chip-btn[data-category="${category}"]`);
-      if (matchingChip) matchingChip.click();
+      if (matchingChip) {
+        matchingChip.click();
+      } else if (window.CampusMap && typeof window.CampusMap.renderLocationMarkers === "function") {
+        window.CampusMap.renderLocationMarkers(category);
+      }
     }
 
     // Close the panel with history synchronization

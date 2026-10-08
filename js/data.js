@@ -586,36 +586,42 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
     hours: "8:00 AM - 5:30 PM",
     phone: "",
     image: ""
-  },
+  }
+];
+
+// ============================================================================
+// 4. 👨‍🏫 CAMPUS PERSONS (Faculty Cabins, Leadership, HODs, & Personnel)
+// ============================================================================
+var CAMPUS_PERSONS = window.CAMPUS_PERSONS = [
   {
-    "id": "office-person-17442-arun-malik",
-    "name": "Dr. Arun Malik",
-    "uid": "17442",
-    "designation": "Professor & Associate Dean",
-    "responsibility": "HOS",
-    "role": "HOS",
-    "department_or_subject": null,
-    "block": "27",
-    "room": "201",
-    "seating": null,
-    "office": "HOS Office",
-    "location_notation": "27-201",
-    "parentBlockIds": [
+    id: "office-person-17442-arun-malik",
+    name: "Dr. Arun Malik",
+    uid: "17442",
+    designation: "Professor & Associate Dean",
+    responsibility: "HOS",
+    role: "HOS",
+    department_or_subject: null,
+    block: "27",
+    room: "201",
+    seating: null,
+    office: "HOS Office",
+    location_notation: "27-201",
+    parentBlockIds: [
       "block-27"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of Computing and Artificial Intelligence",
-    "category": "offices",
-    "type": "Head of School (HOS) Office",
-    "lat": 31.252858651898666,
-    "lng": 75.70330718355343,
-    "visibleFromZoom": 19,
-    "floor": "Block 27, Room 201, HOS Office",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of Computing and Artificial Intelligence",
+    category: "offices",
+    type: "Head of School (HOS) Office",
+    lat: 31.252858651898666,
+    lng: 75.70330718355343,
+    visibleFromZoom: 19,
+    floor: "Block 27, Room 201, HOS Office",
+    facilities: [
       "Block 27 Academic Block",
       "HOS Office"
     ],
-    "tags": [
+    tags: [
       "17442",
       "201",
       "27 201",
@@ -637,40 +643,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "room 201 of block 27",
       "uid 17442"
     ],
-    "desc": "Dr. Arun Malik, Professor & Associate Dean. Role: HOS. Office: HOS Office. Located in Block 27, Room 201, HOS Office (Notation: 27-201).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Dr. Arun Malik, Professor & Associate Dean. Role: HOS. Office: HOS Office. Located in Block 27, Room 201, HOS Office (Notation: 27-201).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-22078-baljit-singh-saini",
-    "name": "Dr. Baljit Singh Saini",
-    "uid": "22078",
-    "designation": "Professor",
-    "responsibility": "COD",
-    "role": "COD",
-    "department_or_subject": null,
-    "block": "27",
-    "room": "203",
-    "seating": "C3",
-    "office": null,
-    "location_notation": "27-203-C3",
-    "parentBlockIds": [
+    id: "office-person-22078-baljit-singh-saini",
+    name: "Dr. Baljit Singh Saini",
+    uid: "22078",
+    designation: "Professor",
+    responsibility: "COD",
+    role: "COD",
+    department_or_subject: null,
+    block: "27",
+    room: "203",
+    seating: "C3",
+    office: null,
+    location_notation: "27-203-C3",
+    parentBlockIds: [
       "block-27"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of Computing and Artificial Intelligence",
-    "category": "offices",
-    "type": "Coordinator of Department (COD) Office",
-    "lat": 31.252858651898666,
-    "lng": 75.70330718355343,
-    "visibleFromZoom": 19,
-    "floor": "Block 27, Room 203, Cabin C3",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of Computing and Artificial Intelligence",
+    category: "offices",
+    type: "Coordinator of Department (COD) Office",
+    lat: 31.252858651898666,
+    lng: 75.70330718355343,
+    visibleFromZoom: 19,
+    floor: "Block 27, Room 203, Cabin C3",
+    facilities: [
       "Block 27 Academic Block",
       "COD"
     ],
-    "tags": [
+    tags: [
       "203",
       "22078",
       "27 203 c3",
@@ -695,40 +701,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "singh",
       "uid 22078"
     ],
-    "desc": "Dr. Baljit Singh Saini, Professor. Role: COD. Located in Block 27, Room 203, Cabin C3 (Notation: 27-203-C3).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Dr. Baljit Singh Saini, Professor. Role: COD. Located in Block 27, Room 203, Cabin C3 (Notation: 27-203-C3).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-12301-rajeev-kumar-patial",
-    "name": "Dr. Rajeev Kumar Patial",
-    "uid": "12301",
-    "designation": "Associate Professor",
-    "responsibility": "COD",
-    "role": "COD",
-    "department_or_subject": null,
-    "block": "28",
-    "room": "206",
-    "seating": "C1",
-    "office": null,
-    "location_notation": "28-206-C1",
-    "parentBlockIds": [
+    id: "office-person-12301-rajeev-kumar-patial",
+    name: "Dr. Rajeev Kumar Patial",
+    uid: "12301",
+    designation: "Associate Professor",
+    responsibility: "COD",
+    role: "COD",
+    department_or_subject: null,
+    block: "28",
+    room: "206",
+    seating: "C1",
+    office: null,
+    location_notation: "28-206-C1",
+    parentBlockIds: [
       "block-28"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of Computing and Artificial Intelligence",
-    "category": "offices",
-    "type": "Coordinator of Department (COD) Office",
-    "lat": 31.25284540741938,
-    "lng": 75.70373386456326,
-    "visibleFromZoom": 19,
-    "floor": "Block 28, Room 206, Cabin C1",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of Computing and Artificial Intelligence",
+    category: "offices",
+    type: "Coordinator of Department (COD) Office",
+    lat: 31.25284540741938,
+    lng: 75.70373386456326,
+    visibleFromZoom: 19,
+    floor: "Block 28, Room 206, Cabin C1",
+    facilities: [
       "Block 28 Academic Block",
       "COD"
     ],
-    "tags": [
+    tags: [
       "12301",
       "206",
       "28 206 c1",
@@ -753,40 +759,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "seating c1",
       "uid 12301"
     ],
-    "desc": "Dr. Rajeev Kumar Patial, Associate Professor. Role: COD. Located in Block 28, Room 206, Cabin C1 (Notation: 28-206-C1).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Dr. Rajeev Kumar Patial, Associate Professor. Role: COD. Located in Block 28, Room 206, Cabin C1 (Notation: 28-206-C1).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-11530-harminder-singh-saggu",
-    "name": "Dr. Harminder Singh Saggu",
-    "uid": "11530",
-    "designation": "Professor",
-    "responsibility": "COD",
-    "role": "COD",
-    "department_or_subject": null,
-    "block": "28",
-    "room": "206",
-    "seating": "C3",
-    "office": null,
-    "location_notation": "28-206-C3",
-    "parentBlockIds": [
+    id: "office-person-11530-harminder-singh-saggu",
+    name: "Dr. Harminder Singh Saggu",
+    uid: "11530",
+    designation: "Professor",
+    responsibility: "COD",
+    role: "COD",
+    department_or_subject: null,
+    block: "28",
+    room: "206",
+    seating: "C3",
+    office: null,
+    location_notation: "28-206-C3",
+    parentBlockIds: [
       "block-28"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of Computing and Artificial Intelligence",
-    "category": "offices",
-    "type": "Coordinator of Department (COD) Office",
-    "lat": 31.25284540741938,
-    "lng": 75.70373386456326,
-    "visibleFromZoom": 19,
-    "floor": "Block 28, Room 206, Cabin C3",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of Computing and Artificial Intelligence",
+    category: "offices",
+    type: "Coordinator of Department (COD) Office",
+    lat: 31.25284540741938,
+    lng: 75.70373386456326,
+    visibleFromZoom: 19,
+    floor: "Block 28, Room 206, Cabin C3",
+    facilities: [
       "Block 28 Academic Block",
       "COD"
     ],
-    "tags": [
+    tags: [
       "11530",
       "206",
       "28 206 c3",
@@ -811,40 +817,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "singh",
       "uid 11530"
     ],
-    "desc": "Dr. Harminder Singh Saggu, Professor. Role: COD. Located in Block 28, Room 206, Cabin C3 (Notation: 28-206-C3).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Dr. Harminder Singh Saggu, Professor. Role: COD. Located in Block 28, Room 206, Cabin C3 (Notation: 28-206-C3).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-28260-simarjit-singh-malhi",
-    "name": "Dr. Simarjit Singh Malhi",
-    "uid": "28260",
-    "designation": "Associate Professor",
-    "responsibility": "COD",
-    "role": "COD",
-    "department_or_subject": null,
-    "block": "27",
-    "room": "205",
-    "seating": "C1",
-    "office": null,
-    "location_notation": "27-205-C1",
-    "parentBlockIds": [
+    id: "office-person-28260-simarjit-singh-malhi",
+    name: "Dr. Simarjit Singh Malhi",
+    uid: "28260",
+    designation: "Associate Professor",
+    responsibility: "COD",
+    role: "COD",
+    department_or_subject: null,
+    block: "27",
+    room: "205",
+    seating: "C1",
+    office: null,
+    location_notation: "27-205-C1",
+    parentBlockIds: [
       "block-27"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of Computing and Artificial Intelligence",
-    "category": "offices",
-    "type": "Coordinator of Department (COD) Office",
-    "lat": 31.252858651898666,
-    "lng": 75.70330718355343,
-    "visibleFromZoom": 19,
-    "floor": "Block 27, Room 205, Cabin C1",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of Computing and Artificial Intelligence",
+    category: "offices",
+    type: "Coordinator of Department (COD) Office",
+    lat: 31.252858651898666,
+    lng: 75.70330718355343,
+    visibleFromZoom: 19,
+    floor: "Block 27, Room 205, Cabin C1",
+    facilities: [
       "Block 27 Academic Block",
       "COD"
     ],
-    "tags": [
+    tags: [
       "205",
       "27 205 c1",
       "27-205-c1",
@@ -869,40 +875,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "singh",
       "uid 28260"
     ],
-    "desc": "Dr. Simarjit Singh Malhi, Associate Professor. Role: COD. Located in Block 27, Room 205, Cabin C1 (Notation: 27-205-C1).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Dr. Simarjit Singh Malhi, Associate Professor. Role: COD. Located in Block 27, Room 205, Cabin C1 (Notation: 27-205-C1).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-34813-sourabh-kaul",
-    "name": "Mr. Sourabh Kaul",
-    "uid": "34813",
-    "designation": "Administrator",
-    "responsibility": "Administrator",
-    "role": "Administrator",
-    "department_or_subject": null,
-    "block": "27",
-    "room": "206",
-    "seating": null,
-    "office": "Administrator Office",
-    "location_notation": "27-206",
-    "parentBlockIds": [
+    id: "office-person-34813-sourabh-kaul",
+    name: "Mr. Sourabh Kaul",
+    uid: "34813",
+    designation: "Administrator",
+    responsibility: "Administrator",
+    role: "Administrator",
+    department_or_subject: null,
+    block: "27",
+    room: "206",
+    seating: null,
+    office: "Administrator Office",
+    location_notation: "27-206",
+    parentBlockIds: [
       "block-27"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of Computing and Artificial Intelligence",
-    "category": "offices",
-    "type": "Administrator Office",
-    "lat": 31.252858651898666,
-    "lng": 75.70330718355343,
-    "visibleFromZoom": 19,
-    "floor": "Block 27, Room 206, Administrator Office",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of Computing and Artificial Intelligence",
+    category: "offices",
+    type: "Administrator Office",
+    lat: 31.252858651898666,
+    lng: 75.70330718355343,
+    visibleFromZoom: 19,
+    floor: "Block 27, Room 206, Administrator Office",
+    facilities: [
       "Block 27 Academic Block",
       "Administrator Office"
     ],
-    "tags": [
+    tags: [
       "206",
       "27 206",
       "27-206",
@@ -924,40 +930,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "sourabh kaul",
       "uid 34813"
     ],
-    "desc": "Mr. Sourabh Kaul, Administrator. Role: Administrator. Office: Administrator Office. Located in Block 27, Room 206, Administrator Office (Notation: 27-206).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Mr. Sourabh Kaul, Administrator. Role: Administrator. Office: Administrator Office. Located in Block 27, Room 206, Administrator Office (Notation: 27-206).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-16717-chirag-sharma",
-    "name": "Dr. Chirag Sharma",
-    "uid": "16717",
-    "designation": "Associate Professor",
-    "responsibility": "COD",
-    "role": "COD",
-    "department_or_subject": null,
-    "block": "27",
-    "room": "207",
-    "seating": "C1",
-    "office": null,
-    "location_notation": "27-207-C1",
-    "parentBlockIds": [
+    id: "office-person-16717-chirag-sharma",
+    name: "Dr. Chirag Sharma",
+    uid: "16717",
+    designation: "Associate Professor",
+    responsibility: "COD",
+    role: "COD",
+    department_or_subject: null,
+    block: "27",
+    room: "207",
+    seating: "C1",
+    office: null,
+    location_notation: "27-207-C1",
+    parentBlockIds: [
       "block-27"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of Computing and Artificial Intelligence",
-    "category": "offices",
-    "type": "Coordinator of Department (COD) Office",
-    "lat": 31.252858651898666,
-    "lng": 75.70330718355343,
-    "visibleFromZoom": 19,
-    "floor": "Block 27, Room 207, Cabin C1",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of Computing and Artificial Intelligence",
+    category: "offices",
+    type: "Coordinator of Department (COD) Office",
+    lat: 31.252858651898666,
+    lng: 75.70330718355343,
+    visibleFromZoom: 19,
+    floor: "Block 27, Room 207, Cabin C1",
+    facilities: [
       "Block 27 Academic Block",
       "COD"
     ],
-    "tags": [
+    tags: [
       "16717",
       "207",
       "27 207 c1",
@@ -981,40 +987,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "sharma",
       "uid 16717"
     ],
-    "desc": "Dr. Chirag Sharma, Associate Professor. Role: COD. Located in Block 27, Room 207, Cabin C1 (Notation: 27-207-C1).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Dr. Chirag Sharma, Associate Professor. Role: COD. Located in Block 27, Room 207, Cabin C1 (Notation: 27-207-C1).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-17688-richa-jain",
-    "name": "Dr. Richa Jain",
-    "uid": "17688",
-    "designation": "Associate Professor",
-    "responsibility": "COD",
-    "role": "COD",
-    "department_or_subject": null,
-    "block": "27",
-    "room": "209",
-    "seating": "C1",
-    "office": null,
-    "location_notation": "27-209-C1",
-    "parentBlockIds": [
+    id: "office-person-17688-richa-jain",
+    name: "Dr. Richa Jain",
+    uid: "17688",
+    designation: "Associate Professor",
+    responsibility: "COD",
+    role: "COD",
+    department_or_subject: null,
+    block: "27",
+    room: "209",
+    seating: "C1",
+    office: null,
+    location_notation: "27-209-C1",
+    parentBlockIds: [
       "block-27"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of Computing and Artificial Intelligence",
-    "category": "offices",
-    "type": "Coordinator of Department (COD) Office",
-    "lat": 31.252858651898666,
-    "lng": 75.70330718355343,
-    "visibleFromZoom": 19,
-    "floor": "Block 27, Room 209, Cabin C1",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of Computing and Artificial Intelligence",
+    category: "offices",
+    type: "Coordinator of Department (COD) Office",
+    lat: 31.252858651898666,
+    lng: 75.70330718355343,
+    visibleFromZoom: 19,
+    floor: "Block 27, Room 209, Cabin C1",
+    facilities: [
       "Block 27 Academic Block",
       "COD"
     ],
-    "tags": [
+    tags: [
       "17688",
       "209",
       "27 209 c1",
@@ -1038,40 +1044,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "seating c1",
       "uid 17688"
     ],
-    "desc": "Dr. Richa Jain, Associate Professor. Role: COD. Located in Block 27, Room 209, Cabin C1 (Notation: 27-209-C1).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Dr. Richa Jain, Associate Professor. Role: COD. Located in Block 27, Room 209, Cabin C1 (Notation: 27-209-C1).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-17673-amritpal-singh",
-    "name": "Dr. Amritpal Singh",
-    "uid": "17673",
-    "designation": "Associate Professor",
-    "responsibility": "COD",
-    "role": "COD",
-    "department_or_subject": null,
-    "block": "27",
-    "room": "102",
-    "seating": "C1",
-    "office": null,
-    "location_notation": "27-102-C1",
-    "parentBlockIds": [
+    id: "office-person-17673-amritpal-singh",
+    name: "Dr. Amritpal Singh",
+    uid: "17673",
+    designation: "Associate Professor",
+    responsibility: "COD",
+    role: "COD",
+    department_or_subject: null,
+    block: "27",
+    room: "102",
+    seating: "C1",
+    office: null,
+    location_notation: "27-102-C1",
+    parentBlockIds: [
       "block-27"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of Computing and Artificial Intelligence",
-    "category": "offices",
-    "type": "Coordinator of Department (COD) Office",
-    "lat": 31.252858651898666,
-    "lng": 75.70330718355343,
-    "visibleFromZoom": 19,
-    "floor": "Block 27, Room 102, Cabin C1",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of Computing and Artificial Intelligence",
+    category: "offices",
+    type: "Coordinator of Department (COD) Office",
+    lat: 31.252858651898666,
+    lng: 75.70330718355343,
+    visibleFromZoom: 19,
+    floor: "Block 27, Room 102, Cabin C1",
+    facilities: [
       "Block 27 Academic Block",
       "COD"
     ],
-    "tags": [
+    tags: [
       "102",
       "17673",
       "27 102 c1",
@@ -1095,40 +1101,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "singh",
       "uid 17673"
     ],
-    "desc": "Dr. Amritpal Singh, Associate Professor. Role: COD. Located in Block 27, Room 102, Cabin C1 (Notation: 27-102-C1).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Dr. Amritpal Singh, Associate Professor. Role: COD. Located in Block 27, Room 102, Cabin C1 (Notation: 27-102-C1).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-15980-mohit-arora",
-    "name": "Dr. Mohit Arora",
-    "uid": "15980",
-    "designation": "Associate Professor",
-    "responsibility": "COD",
-    "role": "COD",
-    "department_or_subject": null,
-    "block": "27",
-    "room": "102",
-    "seating": "C3",
-    "office": null,
-    "location_notation": "27-102-C3",
-    "parentBlockIds": [
+    id: "office-person-15980-mohit-arora",
+    name: "Dr. Mohit Arora",
+    uid: "15980",
+    designation: "Associate Professor",
+    responsibility: "COD",
+    role: "COD",
+    department_or_subject: null,
+    block: "27",
+    room: "102",
+    seating: "C3",
+    office: null,
+    location_notation: "27-102-C3",
+    parentBlockIds: [
       "block-27"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of Computing and Artificial Intelligence",
-    "category": "offices",
-    "type": "Coordinator of Department (COD) Office",
-    "lat": 31.252858651898666,
-    "lng": 75.70330718355343,
-    "visibleFromZoom": 19,
-    "floor": "Block 27, Room 102, Cabin C3",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of Computing and Artificial Intelligence",
+    category: "offices",
+    type: "Coordinator of Department (COD) Office",
+    lat: 31.252858651898666,
+    lng: 75.70330718355343,
+    visibleFromZoom: 19,
+    floor: "Block 27, Room 102, Cabin C3",
+    facilities: [
       "Block 27 Academic Block",
       "COD"
     ],
-    "tags": [
+    tags: [
       "102",
       "15980",
       "27 102 c3",
@@ -1152,40 +1158,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "seating c3",
       "uid 15980"
     ],
-    "desc": "Dr. Mohit Arora, Associate Professor. Role: COD. Located in Block 27, Room 102, Cabin C3 (Notation: 27-102-C3).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Dr. Mohit Arora, Associate Professor. Role: COD. Located in Block 27, Room 102, Cabin C3 (Notation: 27-102-C3).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-11265-dalwinder-singh",
-    "name": "Dr. Dalwinder Singh",
-    "uid": "11265",
-    "designation": "Professor/Deputy Director",
-    "responsibility": "COS",
-    "role": "COS",
-    "department_or_subject": null,
-    "block": "28",
-    "room": "201A",
-    "seating": null,
-    "office": "COS Office",
-    "location_notation": "28-201A",
-    "parentBlockIds": [
+    id: "office-person-11265-dalwinder-singh",
+    name: "Dr. Dalwinder Singh",
+    uid: "11265",
+    designation: "Professor/Deputy Director",
+    responsibility: "COS",
+    role: "COS",
+    department_or_subject: null,
+    block: "28",
+    room: "201A",
+    seating: null,
+    office: "COS Office",
+    location_notation: "28-201A",
+    parentBlockIds: [
       "block-28"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of Computing and Artificial Intelligence",
-    "category": "offices",
-    "type": "Coordinator of School (COS) Office",
-    "lat": 31.25284540741938,
-    "lng": 75.70373386456326,
-    "visibleFromZoom": 19,
-    "floor": "Block 28, Room 201A, COS Office",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of Computing and Artificial Intelligence",
+    category: "offices",
+    type: "Coordinator of School (COS) Office",
+    lat: 31.25284540741938,
+    lng: 75.70373386456326,
+    visibleFromZoom: 19,
+    floor: "Block 28, Room 201A, COS Office",
+    facilities: [
       "Block 28 Academic Block",
       "COS Office"
     ],
-    "tags": [
+    tags: [
       "11265",
       "201a",
       "28 201a",
@@ -1207,40 +1213,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "singh",
       "uid 11265"
     ],
-    "desc": "Dr. Dalwinder Singh, Professor/Deputy Director. Role: COS. Office: COS Office. Located in Block 28, Room 201A, COS Office (Notation: 28-201A).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Dr. Dalwinder Singh, Professor/Deputy Director. Role: COS. Office: COS Office. Located in Block 28, Room 201A, COS Office (Notation: 28-201A).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-16967-gursharan-singh",
-    "name": "Dr. Gursharan Singh",
-    "uid": "16967",
-    "designation": "Associate Professor",
-    "responsibility": "COD",
-    "role": "COD",
-    "department_or_subject": null,
-    "block": "28",
-    "room": "202",
-    "seating": "C2",
-    "office": null,
-    "location_notation": "28-202-C2",
-    "parentBlockIds": [
+    id: "office-person-16967-gursharan-singh",
+    name: "Dr. Gursharan Singh",
+    uid: "16967",
+    designation: "Associate Professor",
+    responsibility: "COD",
+    role: "COD",
+    department_or_subject: null,
+    block: "28",
+    room: "202",
+    seating: "C2",
+    office: null,
+    location_notation: "28-202-C2",
+    parentBlockIds: [
       "block-28"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of Computing and Artificial Intelligence",
-    "category": "offices",
-    "type": "Coordinator of Department (COD) Office",
-    "lat": 31.25284540741938,
-    "lng": 75.70373386456326,
-    "visibleFromZoom": 19,
-    "floor": "Block 28, Room 202, Cabin C2",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of Computing and Artificial Intelligence",
+    category: "offices",
+    type: "Coordinator of Department (COD) Office",
+    lat: 31.25284540741938,
+    lng: 75.70373386456326,
+    visibleFromZoom: 19,
+    floor: "Block 28, Room 202, Cabin C2",
+    facilities: [
       "Block 28 Academic Block",
       "COD"
     ],
-    "tags": [
+    tags: [
       "16967",
       "202",
       "28 202 c2",
@@ -1264,40 +1270,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "singh",
       "uid 16967"
     ],
-    "desc": "Dr. Gursharan Singh, Associate Professor. Role: COD. Located in Block 28, Room 202, Cabin C2 (Notation: 28-202-C2).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Dr. Gursharan Singh, Associate Professor. Role: COD. Located in Block 28, Room 202, Cabin C2 (Notation: 28-202-C2).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-11266-janpreet-singh",
-    "name": "Janpreet Singh",
-    "uid": "11266",
-    "designation": "Assistant Professor",
-    "responsibility": "COD",
-    "role": "COD",
-    "department_or_subject": null,
-    "block": "28",
-    "room": "202",
-    "seating": "C3",
-    "office": null,
-    "location_notation": "28-202-C3",
-    "parentBlockIds": [
+    id: "office-person-11266-janpreet-singh",
+    name: "Janpreet Singh",
+    uid: "11266",
+    designation: "Assistant Professor",
+    responsibility: "COD",
+    role: "COD",
+    department_or_subject: null,
+    block: "28",
+    room: "202",
+    seating: "C3",
+    office: null,
+    location_notation: "28-202-C3",
+    parentBlockIds: [
       "block-28"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of Computing and Artificial Intelligence",
-    "category": "offices",
-    "type": "Coordinator of Department (COD) Office",
-    "lat": 31.25284540741938,
-    "lng": 75.70373386456326,
-    "visibleFromZoom": 19,
-    "floor": "Block 28, Room 202, Cabin C3",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of Computing and Artificial Intelligence",
+    category: "offices",
+    type: "Coordinator of Department (COD) Office",
+    lat: 31.25284540741938,
+    lng: 75.70373386456326,
+    visibleFromZoom: 19,
+    floor: "Block 28, Room 202, Cabin C3",
+    facilities: [
       "Block 28 Academic Block",
       "COD"
     ],
-    "tags": [
+    tags: [
       "11266",
       "202",
       "28 202 c3",
@@ -1320,40 +1326,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "singh",
       "uid 11266"
     ],
-    "desc": "Janpreet Singh, Assistant Professor. Role: COD. Located in Block 28, Room 202, Cabin C3 (Notation: 28-202-C3).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Janpreet Singh, Assistant Professor. Role: COD. Located in Block 28, Room 202, Cabin C3 (Notation: 28-202-C3).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-14597-robin-prakash-mathur",
-    "name": "Dr. Robin Prakash Mathur",
-    "uid": "14597",
-    "designation": "Associate Professor",
-    "responsibility": "COD",
-    "role": "COD",
-    "department_or_subject": null,
-    "block": "28",
-    "room": "203",
-    "seating": "C1",
-    "office": null,
-    "location_notation": "28-203-C1",
-    "parentBlockIds": [
+    id: "office-person-14597-robin-prakash-mathur",
+    name: "Dr. Robin Prakash Mathur",
+    uid: "14597",
+    designation: "Associate Professor",
+    responsibility: "COD",
+    role: "COD",
+    department_or_subject: null,
+    block: "28",
+    room: "203",
+    seating: "C1",
+    office: null,
+    location_notation: "28-203-C1",
+    parentBlockIds: [
       "block-28"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of Computing and Artificial Intelligence",
-    "category": "offices",
-    "type": "Coordinator of Department (COD) Office",
-    "lat": 31.25284540741938,
-    "lng": 75.70373386456326,
-    "visibleFromZoom": 19,
-    "floor": "Block 28, Room 203, Cabin C1",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of Computing and Artificial Intelligence",
+    category: "offices",
+    type: "Coordinator of Department (COD) Office",
+    lat: 31.25284540741938,
+    lng: 75.70373386456326,
+    visibleFromZoom: 19,
+    floor: "Block 28, Room 203, Cabin C1",
+    facilities: [
       "Block 28 Academic Block",
       "COD"
     ],
-    "tags": [
+    tags: [
       "14597",
       "203",
       "28 203 c1",
@@ -1378,40 +1384,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "seating c1",
       "uid 14597"
     ],
-    "desc": "Dr. Robin Prakash Mathur, Associate Professor. Role: COD. Located in Block 28, Room 203, Cabin C1 (Notation: 28-203-C1).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Dr. Robin Prakash Mathur, Associate Professor. Role: COD. Located in Block 28, Room 203, Cabin C1 (Notation: 28-203-C1).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-32821-neeraj-sharma",
-    "name": "Dr. Neeraj Sharma",
-    "uid": "32821",
-    "designation": "Professor and Dean",
-    "responsibility": "HOS",
-    "role": "HOS",
-    "department_or_subject": null,
-    "block": "34",
-    "room": "201B",
-    "seating": null,
-    "office": "HOS Office",
-    "location_notation": "34-201B",
-    "parentBlockIds": [
+    id: "office-person-32821-neeraj-sharma",
+    name: "Dr. Neeraj Sharma",
+    uid: "32821",
+    designation: "Professor and Dean",
+    responsibility: "HOS",
+    role: "HOS",
+    department_or_subject: null,
+    block: "34",
+    room: "201B",
+    seating: null,
+    office: "HOS Office",
+    location_notation: "34-201B",
+    parentBlockIds: [
       "block-34"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of Computer Science & Engineering (CSE)",
-    "category": "offices",
-    "type": "Head of School (HOS) Office",
-    "lat": 31.25148864838823,
-    "lng": 75.7047360500708,
-    "visibleFromZoom": 19,
-    "floor": "Block 34, Room 201B, HOS Office",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of Computer Science & Engineering (CSE)",
+    category: "offices",
+    type: "Head of School (HOS) Office",
+    lat: 31.25148864838823,
+    lng: 75.7047360500708,
+    visibleFromZoom: 19,
+    floor: "Block 34, Room 201B, HOS Office",
+    facilities: [
       "Block 34 Academic Block",
       "HOS Office"
     ],
-    "tags": [
+    tags: [
       "201b",
       "32821",
       "34 201b",
@@ -1433,40 +1439,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "sharma",
       "uid 32821"
     ],
-    "desc": "Dr. Neeraj Sharma, Professor and Dean. Role: HOS. Office: HOS Office. Located in Block 34, Room 201B, HOS Office (Notation: 34-201B).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Dr. Neeraj Sharma, Professor and Dean. Role: HOS. Office: HOS Office. Located in Block 34, Room 201B, HOS Office (Notation: 34-201B).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-16479-parminder-singh",
-    "name": "Dr. Parminder Singh",
-    "uid": "16479",
-    "designation": "Prof. dy Dean",
-    "responsibility": "COS",
-    "role": "COS",
-    "department_or_subject": null,
-    "block": "34",
-    "room": "309",
-    "seating": null,
-    "office": null,
-    "location_notation": "34-309",
-    "parentBlockIds": [
+    id: "office-person-16479-parminder-singh",
+    name: "Dr. Parminder Singh",
+    uid: "16479",
+    designation: "Prof. dy Dean",
+    responsibility: "COS",
+    role: "COS",
+    department_or_subject: null,
+    block: "34",
+    room: "309",
+    seating: null,
+    office: null,
+    location_notation: "34-309",
+    parentBlockIds: [
       "block-34"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of Computer Science & Engineering (CSE)",
-    "category": "offices",
-    "type": "Coordinator of School (COS) Office",
-    "lat": 31.25148864838823,
-    "lng": 75.7047360500708,
-    "visibleFromZoom": 19,
-    "floor": "Block 34, Room 309",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of Computer Science & Engineering (CSE)",
+    category: "offices",
+    type: "Coordinator of School (COS) Office",
+    lat: 31.25148864838823,
+    lng: 75.7047360500708,
+    visibleFromZoom: 19,
+    floor: "Block 34, Room 309",
+    facilities: [
       "Block 34 Academic Block",
       "COS"
     ],
-    "tags": [
+    tags: [
       "16479",
       "309",
       "34 309",
@@ -1487,40 +1493,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "singh",
       "uid 16479"
     ],
-    "desc": "Dr. Parminder Singh, Prof. dy Dean. Role: COS. Located in Block 34, Room 309 (Notation: 34-309).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Dr. Parminder Singh, Prof. dy Dean. Role: COS. Located in Block 34, Room 309 (Notation: 34-309).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-25708-rachit-garg",
-    "name": "Dr. Rachit Garg",
-    "uid": "25708",
-    "designation": "Deputy Dean",
-    "responsibility": "Administrator",
-    "role": "Administrator",
-    "department_or_subject": null,
-    "block": "34",
-    "room": "206",
-    "seating": null,
-    "office": "Administrator Office",
-    "location_notation": "34-206",
-    "parentBlockIds": [
+    id: "office-person-25708-rachit-garg",
+    name: "Dr. Rachit Garg",
+    uid: "25708",
+    designation: "Deputy Dean",
+    responsibility: "Administrator",
+    role: "Administrator",
+    department_or_subject: null,
+    block: "34",
+    room: "206",
+    seating: null,
+    office: "Administrator Office",
+    location_notation: "34-206",
+    parentBlockIds: [
       "block-34"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of Computer Science & Engineering (CSE)",
-    "category": "offices",
-    "type": "Administrator Office",
-    "lat": 31.25148864838823,
-    "lng": 75.7047360500708,
-    "visibleFromZoom": 19,
-    "floor": "Block 34, Room 206, Administrator Office",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of Computer Science & Engineering (CSE)",
+    category: "offices",
+    type: "Administrator Office",
+    lat: 31.25148864838823,
+    lng: 75.7047360500708,
+    visibleFromZoom: 19,
+    floor: "Block 34, Room 206, Administrator Office",
+    facilities: [
       "Block 34 Academic Block",
       "Administrator Office"
     ],
-    "tags": [
+    tags: [
       "206",
       "25708",
       "34 206",
@@ -1543,40 +1549,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "room 206 of block 34",
       "uid 25708"
     ],
-    "desc": "Dr. Rachit Garg, Deputy Dean. Role: Administrator. Office: Administrator Office. Located in Block 34, Room 206, Administrator Office (Notation: 34-206).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Dr. Rachit Garg, Deputy Dean. Role: Administrator. Office: Administrator Office. Located in Block 34, Room 206, Administrator Office (Notation: 34-206).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-11427-ajay-kaler",
-    "name": "Mr. Ajay Kaler",
-    "uid": "11427",
-    "designation": "Sr. Officer",
-    "responsibility": "Admin",
-    "role": "Admin",
-    "department_or_subject": null,
-    "block": "34",
-    "room": "208",
-    "seating": null,
-    "office": null,
-    "location_notation": "34-208",
-    "parentBlockIds": [
+    id: "office-person-11427-ajay-kaler",
+    name: "Mr. Ajay Kaler",
+    uid: "11427",
+    designation: "Sr. Officer",
+    responsibility: "Admin",
+    role: "Admin",
+    department_or_subject: null,
+    block: "34",
+    room: "208",
+    seating: null,
+    office: null,
+    location_notation: "34-208",
+    parentBlockIds: [
       "block-34"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of Computer Science & Engineering (CSE)",
-    "category": "offices",
-    "type": "Admin Office",
-    "lat": 31.25148864838823,
-    "lng": 75.7047360500708,
-    "visibleFromZoom": 19,
-    "floor": "Block 34, Room 208",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of Computer Science & Engineering (CSE)",
+    category: "offices",
+    type: "Admin Office",
+    lat: 31.25148864838823,
+    lng: 75.7047360500708,
+    visibleFromZoom: 19,
+    floor: "Block 34, Room 208",
+    facilities: [
       "Block 34 Academic Block",
       "Admin"
     ],
-    "tags": [
+    tags: [
       "11427",
       "208",
       "34 208",
@@ -1598,40 +1604,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "sr. officer",
       "uid 11427"
     ],
-    "desc": "Mr. Ajay Kaler, Sr. Officer. Role: Admin. Located in Block 34, Room 208 (Notation: 34-208).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Mr. Ajay Kaler, Sr. Officer. Role: Admin. Located in Block 34, Room 208 (Notation: 34-208).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-14575-makul-mahajan",
-    "name": "Dr. Makul Mahajan",
-    "uid": "14575",
-    "designation": "Associate Professor",
-    "responsibility": "HOD",
-    "role": "HOD",
-    "department_or_subject": "Data Science and Big Data",
-    "block": "34",
-    "room": "209",
-    "seating": "C1",
-    "office": null,
-    "location_notation": "34-209-C1",
-    "parentBlockIds": [
+    id: "office-person-14575-makul-mahajan",
+    name: "Dr. Makul Mahajan",
+    uid: "14575",
+    designation: "Associate Professor",
+    responsibility: "HOD",
+    role: "HOD",
+    department_or_subject: "Data Science and Big Data",
+    block: "34",
+    room: "209",
+    seating: "C1",
+    office: null,
+    location_notation: "34-209-C1",
+    parentBlockIds: [
       "block-34"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of Computer Science & Engineering (CSE)",
-    "category": "offices",
-    "type": "HOD Office (Data Science and Big Data)",
-    "lat": 31.25148864838823,
-    "lng": 75.7047360500708,
-    "visibleFromZoom": 19,
-    "floor": "Block 34, Room 209, Cabin C1",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of Computer Science & Engineering (CSE)",
+    category: "offices",
+    type: "HOD Office (Data Science and Big Data)",
+    lat: 31.25148864838823,
+    lng: 75.7047360500708,
+    visibleFromZoom: 19,
+    floor: "Block 34, Room 209, Cabin C1",
+    facilities: [
       "Block 34 Academic Block",
       "HOD"
     ],
-    "tags": [
+    tags: [
       "14575",
       "209",
       "34 209 c1",
@@ -1660,40 +1666,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "seating c1",
       "uid 14575"
     ],
-    "desc": "Dr. Makul Mahajan, Associate Professor. HOD of Data Science and Big Data. Located in Block 34, Room 209, Cabin C1 (Notation: 34-209-C1).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Dr. Makul Mahajan, Associate Professor. HOD of Data Science and Big Data. Located in Block 34, Room 209, Cabin C1 (Notation: 34-209-C1).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-12427-harjeet-kaur",
-    "name": "Dr. Harjeet Kaur",
-    "uid": "12427",
-    "designation": "Associate Professor",
-    "responsibility": "HOD",
-    "role": "HOD",
-    "department_or_subject": "Artificial Intelligence and Machine Learning",
-    "block": "33",
-    "room": "205",
-    "seating": "C1",
-    "office": null,
-    "location_notation": "33-205-C1",
-    "parentBlockIds": [
+    id: "office-person-12427-harjeet-kaur",
+    name: "Dr. Harjeet Kaur",
+    uid: "12427",
+    designation: "Associate Professor",
+    responsibility: "HOD",
+    role: "HOD",
+    department_or_subject: "Artificial Intelligence and Machine Learning",
+    block: "33",
+    room: "205",
+    seating: "C1",
+    office: null,
+    location_notation: "33-205-C1",
+    parentBlockIds: [
       "block-33"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of Computer Science & Engineering (CSE)",
-    "category": "offices",
-    "type": "HOD Office (Artificial Intelligence and Machine Learning)",
-    "lat": 31.25182752424929,
-    "lng": 75.70475097721261,
-    "visibleFromZoom": 19,
-    "floor": "Block 33, Room 205, Cabin C1",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of Computer Science & Engineering (CSE)",
+    category: "offices",
+    type: "HOD Office (Artificial Intelligence and Machine Learning)",
+    lat: 31.25182752424929,
+    lng: 75.70475097721261,
+    visibleFromZoom: 19,
+    floor: "Block 33, Room 205, Cabin C1",
+    facilities: [
       "Block 33 Academic Block",
       "HOD"
     ],
-    "tags": [
+    tags: [
       "12427",
       "205",
       "33 205 c1",
@@ -1724,40 +1730,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "seating c1",
       "uid 12427"
     ],
-    "desc": "Dr. Harjeet Kaur, Associate Professor. HOD of Artificial Intelligence and Machine Learning. Located in Block 33, Room 205, Cabin C1 (Notation: 33-205-C1).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Dr. Harjeet Kaur, Associate Professor. HOD of Artificial Intelligence and Machine Learning. Located in Block 33, Room 205, Cabin C1 (Notation: 33-205-C1).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-12438-manjit-kaur",
-    "name": "Dr. Manjit Kaur",
-    "uid": "12438",
-    "designation": "Professor",
-    "responsibility": "HOD",
-    "role": "HOD",
-    "department_or_subject": "Cloud Computing",
-    "block": "34",
-    "room": "202",
-    "seating": "C1",
-    "office": null,
-    "location_notation": "34-202-C1",
-    "parentBlockIds": [
+    id: "office-person-12438-manjit-kaur",
+    name: "Dr. Manjit Kaur",
+    uid: "12438",
+    designation: "Professor",
+    responsibility: "HOD",
+    role: "HOD",
+    department_or_subject: "Cloud Computing",
+    block: "34",
+    room: "202",
+    seating: "C1",
+    office: null,
+    location_notation: "34-202-C1",
+    parentBlockIds: [
       "block-34"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of Computer Science & Engineering (CSE)",
-    "category": "offices",
-    "type": "HOD Office (Cloud Computing)",
-    "lat": 31.25148864838823,
-    "lng": 75.7047360500708,
-    "visibleFromZoom": 19,
-    "floor": "Block 34, Room 202, Cabin C1",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of Computer Science & Engineering (CSE)",
+    category: "offices",
+    type: "HOD Office (Cloud Computing)",
+    lat: 31.25148864838823,
+    lng: 75.7047360500708,
+    visibleFromZoom: 19,
+    floor: "Block 34, Room 202, Cabin C1",
+    facilities: [
       "Block 34 Academic Block",
       "HOD"
     ],
-    "tags": [
+    tags: [
       "12438",
       "202",
       "34 202 c1",
@@ -1784,40 +1790,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "seating c1",
       "uid 12438"
     ],
-    "desc": "Dr. Manjit Kaur, Professor. HOD of Cloud Computing. Located in Block 34, Room 202, Cabin C1 (Notation: 34-202-C1).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Dr. Manjit Kaur, Professor. HOD of Cloud Computing. Located in Block 34, Room 202, Cabin C1 (Notation: 34-202-C1).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-16870-atul-malhotra",
-    "name": "Dr. Atul Malhotra",
-    "uid": "16870",
-    "designation": "Associate Professor",
-    "responsibility": "HOD",
-    "role": "HOD",
-    "department_or_subject": "Network and Cyber Security",
-    "block": "34",
-    "room": "202",
-    "seating": "C3",
-    "office": null,
-    "location_notation": "34-202-C3",
-    "parentBlockIds": [
+    id: "office-person-16870-atul-malhotra",
+    name: "Dr. Atul Malhotra",
+    uid: "16870",
+    designation: "Associate Professor",
+    responsibility: "HOD",
+    role: "HOD",
+    department_or_subject: "Network and Cyber Security",
+    block: "34",
+    room: "202",
+    seating: "C3",
+    office: null,
+    location_notation: "34-202-C3",
+    parentBlockIds: [
       "block-34"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of Computer Science & Engineering (CSE)",
-    "category": "offices",
-    "type": "HOD Office (Network and Cyber Security)",
-    "lat": 31.25148864838823,
-    "lng": 75.7047360500708,
-    "visibleFromZoom": 19,
-    "floor": "Block 34, Room 202, Cabin C3",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of Computer Science & Engineering (CSE)",
+    category: "offices",
+    type: "HOD Office (Network and Cyber Security)",
+    lat: 31.25148864838823,
+    lng: 75.7047360500708,
+    visibleFromZoom: 19,
+    floor: "Block 34, Room 202, Cabin C3",
+    facilities: [
       "Block 34 Academic Block",
       "HOD"
     ],
-    "tags": [
+    tags: [
       "16870",
       "202",
       "34 202 c3",
@@ -1846,40 +1852,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "seating c3",
       "uid 16870"
     ],
-    "desc": "Dr. Atul Malhotra, Associate Professor. HOD of Network and Cyber Security. Located in Block 34, Room 202, Cabin C3 (Notation: 34-202-C3).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Dr. Atul Malhotra, Associate Professor. HOD of Network and Cyber Security. Located in Block 34, Room 202, Cabin C3 (Notation: 34-202-C3).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-14085-vijay-kumar-garg",
-    "name": "Dr. Vijay Kumar Garg",
-    "uid": "14085",
-    "designation": "Professor",
-    "responsibility": "HOD",
-    "role": "HOD",
-    "department_or_subject": "Programming",
-    "block": "36",
-    "room": "307",
-    "seating": "C1",
-    "office": null,
-    "location_notation": "36-307-C1",
-    "parentBlockIds": [
+    id: "office-person-14085-vijay-kumar-garg",
+    name: "Dr. Vijay Kumar Garg",
+    uid: "14085",
+    designation: "Professor",
+    responsibility: "HOD",
+    role: "HOD",
+    department_or_subject: "Programming",
+    block: "36",
+    room: "307",
+    seating: "C1",
+    office: null,
+    location_notation: "36-307-C1",
+    parentBlockIds: [
       "block-36"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of Computer Science & Engineering (CSE)",
-    "category": "offices",
-    "type": "HOD Office (Programming)",
-    "lat": 31.2516333779156,
-    "lng": 75.70412763243169,
-    "visibleFromZoom": 19,
-    "floor": "Block 36, Room 307, Cabin C1",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of Computer Science & Engineering (CSE)",
+    category: "offices",
+    type: "HOD Office (Programming)",
+    lat: 31.2516333779156,
+    lng: 75.70412763243169,
+    visibleFromZoom: 19,
+    floor: "Block 36, Room 307, Cabin C1",
+    facilities: [
       "Block 36 Academic Block",
       "HOD"
     ],
-    "tags": [
+    tags: [
       "14085",
       "307",
       "36 307 c1",
@@ -1907,40 +1913,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "vijay",
       "vijay kumar garg"
     ],
-    "desc": "Dr. Vijay Kumar Garg, Professor. HOD of Programming. Located in Block 36, Room 307, Cabin C1 (Notation: 36-307-C1).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Dr. Vijay Kumar Garg, Professor. HOD of Programming. Located in Block 36, Room 307, Cabin C1 (Notation: 36-307-C1).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-16870-max-bhatia",
-    "name": "Dr. Max Bhatia",
-    "uid": "16870",
-    "designation": "Associate Professor",
-    "responsibility": "HOD",
-    "role": "HOD",
-    "department_or_subject": "Software Testing and Methodologies",
-    "block": "34",
-    "room": "207",
-    "seating": "C2",
-    "office": null,
-    "location_notation": "34-207-C2",
-    "parentBlockIds": [
+    id: "office-person-16870-max-bhatia",
+    name: "Dr. Max Bhatia",
+    uid: "16870",
+    designation: "Associate Professor",
+    responsibility: "HOD",
+    role: "HOD",
+    department_or_subject: "Software Testing and Methodologies",
+    block: "34",
+    room: "207",
+    seating: "C2",
+    office: null,
+    location_notation: "34-207-C2",
+    parentBlockIds: [
       "block-34"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of Computer Science & Engineering (CSE)",
-    "category": "offices",
-    "type": "HOD Office (Software Testing and Methodologies)",
-    "lat": 31.25148864838823,
-    "lng": 75.7047360500708,
-    "visibleFromZoom": 19,
-    "floor": "Block 34, Room 207, Cabin C2",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of Computer Science & Engineering (CSE)",
+    category: "offices",
+    type: "HOD Office (Software Testing and Methodologies)",
+    lat: 31.25148864838823,
+    lng: 75.7047360500708,
+    visibleFromZoom: 19,
+    floor: "Block 34, Room 207, Cabin C2",
+    facilities: [
       "Block 34 Academic Block",
       "HOD"
     ],
-    "tags": [
+    tags: [
       "16870",
       "207",
       "34 207 c2",
@@ -1969,40 +1975,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "testing",
       "uid 16870"
     ],
-    "desc": "Dr. Max Bhatia, Associate Professor. HOD of Software Testing and Methodologies. Located in Block 34, Room 207, Cabin C2 (Notation: 34-207-C2).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Dr. Max Bhatia, Associate Professor. HOD of Software Testing and Methodologies. Located in Block 34, Room 207, Cabin C2 (Notation: 34-207-C2).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-14623-pushpendra-kumar-pateriya",
-    "name": "Pushpendra Kumar Pateriya",
-    "uid": "14623",
-    "designation": "Assistant Professor",
-    "responsibility": "HOD",
-    "role": "HOD",
-    "department_or_subject": "Full Stack Application Development",
-    "block": "34",
-    "room": "204",
-    "seating": "C1",
-    "office": null,
-    "location_notation": "34-204-C1",
-    "parentBlockIds": [
+    id: "office-person-14623-pushpendra-kumar-pateriya",
+    name: "Pushpendra Kumar Pateriya",
+    uid: "14623",
+    designation: "Assistant Professor",
+    responsibility: "HOD",
+    role: "HOD",
+    department_or_subject: "Full Stack Application Development",
+    block: "34",
+    room: "204",
+    seating: "C1",
+    office: null,
+    location_notation: "34-204-C1",
+    parentBlockIds: [
       "block-34"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of Computer Science & Engineering (CSE)",
-    "category": "offices",
-    "type": "HOD Office (Full Stack Application Development)",
-    "lat": 31.25148864838823,
-    "lng": 75.7047360500708,
-    "visibleFromZoom": 19,
-    "floor": "Block 34, Room 204, Cabin C1",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of Computer Science & Engineering (CSE)",
+    category: "offices",
+    type: "HOD Office (Full Stack Application Development)",
+    lat: 31.25148864838823,
+    lng: 75.7047360500708,
+    visibleFromZoom: 19,
+    floor: "Block 34, Room 204, Cabin C1",
+    facilities: [
       "Block 34 Academic Block",
       "HOD"
     ],
-    "tags": [
+    tags: [
       "14623",
       "204",
       "34 204 c1",
@@ -2032,40 +2038,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "uid 14623",
       "web development"
     ],
-    "desc": "Pushpendra Kumar Pateriya, Assistant Professor. HOD of Full Stack Application Development. Located in Block 34, Room 204, Cabin C1 (Notation: 34-204-C1).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Pushpendra Kumar Pateriya, Assistant Professor. HOD of Full Stack Application Development. Located in Block 34, Room 204, Cabin C1 (Notation: 34-204-C1).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-18364-richa-sharma",
-    "name": "Dr. Richa Sharma",
-    "uid": "18364",
-    "designation": "Associate Professor",
-    "responsibility": "HOD",
-    "role": "HOD",
-    "department_or_subject": "DevOps",
-    "block": "36",
-    "room": "309A",
-    "seating": "C2",
-    "office": null,
-    "location_notation": "36-309A-C2",
-    "parentBlockIds": [
+    id: "office-person-18364-richa-sharma",
+    name: "Dr. Richa Sharma",
+    uid: "18364",
+    designation: "Associate Professor",
+    responsibility: "HOD",
+    role: "HOD",
+    department_or_subject: "DevOps",
+    block: "36",
+    room: "309A",
+    seating: "C2",
+    office: null,
+    location_notation: "36-309A-C2",
+    parentBlockIds: [
       "block-36"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of Computer Science & Engineering (CSE)",
-    "category": "offices",
-    "type": "HOD Office (DevOps)",
-    "lat": 31.2516333779156,
-    "lng": 75.70412763243169,
-    "visibleFromZoom": 19,
-    "floor": "Block 36, Room 309A, Cabin C2",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of Computer Science & Engineering (CSE)",
+    category: "offices",
+    type: "HOD Office (DevOps)",
+    lat: 31.2516333779156,
+    lng: 75.70412763243169,
+    visibleFromZoom: 19,
+    floor: "Block 36, Room 309A, Cabin C2",
+    facilities: [
       "Block 36 Academic Block",
       "HOD"
     ],
-    "tags": [
+    tags: [
       "18364",
       "309a",
       "36 309a c2",
@@ -2092,40 +2098,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "sharma",
       "uid 18364"
     ],
-    "desc": "Dr. Richa Sharma, Associate Professor. HOD of DevOps. Located in Block 36, Room 309A, Cabin C2 (Notation: 36-309A-C2).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Dr. Richa Sharma, Associate Professor. HOD of DevOps. Located in Block 36, Room 309A, Cabin C2 (Notation: 36-309A-C2).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-11360-deepak-kumar",
-    "name": "Dr. Deepak Kumar",
-    "uid": "11360",
-    "designation": "Professor and Assistant Dean",
-    "responsibility": "HOD",
-    "role": "HOD",
-    "department_or_subject": "Mathematics",
-    "block": "38",
-    "room": "301",
-    "seating": "C1",
-    "office": null,
-    "location_notation": "38-301-C1",
-    "parentBlockIds": [
+    id: "office-person-11360-deepak-kumar",
+    name: "Dr. Deepak Kumar",
+    uid: "11360",
+    designation: "Professor and Assistant Dean",
+    responsibility: "HOD",
+    role: "HOD",
+    department_or_subject: "Mathematics",
+    block: "38",
+    room: "301",
+    seating: "C1",
+    office: null,
+    location_notation: "38-301-C1",
+    parentBlockIds: [
       "block-38"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of Computer Science & Engineering (CSE)",
-    "category": "offices",
-    "type": "HOD Office (Mathematics)",
-    "lat": 31.252140287536804,
-    "lng": 75.70338135340346,
-    "visibleFromZoom": 19,
-    "floor": "Block 38, Room 301, Cabin C1",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of Computer Science & Engineering (CSE)",
+    category: "offices",
+    type: "HOD Office (Mathematics)",
+    lat: 31.252140287536804,
+    lng: 75.70338135340346,
+    visibleFromZoom: 19,
+    floor: "Block 38, Room 301, Cabin C1",
+    facilities: [
       "Block 38 Academic Block",
       "HOD"
     ],
-    "tags": [
+    tags: [
       "11360",
       "301",
       "38 301 c1",
@@ -2153,40 +2159,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "seating c1",
       "uid 11360"
     ],
-    "desc": "Dr. Deepak Kumar, Professor and Assistant Dean. HOD of Mathematics. Located in Block 38, Room 301, Cabin C1 (Notation: 38-301-C1).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Dr. Deepak Kumar, Professor and Assistant Dean. HOD of Mathematics. Located in Block 38, Room 301, Cabin C1 (Notation: 38-301-C1).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-13608-gurpinder-singh",
-    "name": "Dr. Gurpinder Singh",
-    "uid": "13608",
-    "designation": "Professor",
-    "responsibility": "HOD",
-    "role": "HOD",
-    "department_or_subject": "Chemistry",
-    "block": "33",
-    "room": "209",
-    "seating": "C1",
-    "office": null,
-    "location_notation": "33-209-C1",
-    "parentBlockIds": [
+    id: "office-person-13608-gurpinder-singh",
+    name: "Dr. Gurpinder Singh",
+    uid: "13608",
+    designation: "Professor",
+    responsibility: "HOD",
+    role: "HOD",
+    department_or_subject: "Chemistry",
+    block: "33",
+    room: "209",
+    seating: "C1",
+    office: null,
+    location_notation: "33-209-C1",
+    parentBlockIds: [
       "block-33"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of Computer Science & Engineering (CSE)",
-    "category": "offices",
-    "type": "HOD Office (Chemistry)",
-    "lat": 31.25182752424929,
-    "lng": 75.70475097721261,
-    "visibleFromZoom": 19,
-    "floor": "Block 33, Room 209, Cabin C1",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of Computer Science & Engineering (CSE)",
+    category: "offices",
+    type: "HOD Office (Chemistry)",
+    lat: 31.25182752424929,
+    lng: 75.70475097721261,
+    visibleFromZoom: 19,
+    floor: "Block 33, Room 209, Cabin C1",
+    facilities: [
       "Block 33 Academic Block",
       "HOD"
     ],
-    "tags": [
+    tags: [
       "13608",
       "209",
       "33 209 c1",
@@ -2213,40 +2219,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "singh",
       "uid 13608"
     ],
-    "desc": "Dr. Gurpinder Singh, Professor. HOD of Chemistry. Located in Block 33, Room 209, Cabin C1 (Notation: 33-209-C1).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Dr. Gurpinder Singh, Professor. HOD of Chemistry. Located in Block 33, Room 209, Cabin C1 (Notation: 33-209-C1).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-12284-pawandeep-kaur",
-    "name": "Dr. Pawandeep Kaur",
-    "uid": "12284",
-    "designation": "Associate Professor",
-    "responsibility": "HOD",
-    "role": "HOD",
-    "department_or_subject": "ECE",
-    "block": "33",
-    "room": "215",
-    "seating": "C1",
-    "office": null,
-    "location_notation": "33-215-C1",
-    "parentBlockIds": [
+    id: "office-person-12284-pawandeep-kaur",
+    name: "Dr. Pawandeep Kaur",
+    uid: "12284",
+    designation: "Associate Professor",
+    responsibility: "HOD",
+    role: "HOD",
+    department_or_subject: "ECE",
+    block: "33",
+    room: "215",
+    seating: "C1",
+    office: null,
+    location_notation: "33-215-C1",
+    parentBlockIds: [
       "block-33"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of Computer Science & Engineering (CSE)",
-    "category": "offices",
-    "type": "HOD Office (ECE)",
-    "lat": 31.25182752424929,
-    "lng": 75.70475097721261,
-    "visibleFromZoom": 19,
-    "floor": "Block 33, Room 215, Cabin C1",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of Computer Science & Engineering (CSE)",
+    category: "offices",
+    type: "HOD Office (ECE)",
+    lat: 31.25182752424929,
+    lng: 75.70475097721261,
+    visibleFromZoom: 19,
+    floor: "Block 33, Room 215, Cabin C1",
+    facilities: [
       "Block 33 Academic Block",
       "HOD"
     ],
-    "tags": [
+    tags: [
       "12284",
       "215",
       "33 215 c1",
@@ -2273,40 +2279,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "seating c1",
       "uid 12284"
     ],
-    "desc": "Dr. Pawandeep Kaur, Associate Professor. HOD of ECE. Located in Block 33, Room 215, Cabin C1 (Notation: 33-215-C1).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Dr. Pawandeep Kaur, Associate Professor. HOD of ECE. Located in Block 33, Room 215, Cabin C1 (Notation: 33-215-C1).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-15312-tejinder-thind",
-    "name": "Mr. Tejinder Thind",
-    "uid": "15312",
-    "designation": "Assistant Professor",
-    "responsibility": "HOD",
-    "role": "HOD",
-    "department_or_subject": "HOL",
-    "block": "34",
-    "room": "203",
-    "seating": "C3",
-    "office": null,
-    "location_notation": "34-203-C3",
-    "parentBlockIds": [
+    id: "office-person-15312-tejinder-thind",
+    name: "Mr. Tejinder Thind",
+    uid: "15312",
+    designation: "Assistant Professor",
+    responsibility: "HOD",
+    role: "HOD",
+    department_or_subject: "HOL",
+    block: "34",
+    room: "203",
+    seating: "C3",
+    office: null,
+    location_notation: "34-203-C3",
+    parentBlockIds: [
       "block-34"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of Computer Science & Engineering (CSE)",
-    "category": "offices",
-    "type": "HOD Office (HOL)",
-    "lat": 31.25148864838823,
-    "lng": 75.7047360500708,
-    "visibleFromZoom": 19,
-    "floor": "Block 34, Room 203, Cabin C3",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of Computer Science & Engineering (CSE)",
+    category: "offices",
+    type: "HOD Office (HOL)",
+    lat: 31.25148864838823,
+    lng: 75.7047360500708,
+    visibleFromZoom: 19,
+    floor: "Block 34, Room 203, Cabin C3",
+    facilities: [
       "Block 34 Academic Block",
       "HOD"
     ],
-    "tags": [
+    tags: [
       "15312",
       "203",
       "34 203 c3",
@@ -2333,40 +2339,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "thind",
       "uid 15312"
     ],
-    "desc": "Mr. Tejinder Thind, Assistant Professor. HOD of HOL. Located in Block 34, Room 203, Cabin C3 (Notation: 34-203-C3).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Mr. Tejinder Thind, Assistant Professor. HOD of HOL. Located in Block 34, Room 203, Cabin C3 (Notation: 34-203-C3).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-11384-amandeep-kaur",
-    "name": "Amandeep Kaur",
-    "uid": "11384",
-    "designation": "Assistant Professor",
-    "responsibility": "HOD",
-    "role": "HOD",
-    "department_or_subject": "Academic Operations",
-    "block": "34",
-    "room": "205",
-    "seating": "C2",
-    "office": null,
-    "location_notation": "34-205-C2",
-    "parentBlockIds": [
+    id: "office-person-11384-amandeep-kaur",
+    name: "Amandeep Kaur",
+    uid: "11384",
+    designation: "Assistant Professor",
+    responsibility: "HOD",
+    role: "HOD",
+    department_or_subject: "Academic Operations",
+    block: "34",
+    room: "205",
+    seating: "C2",
+    office: null,
+    location_notation: "34-205-C2",
+    parentBlockIds: [
       "block-34"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of Computer Science & Engineering (CSE)",
-    "category": "offices",
-    "type": "HOD Office (Academic Operations)",
-    "lat": 31.25148864838823,
-    "lng": 75.7047360500708,
-    "visibleFromZoom": 19,
-    "floor": "Block 34, Room 205, Cabin C2",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of Computer Science & Engineering (CSE)",
+    category: "offices",
+    type: "HOD Office (Academic Operations)",
+    lat: 31.25148864838823,
+    lng: 75.7047360500708,
+    visibleFromZoom: 19,
+    floor: "Block 34, Room 205, Cabin C2",
+    facilities: [
       "Block 34 Academic Block",
       "HOD"
     ],
-    "tags": [
+    tags: [
       "11384",
       "205",
       "34 205 c2",
@@ -2393,40 +2399,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "seating c2",
       "uid 11384"
     ],
-    "desc": "Amandeep Kaur, Assistant Professor. HOD of Academic Operations. Located in Block 34, Room 205, Cabin C2 (Notation: 34-205-C2).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Amandeep Kaur, Assistant Professor. HOD of Academic Operations. Located in Block 34, Room 205, Cabin C2 (Notation: 34-205-C2).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-11361-vikas-verma",
-    "name": "Dr. Vikas Verma",
-    "uid": "11361",
-    "designation": "Associate Professor & Additional Dean",
-    "responsibility": "HOS",
-    "role": "HOS",
-    "department_or_subject": null,
-    "block": "26",
-    "room": "201A",
-    "seating": null,
-    "office": "HOS Office",
-    "location_notation": "26-201A",
-    "parentBlockIds": [
+    id: "office-person-11361-vikas-verma",
+    name: "Dr. Vikas Verma",
+    uid: "11361",
+    designation: "Associate Professor & Additional Dean",
+    responsibility: "HOS",
+    role: "HOS",
+    department_or_subject: null,
+    block: "26",
+    room: "201A",
+    seating: null,
+    office: "HOS Office",
+    location_notation: "26-201A",
+    parentBlockIds: [
       "block-26"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of AI and Emerging Technologies",
-    "category": "offices",
-    "type": "Head of School (HOS) Office",
-    "lat": 31.252861883513926,
-    "lng": 75.70289512306216,
-    "visibleFromZoom": 19,
-    "floor": "Block 26, Room 201A, HOS Office",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of AI and Emerging Technologies",
+    category: "offices",
+    type: "Head of School (HOS) Office",
+    lat: 31.252861883513926,
+    lng: 75.70289512306216,
+    visibleFromZoom: 19,
+    floor: "Block 26, Room 201A, HOS Office",
+    facilities: [
       "Block 26 Academic Block",
       "HOS Office"
     ],
-    "tags": [
+    tags: [
       "11361",
       "201a",
       "26 201a",
@@ -2448,40 +2454,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "vikas",
       "vikas verma"
     ],
-    "desc": "Dr. Vikas Verma, Associate Professor & Additional Dean. Role: HOS. Office: HOS Office. Located in Block 26, Room 201A, HOS Office (Notation: 26-201A).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Dr. Vikas Verma, Associate Professor & Additional Dean. Role: HOS. Office: HOS Office. Located in Block 26, Room 201A, HOS Office (Notation: 26-201A).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-14307-raj-karan-singh",
-    "name": "Raj Karan Singh",
-    "uid": "14307",
-    "designation": "Assistant Professor & Assistant Dean",
-    "responsibility": "COS",
-    "role": "COS",
-    "department_or_subject": null,
-    "block": "26",
-    "room": "207",
-    "seating": null,
-    "office": "COS Office",
-    "location_notation": "26-207",
-    "parentBlockIds": [
+    id: "office-person-14307-raj-karan-singh",
+    name: "Raj Karan Singh",
+    uid: "14307",
+    designation: "Assistant Professor & Assistant Dean",
+    responsibility: "COS",
+    role: "COS",
+    department_or_subject: null,
+    block: "26",
+    room: "207",
+    seating: null,
+    office: "COS Office",
+    location_notation: "26-207",
+    parentBlockIds: [
       "block-26"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of AI and Emerging Technologies",
-    "category": "offices",
-    "type": "Coordinator of School (COS) Office",
-    "lat": 31.252861883513926,
-    "lng": 75.70289512306216,
-    "visibleFromZoom": 19,
-    "floor": "Block 26, Room 207, COS Office",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of AI and Emerging Technologies",
+    category: "offices",
+    type: "Coordinator of School (COS) Office",
+    lat: 31.252861883513926,
+    lng: 75.70289512306216,
+    visibleFromZoom: 19,
+    floor: "Block 26, Room 207, COS Office",
+    facilities: [
       "Block 26 Academic Block",
       "COS Office"
     ],
-    "tags": [
+    tags: [
       "14307",
       "207",
       "26 207",
@@ -2503,40 +2509,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "singh",
       "uid 14307"
     ],
-    "desc": "Raj Karan Singh, Assistant Professor & Assistant Dean. Role: COS. Office: COS Office. Located in Block 26, Room 207, COS Office (Notation: 26-207).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Raj Karan Singh, Assistant Professor & Assistant Dean. Role: COS. Office: COS Office. Located in Block 26, Room 207, COS Office (Notation: 26-207).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-34786-vinay-anand",
-    "name": "Dr. Vinay Anand",
-    "uid": "34786",
-    "designation": "Associate Professor & Administrator",
-    "responsibility": "Administrator",
-    "role": "Administrator",
-    "department_or_subject": null,
-    "block": "26",
-    "room": "204B",
-    "seating": null,
-    "office": "Administrator Office",
-    "location_notation": "26-204B",
-    "parentBlockIds": [
+    id: "office-person-34786-vinay-anand",
+    name: "Dr. Vinay Anand",
+    uid: "34786",
+    designation: "Associate Professor & Administrator",
+    responsibility: "Administrator",
+    role: "Administrator",
+    department_or_subject: null,
+    block: "26",
+    room: "204B",
+    seating: null,
+    office: "Administrator Office",
+    location_notation: "26-204B",
+    parentBlockIds: [
       "block-26"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of AI and Emerging Technologies",
-    "category": "offices",
-    "type": "Administrator Office",
-    "lat": 31.252861883513926,
-    "lng": 75.70289512306216,
-    "visibleFromZoom": 19,
-    "floor": "Block 26, Room 204B, Administrator Office",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of AI and Emerging Technologies",
+    category: "offices",
+    type: "Administrator Office",
+    lat: 31.252861883513926,
+    lng: 75.70289512306216,
+    visibleFromZoom: 19,
+    floor: "Block 26, Room 204B, Administrator Office",
+    facilities: [
       "Block 26 Academic Block",
       "Administrator Office"
     ],
-    "tags": [
+    tags: [
       "204b",
       "26 204b",
       "26-204b",
@@ -2559,40 +2565,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "vinay",
       "vinay anand"
     ],
-    "desc": "Dr. Vinay Anand, Associate Professor & Administrator. Role: Administrator. Office: Administrator Office. Located in Block 26, Room 204B, Administrator Office (Notation: 26-204B).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Dr. Vinay Anand, Associate Professor & Administrator. Role: Administrator. Office: Administrator Office. Located in Block 26, Room 204B, Administrator Office (Notation: 26-204B).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-13891-shilpa-sharma",
-    "name": "Dr. Shilpa Sharma",
-    "uid": "13891",
-    "designation": "Professor",
-    "responsibility": "COD",
-    "role": "COD",
-    "department_or_subject": null,
-    "block": "25",
-    "room": "301",
-    "seating": "C2",
-    "office": null,
-    "location_notation": "25-301-C2",
-    "parentBlockIds": [
+    id: "office-person-13891-shilpa-sharma",
+    name: "Dr. Shilpa Sharma",
+    uid: "13891",
+    designation: "Professor",
+    responsibility: "COD",
+    role: "COD",
+    department_or_subject: null,
+    block: "25",
+    room: "301",
+    seating: "C2",
+    office: null,
+    location_notation: "25-301-C2",
+    parentBlockIds: [
       "block-25"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of AI and Emerging Technologies",
-    "category": "offices",
-    "type": "Coordinator of Department (COD) Office",
-    "lat": 31.25285938442377,
-    "lng": 75.70247885462516,
-    "visibleFromZoom": 19,
-    "floor": "Block 25, Room 301, Cabin C2",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of AI and Emerging Technologies",
+    category: "offices",
+    type: "Coordinator of Department (COD) Office",
+    lat: 31.25285938442377,
+    lng: 75.70247885462516,
+    visibleFromZoom: 19,
+    floor: "Block 25, Room 301, Cabin C2",
+    facilities: [
       "Block 25 Academic Block",
       "COD"
     ],
-    "tags": [
+    tags: [
       "13891",
       "25 301 c2",
       "25-301-c2",
@@ -2616,40 +2622,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "shilpa sharma",
       "uid 13891"
     ],
-    "desc": "Dr. Shilpa Sharma, Professor. Role: COD. Located in Block 25, Room 301, Cabin C2 (Notation: 25-301-C2).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Dr. Shilpa Sharma, Professor. Role: COD. Located in Block 25, Room 301, Cabin C2 (Notation: 25-301-C2).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-17451-isha-batra",
-    "name": "Dr. Isha Batra",
-    "uid": "17451",
-    "designation": "Professor",
-    "responsibility": "COD",
-    "role": "COD",
-    "department_or_subject": null,
-    "block": "25",
-    "room": "301",
-    "seating": "C3",
-    "office": null,
-    "location_notation": "25-301-C3",
-    "parentBlockIds": [
+    id: "office-person-17451-isha-batra",
+    name: "Dr. Isha Batra",
+    uid: "17451",
+    designation: "Professor",
+    responsibility: "COD",
+    role: "COD",
+    department_or_subject: null,
+    block: "25",
+    room: "301",
+    seating: "C3",
+    office: null,
+    location_notation: "25-301-C3",
+    parentBlockIds: [
       "block-25"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of AI and Emerging Technologies",
-    "category": "offices",
-    "type": "Coordinator of Department (COD) Office",
-    "lat": 31.25285938442377,
-    "lng": 75.70247885462516,
-    "visibleFromZoom": 19,
-    "floor": "Block 25, Room 301, Cabin C3",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of AI and Emerging Technologies",
+    category: "offices",
+    type: "Coordinator of Department (COD) Office",
+    lat: 31.25285938442377,
+    lng: 75.70247885462516,
+    visibleFromZoom: 19,
+    floor: "Block 25, Room 301, Cabin C3",
+    facilities: [
       "Block 25 Academic Block",
       "COD"
     ],
-    "tags": [
+    tags: [
       "17451",
       "25 301 c3",
       "25-301-c3",
@@ -2673,40 +2679,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "seating c3",
       "uid 17451"
     ],
-    "desc": "Dr. Isha Batra, Professor. Role: COD. Located in Block 25, Room 301, Cabin C3 (Notation: 25-301-C3).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Dr. Isha Batra, Professor. Role: COD. Located in Block 25, Room 301, Cabin C3 (Notation: 25-301-C3).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-14591-virat-deveser",
-    "name": "Dr. Virat Deveser",
-    "uid": "14591",
-    "designation": "Professor",
-    "responsibility": "COD",
-    "role": "COD",
-    "department_or_subject": null,
-    "block": "26",
-    "room": "202",
-    "seating": "C1",
-    "office": null,
-    "location_notation": "26-202-C1",
-    "parentBlockIds": [
+    id: "office-person-14591-virat-deveser",
+    name: "Dr. Virat Deveser",
+    uid: "14591",
+    designation: "Professor",
+    responsibility: "COD",
+    role: "COD",
+    department_or_subject: null,
+    block: "26",
+    room: "202",
+    seating: "C1",
+    office: null,
+    location_notation: "26-202-C1",
+    parentBlockIds: [
       "block-26"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of AI and Emerging Technologies",
-    "category": "offices",
-    "type": "Coordinator of Department (COD) Office",
-    "lat": 31.252861883513926,
-    "lng": 75.70289512306216,
-    "visibleFromZoom": 19,
-    "floor": "Block 26, Room 202, Cabin C1",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of AI and Emerging Technologies",
+    category: "offices",
+    type: "Coordinator of Department (COD) Office",
+    lat: 31.252861883513926,
+    lng: 75.70289512306216,
+    visibleFromZoom: 19,
+    floor: "Block 26, Room 202, Cabin C1",
+    facilities: [
       "Block 26 Academic Block",
       "COD"
     ],
-    "tags": [
+    tags: [
       "14591",
       "202",
       "26 202 c1",
@@ -2730,40 +2736,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "virat",
       "virat deveser"
     ],
-    "desc": "Dr. Virat Deveser, Professor. Role: COD. Located in Block 26, Room 202, Cabin C1 (Notation: 26-202-C1).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Dr. Virat Deveser, Professor. Role: COD. Located in Block 26, Room 202, Cabin C1 (Notation: 26-202-C1).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-16921-arvind-kumar",
-    "name": "Arvind Kumar",
-    "uid": "16921",
-    "designation": "Assistant Professor",
-    "responsibility": "COD",
-    "role": "COD",
-    "department_or_subject": null,
-    "block": "26",
-    "room": "202",
-    "seating": "C3",
-    "office": null,
-    "location_notation": "26-202-C3",
-    "parentBlockIds": [
+    id: "office-person-16921-arvind-kumar",
+    name: "Arvind Kumar",
+    uid: "16921",
+    designation: "Assistant Professor",
+    responsibility: "COD",
+    role: "COD",
+    department_or_subject: null,
+    block: "26",
+    room: "202",
+    seating: "C3",
+    office: null,
+    location_notation: "26-202-C3",
+    parentBlockIds: [
       "block-26"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of AI and Emerging Technologies",
-    "category": "offices",
-    "type": "Coordinator of Department (COD) Office",
-    "lat": 31.252861883513926,
-    "lng": 75.70289512306216,
-    "visibleFromZoom": 19,
-    "floor": "Block 26, Room 202, Cabin C3",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of AI and Emerging Technologies",
+    category: "offices",
+    type: "Coordinator of Department (COD) Office",
+    lat: 31.252861883513926,
+    lng: 75.70289512306216,
+    visibleFromZoom: 19,
+    floor: "Block 26, Room 202, Cabin C3",
+    facilities: [
       "Block 26 Academic Block",
       "COD"
     ],
-    "tags": [
+    tags: [
       "16921",
       "202",
       "26 202 c3",
@@ -2786,40 +2792,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "seating c3",
       "uid 16921"
     ],
-    "desc": "Arvind Kumar, Assistant Professor. Role: COD. Located in Block 26, Room 202, Cabin C3 (Notation: 26-202-C3).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Arvind Kumar, Assistant Professor. Role: COD. Located in Block 26, Room 202, Cabin C3 (Notation: 26-202-C3).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-14557-avinash-kaur",
-    "name": "Dr. Avinash Kaur",
-    "uid": "14557",
-    "designation": "Professor",
-    "responsibility": "COD",
-    "role": "COD",
-    "department_or_subject": null,
-    "block": "26",
-    "room": "203",
-    "seating": "C1",
-    "office": null,
-    "location_notation": "26-203-C1",
-    "parentBlockIds": [
+    id: "office-person-14557-avinash-kaur",
+    name: "Dr. Avinash Kaur",
+    uid: "14557",
+    designation: "Professor",
+    responsibility: "COD",
+    role: "COD",
+    department_or_subject: null,
+    block: "26",
+    room: "203",
+    seating: "C1",
+    office: null,
+    location_notation: "26-203-C1",
+    parentBlockIds: [
       "block-26"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of AI and Emerging Technologies",
-    "category": "offices",
-    "type": "Coordinator of Department (COD) Office",
-    "lat": 31.252861883513926,
-    "lng": 75.70289512306216,
-    "visibleFromZoom": 19,
-    "floor": "Block 26, Room 203, Cabin C1",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of AI and Emerging Technologies",
+    category: "offices",
+    type: "Coordinator of Department (COD) Office",
+    lat: 31.252861883513926,
+    lng: 75.70289512306216,
+    visibleFromZoom: 19,
+    floor: "Block 26, Room 203, Cabin C1",
+    facilities: [
       "Block 26 Academic Block",
       "COD"
     ],
-    "tags": [
+    tags: [
       "14557",
       "203",
       "26 203 c1",
@@ -2843,40 +2849,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "seating c1",
       "uid 14557"
     ],
-    "desc": "Dr. Avinash Kaur, Professor. Role: COD. Located in Block 26, Room 203, Cabin C1 (Notation: 26-203-C1).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Dr. Avinash Kaur, Professor. Role: COD. Located in Block 26, Room 203, Cabin C1 (Notation: 26-203-C1).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-18758-parampreet-kaur",
-    "name": "Dr. Parampreet Kaur",
-    "uid": "18758",
-    "designation": "Associate Professor",
-    "responsibility": "COD",
-    "role": "COD",
-    "department_or_subject": null,
-    "block": "27",
-    "room": "203",
-    "seating": "C3",
-    "office": null,
-    "location_notation": "27-203-C3",
-    "parentBlockIds": [
+    id: "office-person-18758-parampreet-kaur",
+    name: "Dr. Parampreet Kaur",
+    uid: "18758",
+    designation: "Associate Professor",
+    responsibility: "COD",
+    role: "COD",
+    department_or_subject: null,
+    block: "27",
+    room: "203",
+    seating: "C3",
+    office: null,
+    location_notation: "27-203-C3",
+    parentBlockIds: [
       "block-27"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of AI and Emerging Technologies",
-    "category": "offices",
-    "type": "Coordinator of Department (COD) Office",
-    "lat": 31.252858651898666,
-    "lng": 75.70330718355343,
-    "visibleFromZoom": 19,
-    "floor": "Block 27, Room 203, Cabin C3",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of AI and Emerging Technologies",
+    category: "offices",
+    type: "Coordinator of Department (COD) Office",
+    lat: 31.252858651898666,
+    lng: 75.70330718355343,
+    visibleFromZoom: 19,
+    floor: "Block 27, Room 203, Cabin C3",
+    facilities: [
       "Block 27 Academic Block",
       "COD"
     ],
-    "tags": [
+    tags: [
       "18758",
       "203",
       "27 203 c3",
@@ -2900,40 +2906,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "seating c3",
       "uid 18758"
     ],
-    "desc": "Dr. Parampreet Kaur, Associate Professor. Role: COD. Located in Block 27, Room 203, Cabin C3 (Notation: 27-203-C3).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Dr. Parampreet Kaur, Associate Professor. Role: COD. Located in Block 27, Room 203, Cabin C3 (Notation: 27-203-C3).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-20260-subhita",
-    "name": "Dr. Subhita",
-    "uid": "20260",
-    "designation": "Assistant Professor",
-    "responsibility": "COD",
-    "role": "COD",
-    "department_or_subject": null,
-    "block": "26",
-    "room": "205",
-    "seating": "C1",
-    "office": null,
-    "location_notation": "26-205-C1",
-    "parentBlockIds": [
+    id: "office-person-20260-subhita",
+    name: "Dr. Subhita",
+    uid: "20260",
+    designation: "Assistant Professor",
+    responsibility: "COD",
+    role: "COD",
+    department_or_subject: null,
+    block: "26",
+    room: "205",
+    seating: "C1",
+    office: null,
+    location_notation: "26-205-C1",
+    parentBlockIds: [
       "block-26"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of AI and Emerging Technologies",
-    "category": "offices",
-    "type": "Coordinator of Department (COD) Office",
-    "lat": 31.252861883513926,
-    "lng": 75.70289512306216,
-    "visibleFromZoom": 19,
-    "floor": "Block 26, Room 205, Cabin C1",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of AI and Emerging Technologies",
+    category: "offices",
+    type: "Coordinator of Department (COD) Office",
+    lat: 31.252861883513926,
+    lng: 75.70289512306216,
+    visibleFromZoom: 19,
+    floor: "Block 26, Room 205, Cabin C1",
+    facilities: [
       "Block 26 Academic Block",
       "COD"
     ],
-    "tags": [
+    tags: [
       "20260",
       "205",
       "26 205 c1",
@@ -2955,40 +2961,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "subhita",
       "uid 20260"
     ],
-    "desc": "Dr. Subhita, Assistant Professor. Role: COD. Located in Block 26, Room 205, Cabin C1 (Notation: 26-205-C1).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Dr. Subhita, Assistant Professor. Role: COD. Located in Block 26, Room 205, Cabin C1 (Notation: 26-205-C1).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-11518-gurpreet-singh-bhatia",
-    "name": "Dr. Gurpreet Singh Bhatia",
-    "uid": "11518",
-    "designation": "Associate Professor",
-    "responsibility": "COD",
-    "role": "COD",
-    "department_or_subject": null,
-    "block": "38",
-    "room": "507",
-    "seating": "C1",
-    "office": null,
-    "location_notation": "38-507-C1",
-    "parentBlockIds": [
+    id: "office-person-11518-gurpreet-singh-bhatia",
+    name: "Dr. Gurpreet Singh Bhatia",
+    uid: "11518",
+    designation: "Associate Professor",
+    responsibility: "COD",
+    role: "COD",
+    department_or_subject: null,
+    block: "38",
+    room: "507",
+    seating: "C1",
+    office: null,
+    location_notation: "38-507-C1",
+    parentBlockIds: [
       "block-38"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of AI and Emerging Technologies",
-    "category": "offices",
-    "type": "Coordinator of Department (COD) Office",
-    "lat": 31.252140287536804,
-    "lng": 75.70338135340346,
-    "visibleFromZoom": 19,
-    "floor": "Block 38, Room 507, Cabin C1",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of AI and Emerging Technologies",
+    category: "offices",
+    type: "Coordinator of Department (COD) Office",
+    lat: 31.252140287536804,
+    lng: 75.70338135340346,
+    visibleFromZoom: 19,
+    floor: "Block 38, Room 507, Cabin C1",
+    facilities: [
       "Block 38 Academic Block",
       "COD"
     ],
-    "tags": [
+    tags: [
       "11518",
       "38 507 c1",
       "38-507-c1",
@@ -3013,40 +3019,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "singh",
       "uid 11518"
     ],
-    "desc": "Dr. Gurpreet Singh Bhatia, Associate Professor. Role: COD. Located in Block 38, Room 507, Cabin C1 (Notation: 38-507-C1).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Dr. Gurpreet Singh Bhatia, Associate Professor. Role: COD. Located in Block 38, Room 507, Cabin C1 (Notation: 38-507-C1).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-12975-harwant-singh-arri",
-    "name": "Dr. Harwant Singh Arri",
-    "uid": "12975",
-    "designation": "Professor",
-    "responsibility": "COD",
-    "role": "COD",
-    "department_or_subject": null,
-    "block": "26",
-    "room": "203",
-    "seating": "C4",
-    "office": null,
-    "location_notation": "26-203-C4",
-    "parentBlockIds": [
+    id: "office-person-12975-harwant-singh-arri",
+    name: "Dr. Harwant Singh Arri",
+    uid: "12975",
+    designation: "Professor",
+    responsibility: "COD",
+    role: "COD",
+    department_or_subject: null,
+    block: "26",
+    room: "203",
+    seating: "C4",
+    office: null,
+    location_notation: "26-203-C4",
+    parentBlockIds: [
       "block-26"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of AI and Emerging Technologies",
-    "category": "offices",
-    "type": "Coordinator of Department (COD) Office",
-    "lat": 31.252861883513926,
-    "lng": 75.70289512306216,
-    "visibleFromZoom": 19,
-    "floor": "Block 26, Room 203, Cabin C4",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of AI and Emerging Technologies",
+    category: "offices",
+    type: "Coordinator of Department (COD) Office",
+    lat: 31.252861883513926,
+    lng: 75.70289512306216,
+    visibleFromZoom: 19,
+    floor: "Block 26, Room 203, Cabin C4",
+    facilities: [
       "Block 26 Academic Block",
       "COD"
     ],
-    "tags": [
+    tags: [
       "12975",
       "203",
       "26 203 c4",
@@ -3071,40 +3077,40 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "singh",
       "uid 12975"
     ],
-    "desc": "Dr. Harwant Singh Arri, Professor. Role: COD. Located in Block 26, Room 203, Cabin C4 (Notation: 26-203-C4).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Dr. Harwant Singh Arri, Professor. Role: COD. Located in Block 26, Room 203, Cabin C4 (Notation: 26-203-C4).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   },
   {
-    "id": "office-person-13815-timan-kumar",
-    "name": "Timan Kumar",
-    "uid": "13815",
-    "designation": "Officer",
-    "responsibility": "Admin Officer",
-    "role": "Admin Officer",
-    "department_or_subject": null,
-    "block": "26",
-    "room": "204",
-    "seating": null,
-    "office": "Admin Office",
-    "location_notation": "26-204",
-    "parentBlockIds": [
+    id: "office-person-13815-timan-kumar",
+    name: "Timan Kumar",
+    uid: "13815",
+    designation: "Officer",
+    responsibility: "Admin Officer",
+    role: "Admin Officer",
+    department_or_subject: null,
+    block: "26",
+    room: "204",
+    seating: null,
+    office: "Admin Office",
+    location_notation: "26-204",
+    parentBlockIds: [
       "block-26"
     ],
-    "groupId": "cse-dept",
-    "groupName": "School of AI and Emerging Technologies",
-    "category": "offices",
-    "type": "Admin Officer Office",
-    "lat": 31.252861883513926,
-    "lng": 75.70289512306216,
-    "visibleFromZoom": 19,
-    "floor": "Block 26, Room 204, Admin Office",
-    "facilities": [
+    groupId: "cse-dept",
+    groupName: "School of AI and Emerging Technologies",
+    category: "offices",
+    type: "Admin Officer Office",
+    lat: 31.252861883513926,
+    lng: 75.70289512306216,
+    visibleFromZoom: 19,
+    floor: "Block 26, Room 204, Admin Office",
+    facilities: [
       "Block 26 Academic Block",
       "Admin Office"
     ],
-    "tags": [
+    tags: [
       "13815",
       "204",
       "26 204",
@@ -3127,11 +3133,74 @@ var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [
       "timan kumar",
       "uid 13815"
     ],
-    "desc": "Timan Kumar, Officer. Role: Admin Officer. Office: Admin Office. Located in Block 26, Room 204, Admin Office (Notation: 26-204).",
-    "hours": "8:00 AM - 5:30 PM",
-    "phone": "",
-    "image": ""
+    desc: "Timan Kumar, Officer. Role: Admin Officer. Office: Admin Office. Located in Block 26, Room 204, Admin Office (Notation: 26-204).",
+    hours: "8:00 AM - 5:30 PM",
+    phone: "",
+    image: ""
   }
+];
+
+// ============================================================================
+// 5. 🔗 CAMPUS BLOCK CONNECTIONS (Which block connects to which, and how)
+// ============================================================================
+var CAMPUS_BLOCK_CONNECTIONS = window.CAMPUS_BLOCK_CONNECTIONS = [
+  {
+    id: "conn-25-26",
+    blocks: ["Block 25", "Block 26"],
+    how: "Connected via direct continuous indoor corridors from 3rd to 6th floor. You can walk between them inside without stepping outside."
+  },
+  {
+    id: "conn-26-27",
+    blocks: ["Block 26", "Block 27"],
+    how: "Connected via direct continuous indoor corridors from 3rd to 6th floor. You can walk between them inside without stepping outside."
+  },
+  {
+    id: "conn-27-28",
+    blocks: ["Block 27", "Block 28"],
+    how: "Connected via direct continuous indoor corridors from 3rd to 5th floor. You can walk between them inside without stepping outside."
+  },
+  {
+    id: "conn-28-29",
+    blocks: ["Block 28", "Block 29"],
+    how: "Connected via direct continuous indoor corridors from 3rd to 5th floor. You can walk between them inside without stepping outside."
+  },
+  {
+    id: "conn-29-30",
+    blocks: ["Block 29", "Block 30"],
+    how: "Connected via direct continuous indoor corridors from 3rd to 4th floor. You can walk between them inside without stepping outside."
+  },
+
+  {
+    id: "conn-library-37",
+    blocks: ["Central Library", "Block 37"],
+    how: "Same building in the pathway: Ground up to 5th floor is the Central Library, and 6th floor onwards is Block 37 (CSE)."
+  },
+  {
+    id: "conn-38-26",
+    blocks: ["Block 38", "Block 26"],
+    how: "Connected via direct continuous indoor corridors from 3rd to 6th floor. You can walk between them inside without stepping outside."
+  },
+  {
+    id: "conn-28-38-37-36-33",
+    blocks: ["Block 28", "Block 38", "Block 37", "Block 36", "Block 33"],
+    how: "Connected via direct continuous outdoor corridors (known as Centeral library passage) from 2nd to 6th floor."
+  },
+  {
+    id: "conn-38-37-36",
+    blocks: ["Block 38", "Block 37", "Block 36"],
+    how: "Connected via direct continuous outdoor corridors (known as Central library passage) from 2nd to 9th floor."
+  },
+  {
+    id: "conn-32-33",
+    blocks: ["Block 32", "Block 33"],
+    how: "Connected via direct continuous indoor corridors from 3rd to 8th floor. You can walk between them inside without stepping outside."
+  },
+  {
+    id: "conn-33-34",
+    blocks: ["Block 33", "Block 34"],
+    how: "Connected via direct continuous indoor corridors from 3rd to 8th floor. You can walk between them inside without stepping outside."
+  },
+  
 ];
 
 
@@ -3141,9 +3210,25 @@ function getLocationsByGroupId(groupId) {
 }
 
 function getAllCampusLocations() {
-  return [...CAMPUS_LOCATIONS, ...CAMPUS_OFFICES];
+  return [
+    ...CAMPUS_LOCATIONS,
+    ...CAMPUS_OFFICES,
+    ...(typeof CAMPUS_PERSONS !== "undefined" ? CAMPUS_PERSONS : [])
+  ];
+}
+
+function getAllCampusPersons() {
+  return typeof CAMPUS_PERSONS !== "undefined" ? CAMPUS_PERSONS : [];
 }
 
 function getGroupById(groupId) {
   return CAMPUS_GROUPS.find(g => g.id === groupId);
-}                                                                                                                                       
+}
+
+function getBlockConnections(blockNameOrId) {
+  if (!blockNameOrId) return CAMPUS_BLOCK_CONNECTIONS;
+  const clean = String(blockNameOrId).toLowerCase().replace(/^(block-?)/, '');
+  return CAMPUS_BLOCK_CONNECTIONS.filter(conn =>
+    conn.blocks && conn.blocks.some(b => b.toLowerCase().includes(clean))
+  );
+}

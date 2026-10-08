@@ -62,22 +62,7 @@ class AssistantController {
     });
 
     this._addBotMessage(
-<<<<<<< HEAD
       "Hi there! 😊 I'm your LPUNavix Campus Assistant ✨\n\nAsk me about the Central Library, Placement Cell (TPC), Shanti Devi Mittal Auditorium, faculty cabins, academic departments, blocks, hostels, or campus services!"
-=======
-      "Hi there! 😊 I'm your LPUNavix Campus Assistant.\n\nAsk me about the Central Library, placement cell (TPC), faculty cabins, academic departments, blocks, hostels, or campus services!",
-      {
-        chips: [
-          'Central Library',
-          'Placement Cell (TPC)',
-          'Where is Block 37?',
-          'Where is Block 34?',
-          'HOD of AI and ML',
-          'Who is the HOS?',
-          'Uni Health Center',
-        ],
-      }
->>>>>>> c56aff861c91bacffa5ab5267cf197b5be7cb613
     );
   }
 

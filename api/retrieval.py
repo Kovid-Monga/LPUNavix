@@ -158,6 +158,19 @@ def find_structured_matches(query: str, records: list[Record]) -> list[Record]:
         if matches:
             return matches
 
+    # 5.5 Block connection queries (e.g. "how are blocks 25 and 26 connected", "is block 25 connected to 26")
+    if any(w in clean_q for w in ["connect", "connection", "connected", "bridge", "corridor"]):
+        found_blocks = re.findall(r"\b(\d+)\b", clean_q)
+        for r in records:
+            if r.kind == "connection":
+                if found_blocks:
+                    if any(b in r.blob.lower() for b in found_blocks):
+                        add(r)
+                else:
+                    add(r)
+        if matches:
+            return matches
+
     # 6. Block queries (e.g. "Who sits in Block 27", "Where is Block 28", "Block 34")
     if block_m:
         b_val = block_m.group(1)

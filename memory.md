@@ -252,9 +252,9 @@ The backend is built with **FastAPI** (`api/main.py`). It serves both the API en
 
 ---
 
-### Section 3 — `CAMPUS_OFFICES` (Faculty Cabins, HODs, & Room-level Offices)
-> Fine-grained office and personnel locations visible at high zoom (zoom ≥ `visibleFromZoom`). Declared as `var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [...]` — merged with `CAMPUS_LOCATIONS` by `getAllCampusLocations()`.
-> Contains general administrative offices, school leadership, and individual faculty cabins/personnel.
+### Section 3 — `CAMPUS_OFFICES` (Administrative Offices, TPC, & Helpdesks)
+> Physical office locations on campus (Placement cell floors, administrative offices, etc.).
+> Declared as `var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [...]`.
 
 ```javascript
 // var CAMPUS_OFFICES = window.CAMPUS_OFFICES = [ ... ]
@@ -276,32 +276,63 @@ The backend is built with **FastAPI** (`api/main.py`). It serves both the API en
   hours: "8:00 AM - 5:30 PM",
   phone: "",
   image: ""
-},
-// Faculty / Personnel Cabin Record Schema:
-{
-  id: "faculty-timan-kumar-admin",
-  name: "Timan Kumar (Admin Officer)",
-  groupId: "cse-dept",
-  groupName: "School of Computer Science & Engineering (CSE)",
-  category: "offices",
-  type: "Faculty Cabin",
-  parentBlockIds: ["block-26"],
-  visibleFromZoom: 19,
-  lat: 31.252700,
-  lng: 75.703200,
-  floor: "Floor 2, Room 204 (Notation: 26-204)",
-  facilities: ["Cabin Consultation", "Faculty Seating"],
-  tags: ["timan kumar", "admin officer", "block 26", "room 204", "26-204", "uid 13815"],
-  desc: "Timan Kumar, Officer. Role: Admin Officer. Office: Admin Office. Located in Block 26, Room 204.",
-  hours: "8:00 AM - 5:30 PM",
-  phone: "",
-  image: ""
 }
 ```
 
 ---
 
-### Section 4 — `CAMPUS_KARTS` (Live shuttle static config)
+### Section 4 — `CAMPUS_PERSONS` (Faculty Cabins, Leadership, HODs, & Personnel)
+> Dedicated section for individual faculty members, Deans, HODs, CODs, and staff seating cabins.
+> Declared as `var CAMPUS_PERSONS = window.CAMPUS_PERSONS = [...]`.
+
+```javascript
+// var CAMPUS_PERSONS = window.CAMPUS_PERSONS = [ ... ]
+{
+  id: "office-person-17442-arun-malik",
+  name: "Dr. Arun Malik",
+  uid: "17442",
+  designation: "Professor & Associate Dean",
+  responsibility: "HOS",
+  role: "HOS",
+  department_or_subject: null,
+  block: "27",
+  room: "201",
+  seating: null,
+  office: "HOS Office",
+  location_notation: "27-201",
+  parentBlockIds: ["block-27"],
+  groupId: "cse-dept",
+  groupName: "School of Computing and Artificial Intelligence",
+  category: "offices",
+  type: "Head of School (HOS) Office",
+  lat: 31.252858651898666,
+  lng: 75.70330718355343,
+  visibleFromZoom: 19,
+  floor: "Block 27, Room 201, HOS Office",
+  facilities: ["Block 27 Academic Block", "HOS Office"],
+  tags: ["17442", "201", "27-201", "arun malik", "hos"]
+}
+```
+
+---
+
+### Section 5 — `CAMPUS_BLOCK_CONNECTIONS` (Interconnected Blocks & Corridors in `js/data.js`)
+> Defines which blocks are connected to which and how. Minimal schema: `id`, `blocks`, and `how`.
+> Automatically indexed by `api/data_loader.py` for RAG and chatbot grounding.
+> Available globally in the browser as `window.CAMPUS_BLOCK_CONNECTIONS` and via `getBlockConnections(blockNameOrId)`.
+
+```javascript
+// var CAMPUS_BLOCK_CONNECTIONS = window.CAMPUS_BLOCK_CONNECTIONS = [ ... ]
+{
+  id: "conn-25-26",
+  blocks: ["Block 25", "Block 26"],
+  how: "Connected via direct continuous indoor corridors from 2nd to 6th floor. You can walk between them inside without stepping outside."
+}
+```
+
+---
+
+### Section 6 — `CAMPUS_KARTS` (Live shuttle static config)
 > Static default config for each electric shuttle. **Live positions** are overwritten at runtime by the backend `/api/locations` polling — this is just the fallback/initial state.
 
 ```javascript

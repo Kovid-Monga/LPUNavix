@@ -108,7 +108,25 @@ def load_raw_data(data_js_path: str | Path) -> dict[str, list[dict]]:
     locations = _js_array_to_json(_find_array_literal(raw, "CAMPUS_LOCATIONS"))
     offices = _js_array_to_json(_find_array_literal(raw, "CAMPUS_OFFICES"))
 
-    return {"groups": groups, "locations": locations, "offices": offices}
+    persons = []
+    try:
+        persons = _js_array_to_json(_find_array_literal(raw, "CAMPUS_PERSONS"))
+    except Exception:
+        pass
+
+    connections = []
+    try:
+        connections = _js_array_to_json(_find_array_literal(raw, "CAMPUS_BLOCK_CONNECTIONS"))
+    except Exception:
+        pass
+
+    return {
+        "groups": groups,
+        "locations": locations,
+        "offices": offices,
+        "persons": persons,
+        "connections": connections,
+    }
 
 
 @dataclass
@@ -184,7 +202,11 @@ def normalize(raw: dict[str, list[dict]]) -> list[Record]:
             )
         )
 
-    for loc_list, kind in ((raw["locations"], "location"), (raw["offices"], "office")):
+    for loc_list, kind in (
+        (raw.get("locations", []), "location"),
+        (raw.get("offices", []), "office"),
+        (raw.get("persons", []), "office"),
+    ):
         for loc in loc_list:
             is_personnel = bool(loc.get("uid") or loc.get("role") or loc.get("responsibility"))
             parent_block_id = loc.get("parentBlockIds", [None])[0] if loc.get("parentBlockIds") else None
@@ -265,6 +287,44 @@ def normalize(raw: dict[str, list[dict]]) -> list[Record]:
                     parent_block_id=parent_block_id,
                 )
             )
+
+    for conn in raw.get("connections", []):
+        blocks = conn.get("blocks", [])
+        if not blocks and (conn.get("fromBlock") or conn.get("from")):
+            f_b = conn.get("fromBlock") or conn.get("from")
+            t_b = conn.get("toBlock") or conn.get("to")
+            blocks = [b for b in (f_b, t_b) if b]
+
+        blocks_str = " & ".join(blocks)
+        name = conn.get("name") or (f"{blocks_str} Connection" if blocks_str else conn.get("id", "Block Connection"))
+        how = conn.get("how") or conn.get("desc") or conn.get("description") or ""
+
+        blob_parts = [
+            name,
+            *blocks,
+            how,
+            "connected",
+            "connection",
+            "bridge",
+            "corridor",
+            "walkway",
+        ]
+
+        records.append(
+            Record(
+                id=conn["id"],
+                name=name,
+                kind="connection",
+                category="connection",
+                blob=_blob(*blob_parts),
+                context={
+                    "name": name,
+                    "type": "Block Connection",
+                    "blocks": ", ".join(blocks),
+                    "how": how,
+                },
+            )
+        )
 
     return records
 

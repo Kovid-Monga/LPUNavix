@@ -317,16 +317,6 @@ def resolve_contextual_query(
     return question, None
 
 
-def generate_interactive_chips(
-    question: str,
-    top_record: Optional[Record] = None,
-    tier: str = "none",
-    is_negative_reply: bool = False,
-) -> list[str]:
-    """Generate dynamic, context-relevant interactive action and question chips."""
-    return []
-
-
 router = APIRouter()
 
 
@@ -343,12 +333,8 @@ async def chat(req: ChatRequest) -> ChatResponse:
         try:
             reply = generate_reply(raw_question, [], match_quality="none", history=history_payload)
         except Exception:
-<<<<<<< HEAD
             reply = "Hello! 😊 I'm your LPUNavix Campus Assistant ✨ How can I help you find buildings, placement cell (TPC), faculty cabins, or departments today? 🏢📍"
-=======
-            reply = "Hey there! 👋 I'm your LPUNavix Campus Guide ✨ How can I help you find faculty cabins, campus blocks, food spots, or departments today? 🏢📍"
->>>>>>> c56aff861c91bacffa5ab5267cf197b5be7cb613
-        return ChatResponse(reply=reply, locationId=None, title=None, chips=[])
+        return ChatResponse(reply=reply, locationId=None, title=None)
 
     retriever: Optional[Retriever] = _state.get("retriever")
     if retriever is None:
@@ -374,7 +360,7 @@ async def chat(req: ChatRequest) -> ChatResponse:
             f"Hmm, I don't have any campus data loaded to answer that yet! 🤔 "
             f"Once it's set up I can help with {CAN_HELP_WITH}. 🏢📍"
         )
-        return ChatResponse(reply=reply, locationId=None, title=None, chips=[])
+        return ChatResponse(reply=reply, locationId=None, title=None)
 
     top_record, top_score = ranked[0]
     tier = classify_match(top_score)
@@ -409,10 +395,8 @@ async def chat(req: ChatRequest) -> ChatResponse:
     )
     is_negative_reply = any(phrase in reply.lower() for phrase in fallback_negative_phrases)
 
-    chips = generate_interactive_chips(raw_question, top_record, tier, is_negative_reply)
-
     # Never surface a map location if the match is weak/none or the model replied that no info is available
     if tier != "confident" or is_negative_reply:
-        return ChatResponse(reply=reply, locationId=None, title=None, chips=chips)
+        return ChatResponse(reply=reply, locationId=None, title=None)
 
-    return ChatResponse(reply=reply, locationId=top_record.id, title=top_record.name, chips=chips)
+    return ChatResponse(reply=reply, locationId=top_record.id, title=top_record.name)

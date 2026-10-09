@@ -16,6 +16,7 @@ import sys
 import os
 import re
 import json
+import math
 import argparse
 import urllib.request
 import urllib.parse
@@ -30,11 +31,13 @@ if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
         pass
 
 # Default target file paths
-DEFAULT_BOUNDARY_FILE = os.path.join("js", "boundary.js")
-DEFAULT_ROADS_FILE = os.path.join("js", "campus_roads.js")
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+DEFAULT_BOUNDARY_FILE = os.path.join(SCRIPT_DIR, "js", "boundary.js")
+DEFAULT_ROADS_FILE = os.path.join(SCRIPT_DIR, "js", "campus_roads.js")
 
-# OSM LPU Boundary Way ID
-LPU_BOUNDARY_WAY_ID = 422435593
+# OSM LPU Boundary Relation & Way IDs (supports multipolygon split boundary ways)
+LPU_BOUNDARY_RELATION_ID = 21599790
+LPU_BOUNDARY_WAY_IDS = [422435593, 1566901467]
 
 # Bounding box covering Lovely Professional University
 CAMPUS_BBOX = (31.245, 75.697, 31.262, 75.710)
@@ -104,23 +107,180 @@ def point_in_polygon(lat: float, lon: float, poly: List[List[float]]) -> bool:
     return inside
 
 
+def footpath_width_m(highway: str) -> float:
+    """Return an estimated display width for an OSM footpath centerline."""
+    return {
+        "pedestrian": 4.6,
+        "track": 3.6,
+        "cycleway": 3.4,
+        "steps": 2.0,
+    }.get(highway, 3.7)
+
+
+def buffer_centerline_to_area(coords: List[List[float]], width_m: float) -> List[List[float]]:
+    """Build a simple miter-joined polygon around a lat/lon centerline."""
+    if len(coords) < 2:
+        return []
+
+    half_width = width_m / 2
+    mean_lat = math.radians(sum(point[0] for point in coords) / len(coords))
+    origin_lat, origin_lon = coords[0]
+    meters_per_lon = 111320 * math.cos(mean_lat)
+    meters_per_lat = 110540
+    points = [
+        ((lon - origin_lon) * meters_per_lon, (lat - origin_lat) * meters_per_lat)
+        for lat, lon in coords
+    ]
+    points = [point for index, point in enumerate(points)
+              if index == 0 or math.dist(point, points[index - 1]) > 0.02]
+    if len(points) < 2:
+        return []
+
+    directions = []
+    normals = []
+    for start, end in zip(points, points[1:]):
+        dx, dy = end[0] - start[0], end[1] - start[1]
+        length = math.hypot(dx, dy)
+        directions.append((dx / length, dy / length))
+        normals.append((-dy / length, dx / length))
+
+    def offset_side(side: float) -> List[tuple[float, float]]:
+        edge = []
+        for index, point in enumerate(points):
+            if index == 0:
+                dx, dy = directions[0]
+                nx, ny = normals[0]
+                edge.append((point[0] - dx * half_width + nx * half_width * side,
+                             point[1] - dy * half_width + ny * half_width * side))
+            elif index == len(points) - 1:
+                dx, dy = directions[-1]
+                nx, ny = normals[-1]
+                edge.append((point[0] + dx * half_width + nx * half_width * side,
+                             point[1] + dy * half_width + ny * half_width * side))
+            else:
+                before = (normals[index - 1][0] * side, normals[index - 1][1] * side)
+                after = (normals[index][0] * side, normals[index][1] * side)
+                mx, my = before[0] + after[0], before[1] + after[1]
+                magnitude = math.hypot(mx, my)
+                if magnitude < 1e-8:
+                    mx, my = after
+                    magnitude = math.hypot(mx, my)
+                mx, my = mx / magnitude, my / magnitude
+                denominator = mx * after[0] + my * after[1]
+                distance = half_width / max(abs(denominator), 0.5)
+                distance = min(distance, half_width * 2)
+                edge.append((point[0] + mx * distance, point[1] + my * distance))
+        return edge
+
+    ring_xy = offset_side(1) + list(reversed(offset_side(-1)))
+    ring = [
+        [round(origin_lat + y / meters_per_lat, 7),
+         round(origin_lon + x / meters_per_lon, 7)]
+        for x, y in ring_xy
+    ]
+    if ring:
+        ring.append(ring[0])
+    return ring
+
+
 # ==============================================================================
 # 1. Fetch & Build Boundary (js/boundary.js)
 # ==============================================================================
+def stitch_boundary_segments(segments: List[List[List[float]]]) -> List[List[float]]:
+    """Stitch multiple connected boundary way segments into a single closed ring."""
+    if not segments:
+        return []
+    if len(segments) == 1:
+        ring = list(segments[0])
+        if math.hypot(ring[0][0] - ring[-1][0], ring[0][1] - ring[-1][1]) > 1e-6:
+            ring.append(ring[0])
+        return ring
+
+    chain = list(segments[0])
+    rem = list(segments[1:])
+    tol = 0.00015  # ~15 meters tolerance for junction matching
+
+    while rem:
+        matched = False
+        for i, s in enumerate(rem):
+            # Connect to end of chain
+            if math.hypot(chain[-1][0] - s[0][0], chain[-1][1] - s[0][1]) < tol:
+                chain.extend(s[1:])
+                rem.pop(i)
+                matched = True
+                break
+            elif math.hypot(chain[-1][0] - s[-1][0], chain[-1][1] - s[-1][1]) < tol:
+                chain.extend(list(reversed(s[:-1])))
+                rem.pop(i)
+                matched = True
+                break
+            # Connect to start of chain
+            elif math.hypot(chain[0][0] - s[-1][0], chain[0][1] - s[-1][1]) < tol:
+                chain = s[:-1] + chain
+                rem.pop(i)
+                matched = True
+                break
+            elif math.hypot(chain[0][0] - s[0][0], chain[0][1] - s[0][1]) < tol:
+                chain = list(reversed(s[1:])) + chain
+                rem.pop(i)
+                matched = True
+                break
+
+        if not matched:
+            print(f"[WARN] Could not connect {len(rem)} boundary segment(s); continuing with stitched chain.")
+            break
+
+    # Ensure the polygon is closed
+    if math.hypot(chain[0][0] - chain[-1][0], chain[0][1] - chain[-1][1]) > 1e-6:
+        chain.append(chain[0])
+    return chain
+
+
 def fetch_campus_boundary(fallback_file: str) -> List[List[float]]:
-    """Fetch official LPU boundary coordinates from OSM way 422435593."""
-    print(f"\n[STEP 1] Fetching LPU boundary (OSM way/{LPU_BOUNDARY_WAY_ID})...")
+    """Fetch official LPU boundary coordinates from OSM relation or connected ways."""
+    print(f"\n[STEP 1] Fetching LPU boundary (OSM relation {LPU_BOUNDARY_RELATION_ID} & ways {LPU_BOUNDARY_WAY_IDS})...")
+    way_queries = " ".join(f"way({wid});" for wid in LPU_BOUNDARY_WAY_IDS)
     query = f"""[out:json][timeout:30];
-way({LPU_BOUNDARY_WAY_ID});
+(
+  relation({LPU_BOUNDARY_RELATION_ID});
+  way({LPU_BOUNDARY_WAY_IDS[0]}); rel(bw);
+  {way_queries}
+);
 out body geom;
 """
     try:
         res = query_overpass(query)
         elements = res.get("elements", [])
-        if elements and "geometry" in elements[0]:
-            boundary = [[round(p["lat"], 7), round(p["lon"], 7)] for p in elements[0]["geometry"]]
-            print(f"[SUCCESS] Fetched {len(boundary)} boundary vertices from OpenStreetMap.")
+
+        # 1. First priority: Check if multipolygon relation is present with outer members
+        segments = []
+        for el in elements:
+            if el.get("type") == "relation":
+                for m in el.get("members", []):
+                    if m.get("role") in ("outer", "") and m.get("geometry"):
+                        pts = [[round(p["lat"], 7), round(p["lon"], 7)] for p in m["geometry"]]
+                        if len(pts) >= 2:
+                            segments.append(pts)
+                if segments:
+                    break
+
+        # 2. Second priority: If relation was not returned, collect from member ways
+        if not segments:
+            seen_ways = set()
+            for el in elements:
+                if el.get("type") == "way" and el.get("geometry"):
+                    wid = el.get("id")
+                    if wid not in seen_ways:
+                        seen_ways.add(wid)
+                        pts = [[round(p["lat"], 7), round(p["lon"], 7)] for p in el["geometry"]]
+                        if len(pts) >= 2:
+                            segments.append(pts)
+
+        if segments:
+            boundary = stitch_boundary_segments(segments)
+            print(f"[SUCCESS] Fetched {len(segments)} boundary segments, stitched into {len(boundary)} vertices from OpenStreetMap.")
             return boundary
+
     except Exception as e:
         print(f"[WARN] Live boundary fetch failed: {e}")
 
@@ -147,7 +307,7 @@ def generate_boundary_js(boundary: List[List[float]]) -> str:
 
     formatted_coords = "\n".join(coords_lines)
     return f"""// LPU Campus Boundary Coordinates
-// Source: OpenStreetMap way/{LPU_BOUNDARY_WAY_ID}
+// Source: OpenStreetMap (relation/{LPU_BOUNDARY_RELATION_ID} & ways {LPU_BOUNDARY_WAY_IDS})
 // Last synced: {today}
 // Total nodes: {len(boundary)}
 
@@ -250,7 +410,10 @@ def filter_campus_ways(raw_ways: List[Dict[str, Any]], boundary: List[List[float
                 "name": tags.get("name", ""),
                 "oneway": tags.get("oneway", ""),
                 "junction": tags.get("junction", ""),
-                "geometry": pts
+                "geometry": pts,
+                "area_geometry": buffer_centerline_to_area(pts, footpath_width_m(hw))
+                    if hw in {"footway", "path", "steps", "pedestrian", "track", "cycleway"}
+                    else None
             })
 
     campus_ways.sort(key=lambda w: (w["highway"], w["id"]))
@@ -283,7 +446,8 @@ if (typeof window !== "undefined") {
       oneway: way.oneway || "",
       junction: way.junction || ""
     },
-    coords: way.geometry
+    coords: way.geometry,
+    areaGeometry: way.area_geometry || null
   }));
 }
 """

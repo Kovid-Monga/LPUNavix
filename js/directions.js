@@ -638,6 +638,7 @@ class DirectionsController {
           inputEl.value = item.name;
           if (type === "origin" || type === "top-origin") {
             this.currentOrigin = item.name;
+            this.updateStartNavigationVisibility(item.name);
             const topO = document.getElementById("gmaps-topbar-origin-input");
             const panO = document.getElementById("direction-origin-input");
             if (topO) topO.value = item.name;
@@ -734,6 +735,9 @@ class DirectionsController {
 
     inputEl.addEventListener("input", () => {
       const val = (inputEl.value || "").trim();
+      if (type === "origin" || type === "top-origin") {
+        this.updateStartNavigationVisibility(inputEl.value);
+      }
       if (type === "dest" || type === "top-dest") {
         this.currentDestination = inputEl.value;
         this.updateDestinationState(inputEl.value);
@@ -759,6 +763,7 @@ class DirectionsController {
         dropdown.classList.remove("open");
         if (type === "origin" || type === "top-origin") {
           this.currentOrigin = inputEl.value;
+          this.updateStartNavigationVisibility(inputEl.value);
           const topO = document.getElementById("gmaps-topbar-origin-input");
           const panO = document.getElementById("direction-origin-input");
           if (topO) topO.value = inputEl.value;
@@ -916,6 +921,7 @@ class DirectionsController {
       const temp = this.currentOrigin || "Your location";
       this.currentOrigin = this.currentDestination || "Your location";
       this.currentDestination = temp === "Your location" ? "" : temp;
+      this.updateStartNavigationVisibility(this.currentOrigin);
 
       const originInput = document.getElementById("direction-origin-input");
       const destInput = document.getElementById("direction-dest-input");
@@ -972,6 +978,7 @@ class DirectionsController {
     // Start navigation buttons (both in drawer and Google Maps preview sheet)
     const handleStartNav = (e) => {
       if (e) e.preventDefault();
+      if (!this.isMyLocationOrigin(this.currentOrigin)) return;
       console.log(`[LPUNavix] Start Navigation clicked for mode: ${this.currentMode}, destination: ${this.currentDestination}`);
       const dest = this.currentDestination || "Destination";
       const dur = (this.currentRouteData && this.currentRouteData.activeRoute) ? this.currentRouteData.activeRoute.duration : "1 min";
@@ -1125,6 +1132,7 @@ class DirectionsController {
 
     this.currentOrigin = origin;
     this.currentDestination = dest;
+    this.updateStartNavigationVisibility(origin);
 
     const originInput = document.getElementById("direction-origin-input");
     const destInput = document.getElementById("direction-dest-input");
@@ -1311,6 +1319,22 @@ class DirectionsController {
 
     if (actionsRow) actionsRow.style.display = hasDest ? "block" : "none";
     if (quickChips) quickChips.style.display = hasDest ? "none" : "flex";
+  }
+
+  isMyLocationOrigin(origin) {
+    const normalized = String(origin || "").trim().toLowerCase().replace(/[^a-z]+/g, " ").trim();
+    return ["your location", "my location", "current location", "your current location", "you are here"].includes(normalized);
+  }
+
+  updateStartNavigationVisibility(origin = this.currentOrigin) {
+    const isMyLocation = this.isMyLocationOrigin(origin);
+    ["start-nav-btn", "gmaps-start-action-btn"].forEach(id => {
+      const button = document.getElementById(id);
+      if (!button) return;
+      button.hidden = !isMyLocation;
+      button.style.setProperty("display", isMyLocation ? "" : "none", "important");
+      button.setAttribute("aria-hidden", String(!isMyLocation));
+    });
   }
 
   selectDestination(destName) {

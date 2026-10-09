@@ -147,9 +147,9 @@
 }
 
 .legend-preview-road {
-  background: #334155;
-  border: 1px solid #ffffff;
-  height: 8px;
+  background: #757b80;
+  border: 0;
+  height: 9px;
 }
 
 .legend-preview-road::after {
@@ -162,9 +162,11 @@
 }
 
 .legend-preview-footpath {
-  background: #7c82ff;
-  border: 1px solid #ffffff;
-  height: 6px;
+  background-color: #c7cccf;
+  background-image: url('../assets/footpath-gray-brick-light.png');
+  background-size: 21px 21px;
+  border: 1px solid #626a70;
+  height: 7px;
 }
 
 /* Outside Area Dimming Mask & Spotlight Effects */
@@ -849,7 +851,15 @@
 }
 
 .route-dotted-preview-path {
-  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.25));
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.48));
+}
+
+.route-preview-walking {
+  filter: drop-shadow(0 0 4px rgba(22, 131, 255, 0.58));
+}
+
+.route-preview-vehicle {
+  filter: drop-shadow(0 0 4px rgba(255, 138, 0, 0.58));
 }
 
 /* Active Navigation Mode for Desktop & Mobile */
@@ -925,4 +935,4 @@ body.navigation-active .mobile-nav-eta-bar .eta-close-btn {
 body.navigation-active .mobile-nav-eta-bar .eta-close-btn:hover {
   background: rgba(239, 68, 68, 0.4);
   color: #ffffff;
-}
+}

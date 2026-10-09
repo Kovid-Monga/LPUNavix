@@ -4,3 +4,5 @@ __pycache__/
 venv/
 .env
 .env.*
+sync_campus_osm.py
+tests/

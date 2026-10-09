@@ -10,18 +10,16 @@
 // ============================================================================
 const CAMPUS_STYLE_CONFIG = {
   // Vehicle Roads
-  roadCore: '#b4b0b0ff',          // Main road surface (Dark asphalt / grey)
-  roadOpacity: 0.35,            // ◀️ Road Translucency (0.0 to 1.0)
-  roadCasing: '#ffffff',        // Road outer border edges (White)
-  roadCasingOpacity: 0.85,      // ◀️ Road border translucency
+  roadCore: '#414b69ff',          // Slightly lighter asphalt surface
+  roadOpacity: 0.98,
   roadDivider: '#ffffff',       // Center dashed lane divider
   roadArrow: '#4c4c4cff',         // Directional arrowheads
 
   // Footpaths & Walkways
-  footpathCore: '#7c82ffff',      // Footpath surface (Terracotta / Orange)
-  footpathOpacity: 0.65,        // ◀️ Footpath Translucency (0.0 to 1.0)
-  footpathCasing: '#ffffff',    // Footpath outer border edges (White)
-  footpathCasingOpacity: 0.85,  // ◀️ Footpath border translucency
+  footpathCore: '#c7cccf',      // Light gray brick paving surface
+  footpathOpacity: 1,
+  footpathCasing: '#626a70',    // Defined outer edge around the brick paving
+  footpathCasingOpacity: 0.96,
 
   // Campus Boundary Perimeter & Outside Dimming
   boundaryLine: '#c5ffc1ff',        // Boundary line color (Green / Blue / Black)
@@ -139,8 +137,8 @@ class CampusMapController {
       { maxZoom: 19, subdomains: "abcd" }
     );
 
-    // Set default base layer (street fallback or satellite)
-    this.setBaseLayer("satellite");
+    // Start with OpenStreetMap; users can switch to satellite from the map controls.
+    this.setBaseLayer("street");
 
     // Dedicated Navigation Route Pane with z-index 580 (strictly above roads/footpaths in overlayPane 400)
     if (!this.map.getPane('routePane')) {
@@ -149,9 +147,27 @@ class CampusMapController {
       rp.style.pointerEvents = 'none';
     }
 
-    // Initialize Layer Groups in strict visual order (Roads -> Footpaths -> Routes -> Markers)
-    this.roadsLayer = L.layerGroup().addTo(this.map);
+    // Keep both network layers above other campus overlays; roads must paint above walkways.
+    if (!this.map.getPane('footpathPane')) {
+      const fp = this.map.createPane('footpathPane');
+      fp.style.zIndex = '410';
+    }
+    this.footpathRenderer = L.svg({ pane: 'footpathPane' }).addTo(this.map);
+    if (!this.map.getPane('roadPane')) {
+      const rp = this.map.createPane('roadPane');
+      rp.style.zIndex = '420';
+    }
+    this.roadRenderer = L.svg({ pane: 'roadPane' }).addTo(this.map);
+
+    // POI icons and their text labels must stay above both network panes.
+    if (!this.map.getPane('locationMarkerPane')) {
+      const lp = this.map.createPane('locationMarkerPane');
+      lp.style.zIndex = '640';
+    }
+
+    // Explicit panes also keep both networks above boundary/area overlays in overlayPane.
     this.footpathsLayer = L.layerGroup().addTo(this.map);
+    this.roadsLayer = L.layerGroup().addTo(this.map);
     this.routesLayer = L.layerGroup([], { pane: 'routePane' }).addTo(this.map);
     this.markersLayer = L.layerGroup().addTo(this.map);
     this.kartsLayer = L.layerGroup().addTo(this.map);
@@ -190,7 +206,6 @@ class CampusMapController {
       this.renderLocationMarkers();
     });
     this.map.on('moveend', () => {
-      scheduleRoadRender();
       this.updateMarkerLabelVisibility();
     });
     this.map.on('rotateend', () => {
@@ -243,6 +258,65 @@ class CampusMapController {
       this.currentTileLayer = targetLayer;
       this.currentTileLayer.addTo(this.map);
     }
+  }
+
+  getFootpathTextureAngle(coords) {
+    if (!Array.isArray(coords) || coords.length < 2) return 0;
+
+    let axisX = 0;
+    let axisY = 0;
+    for (let index = 1; index < coords.length; index += 1) {
+      const start = coords[index - 1];
+      const end = coords[index];
+      const meanLat = ((start[0] + end[0]) / 2) * Math.PI / 180;
+      const dx = (end[1] - start[1]) * Math.cos(meanLat);
+      const dy = -(end[0] - start[0]);
+      const length = Math.hypot(dx, dy);
+      if (length < 1e-12) continue;
+
+      const angle = Math.atan2(dy, dx);
+      axisX += length * Math.cos(2 * angle);
+      axisY += length * Math.sin(2 * angle);
+    }
+
+    return Math.atan2(axisY, axisX) * 90 / Math.PI;
+  }
+
+  ensureFootpathBrickPattern(renderer, patternId, angle, anchor) {
+    const svg = renderer && renderer._container;
+    if (!svg || typeof svg.querySelector !== 'function') return false;
+
+    const transform = `translate(${anchor.x} ${anchor.y}) rotate(${angle})`;
+    const existingPattern = svg.querySelector(`#${patternId}`);
+    if (existingPattern) {
+      existingPattern.setAttribute('patternTransform', transform);
+      return true;
+    }
+
+    const svgNs = 'http://www.w3.org/2000/svg';
+    let defs = svg.querySelector('defs');
+    if (!defs) {
+      defs = document.createElementNS(svgNs, 'defs');
+      svg.insertBefore(defs, svg.firstChild);
+    }
+
+    const pattern = document.createElementNS(svgNs, 'pattern');
+    pattern.setAttribute('id', patternId);
+    pattern.setAttribute('patternUnits', 'userSpaceOnUse');
+    pattern.setAttribute('width', '72');
+    pattern.setAttribute('height', '72');
+    pattern.setAttribute('patternTransform', transform);
+
+    const textureImage = document.createElementNS(svgNs, 'image');
+    textureImage.setAttribute('href', 'assets/footpath-gray-brick-light.png');
+    textureImage.setAttribute('x', '0');
+    textureImage.setAttribute('y', '0');
+    textureImage.setAttribute('width', '72');
+    textureImage.setAttribute('height', '72');
+    textureImage.setAttribute('preserveAspectRatio', 'none');
+    pattern.appendChild(textureImage);
+    defs.appendChild(pattern);
+    return true;
   }
 
   renderCampusBoundary() {
@@ -340,7 +414,8 @@ class CampusMapController {
         ? LPU_ROAD_NETWORK.map(way => ({
             id: way.id,
             tags: { highway: way.highway, name: way.name || "", oneway: way.oneway || "", junction: way.junction || "" },
-            coords: way.geometry
+            coords: way.geometry,
+            areaGeometry: way.area_geometry || null
           }))
         : [];
 
@@ -349,47 +424,45 @@ class CampusMapController {
     }
 
     const zoom = this.map ? this.map.getZoom() : 16;
-    const isFootpath = (hw) => hw === 'footway' || hw === 'path' || hw === 'steps' || hw === 'pedestrian' || hw === 'track';
+    const isFootpath = (hw) => hw === 'footway' || hw === 'path' || hw === 'steps' || hw === 'pedestrian' || hw === 'track' || hw === 'cycleway';
 
     // DYNAMIC ZOOM-DEPENDENT STROKE WEIGHTS (prevents congestion when zooming out)
-    let roadCasingWeight, roadCoreWeight, dividerWeight, footpathCasingWeight, footpathCoreWeight;
+    let roadCoreWeight, dividerWeight, footpathCasingWeight, footpathCoreWeight;
     let showDividers = false;
     let showArrows = false;
 
     if (zoom >= 18) {
-      roadCasingWeight = 16;
-      roadCoreWeight = 12;
-      dividerWeight = 2;
-      footpathCasingWeight = 6;
-      footpathCoreWeight = 4;
+      roadCoreWeight = 15;
+      dividerWeight = 2.2;
+      footpathCasingWeight = 8;
+      footpathCoreWeight = 5.5;
       showDividers = true;
       showArrows = true;
     } else if (zoom >= 17) {
-      roadCasingWeight = 12;
-      roadCoreWeight = 8.5;
-      dividerWeight = 1.5;
-      footpathCasingWeight = 5;
-      footpathCoreWeight = 3;
+      roadCoreWeight = 11;
+      dividerWeight = 1.8;
+      footpathCasingWeight = 6.5;
+      footpathCoreWeight = 4.5;
       showDividers = true;
       showArrows = true;
     } else if (zoom >= 16) {
-      roadCasingWeight = 7;
-      roadCoreWeight = 4.5;
+      roadCoreWeight = 6;
       dividerWeight = 1;
-      footpathCasingWeight = 3.5;
-      footpathCoreWeight = 2;
-      showDividers = false;
+      footpathCasingWeight = 4.8;
+      footpathCoreWeight = 3.2;
+      showDividers = true;
       showArrows = false;
     } else {
-      // Zoom <= 15 (Overview mode: ultra clean, uncluttered lines)
-      roadCasingWeight = 3.5;
-      roadCoreWeight = 2.2;
-      footpathCasingWeight = 2;
-      footpathCoreWeight = 1.4;
-      showDividers = false;
+      // Zoom <= 15: keep the network legible in the campus overview.
+      roadCoreWeight = 4.2;
+      dividerWeight = 1;
+      footpathCasingWeight = 4.8;
+      footpathCoreWeight = 3.2;
+      showDividers = zoom >= 14;
       showArrows = false;
     }
 
+    const footpathAreas = [];
     roadList.forEach(way => {
       const highway = (way.tags && way.tags.highway) || 'road';
       const coords = way.coords;
@@ -398,20 +471,27 @@ class CampusMapController {
 
       if (isFootpath(highway)) {
         // ====================================================================
-        // FOOTPATH: Orange Terracotta with White Edge Borders (Like Reference)
+        // FOOTPATH: render its estimated mapped surface area; preserve line fallback for older data.
         // ====================================================================
         if (!this.showFootpaths) return;
 
-        if (zoom >= 16) {
-          // White outer casing/border
-          L.polyline(coords, {
-            color: CAMPUS_STYLE_CONFIG.footpathCasing,
-            weight: footpathCasingWeight,
-            opacity: CAMPUS_STYLE_CONFIG.footpathCasingOpacity,
-            lineCap: 'round',
-            lineJoin: 'round'
-          }).addTo(this.footpathsLayer);
+        const areaGeometry = way.areaGeometry || way.area_geometry;
+        if (Array.isArray(areaGeometry) && areaGeometry.length >= 4) {
+          footpathAreas.push({ way, areaGeometry, coords });
+          return;
         }
+
+        // Both layers use identical, unsimplified geometry so their edges stay aligned.
+        L.polyline(coords, {
+          color: CAMPUS_STYLE_CONFIG.footpathCasing,
+          weight: footpathCasingWeight,
+          opacity: CAMPUS_STYLE_CONFIG.footpathCasingOpacity,
+          lineCap: 'round',
+          lineJoin: 'round',
+          smoothFactor: 0,
+          pane: 'footpathPane',
+          renderer: this.footpathRenderer
+        }).addTo(this.footpathsLayer);
 
         // Terracotta orange path core
         L.polyline(coords, {
@@ -419,32 +499,29 @@ class CampusMapController {
           weight: footpathCoreWeight,
           opacity: CAMPUS_STYLE_CONFIG.footpathOpacity,
           lineCap: 'round',
-          lineJoin: 'round'
+          lineJoin: 'round',
+          smoothFactor: 0,
+          pane: 'footpathPane',
+          renderer: this.footpathRenderer
         }).bindPopup(`<b>Footpath / Walkway</b>`).addTo(this.footpathsLayer);
 
       } else {
         // ====================================================================
-        // VEHICLE ROAD: Asphalt Dark Core + White Edges + Center Line + Arrows
+        // VEHICLE ROAD: wide asphalt surface + center line + arrows
         // ====================================================================
         if (!this.showRoads) return;
 
         if (zoom >= 16) {
-          // 1. Solid White Outer Edge Casing
-          L.polyline(coords, {
-            color: CAMPUS_STYLE_CONFIG.roadCasing,
-            weight: roadCasingWeight,
-            opacity: CAMPUS_STYLE_CONFIG.roadCasingOpacity,
-            lineCap: 'round',
-            lineJoin: 'round'
-          }).addTo(this.roadsLayer);
-
-          // 2. Dark Asphalt Road Surface Core
+          // Draw the asphalt directly; no contrasting outer casing.
           const roadLine = L.polyline(coords, {
             color: CAMPUS_STYLE_CONFIG.roadCore,
             weight: roadCoreWeight,
             opacity: CAMPUS_STYLE_CONFIG.roadOpacity,
             lineCap: 'round',
-            lineJoin: 'round'
+            lineJoin: 'round',
+            smoothFactor: 0,
+            pane: 'roadPane',
+            renderer: this.roadRenderer
           }).bindPopup(`<b>Road:</b> ${way.tags?.name || highway}`).addTo(this.roadsLayer);
 
           // 3. Dashed White Center Lane Divider
@@ -454,7 +531,10 @@ class CampusMapController {
               weight: dividerWeight,
               dashArray: '5, 8',
               opacity: 0.9,
-              lineCap: 'butt'
+              lineCap: 'butt',
+              smoothFactor: 0,
+              pane: 'roadPane',
+              renderer: this.roadRenderer
             }).addTo(this.roadsLayer);
           }
 
@@ -463,6 +543,7 @@ class CampusMapController {
           if (showArrows && isOneWay && typeof L.polylineDecorator !== 'undefined') {
             try {
               L.polylineDecorator(roadLine, {
+                pane: 'roadPane',
                 patterns: [
                   {
                     offset: 35,
@@ -485,20 +566,69 @@ class CampusMapController {
           }
         }
       } else {
-        // Zoom <= 15 (Overview mode: clean slim line)
-        L.polyline(coords, {
-          color: CAMPUS_STYLE_CONFIG.roadCasing,
-          weight: roadCasingWeight,
-          opacity: CAMPUS_STYLE_CONFIG.roadCasingOpacity
-        }).addTo(this.roadsLayer);
-
+        // Zoomed-out overview: keep roads and lane dashes visible together.
         L.polyline(coords, {
           color: CAMPUS_STYLE_CONFIG.roadCore,
           weight: roadCoreWeight,
-          opacity: CAMPUS_STYLE_CONFIG.roadOpacity
+          opacity: CAMPUS_STYLE_CONFIG.roadOpacity,
+          smoothFactor: 0,
+          pane: 'roadPane',
+          renderer: this.roadRenderer
         }).bindPopup(`<b>Road:</b> ${way.tags?.name || highway}`).addTo(this.roadsLayer);
+
+        if (showDividers) {
+          L.polyline(coords, {
+            color: CAMPUS_STYLE_CONFIG.roadDivider,
+            weight: dividerWeight,
+            dashArray: '4, 7',
+            opacity: 0.9,
+            lineCap: 'butt',
+            smoothFactor: 0,
+            pane: 'roadPane',
+            renderer: this.roadRenderer
+          }).addTo(this.roadsLayer);
+        }
       }
     }
+    });
+
+    this.renderFootpathAreas(footpathAreas);
+  }
+
+  renderFootpathAreas(footpathAreas) {
+    if (!Array.isArray(footpathAreas) || footpathAreas.length === 0) return;
+
+    // Put every outline down first. The textured fills drawn afterward cover
+    // internal borders wherever paths overlap, leaving a cleaner junction.
+    footpathAreas.forEach(({ areaGeometry }) => {
+      L.polygon(areaGeometry, {
+        color: CAMPUS_STYLE_CONFIG.footpathCasing,
+        weight: 2.5,
+        opacity: CAMPUS_STYLE_CONFIG.footpathCasingOpacity,
+        fill: false,
+        interactive: false,
+        lineJoin: 'round',
+        smoothFactor: 0,
+        pane: 'footpathPane',
+        renderer: this.footpathRenderer
+      }).addTo(this.footpathsLayer);
+    });
+
+    footpathAreas.forEach(({ way, areaGeometry, coords }) => {
+      const walkwayArea = L.polygon(areaGeometry, {
+        stroke: false,
+        fillColor: CAMPUS_STYLE_CONFIG.footpathCore,
+        fillOpacity: CAMPUS_STYLE_CONFIG.footpathOpacity,
+        smoothFactor: 0,
+        pane: 'footpathPane',
+        renderer: this.footpathRenderer
+      }).bindPopup(`<b>Footpath / Walkway</b>`).addTo(this.footpathsLayer);
+      const patternId = `lpu-footpath-gray-brick-${way.id}`;
+      const textureAngle = this.getFootpathTextureAngle(coords);
+      const textureAnchor = this.map.latLngToLayerPoint(coords[0]);
+      if (this.ensureFootpathBrickPattern(walkwayArea._renderer, patternId, textureAngle, textureAnchor)) {
+        walkwayArea.setStyle({ fillColor: `url(#${patternId})` });
+      }
     });
   }
 
@@ -595,7 +725,10 @@ class CampusMapController {
         iconAnchor: [13, 13]
       });
 
-      const marker = L.marker([loc.lat, loc.lng], { icon: pinIcon });
+      const marker = L.marker([loc.lat, loc.lng], {
+        icon: pinIcon,
+        pane: 'locationMarkerPane'
+      });
       marker.on("click", () => {
         if (window.UIController) {
           window.UIController.showLocationDetails(loc);
@@ -636,8 +769,8 @@ class CampusMapController {
     const skipFitBounds = options.skipFitBounds === true;
 
     // Dynamic mode styling colors
-    let dotColor = "#2563eb"; // Walking: electric blue
-    let glowColor = "#3b82f6";
+    let dotColor = "#1717ecff"; // Walking: electric blue
+    let glowColor = "#432399ff";
     if (mode === "bicycle") {
       dotColor = "#059669"; // Bicycle: emerald
       glowColor = "#10b981";
@@ -682,8 +815,8 @@ class CampusMapController {
       mainLineDashArray = null; // Solid
     } else {
       // Dotted format for route preview
-      mainLineColor = (mode === "walking") ? "#2563eb" : ROUTE_ACCENT_COLOR;
-      mainLineWeight = 6.5;
+      mainLineColor = (mode === "walking") ? "#1683ff" : "#ff8a00";
+      mainLineWeight = 7.5;
       mainLineDashArray = "0.1, 13"; // Round dotted beads
     }
 
@@ -704,21 +837,38 @@ class CampusMapController {
       }
     }
 
-    // 2. Route Outer White Casing (Provides crisp boundary against terrain/roads)
-    L.polyline(roadCoords, {
-      pane: 'routePane',
-      className: "route-casing-path",
-      color: "#ffffff",
-      weight: isNavigating ? 13 : 11,
-      opacity: 0.95,
-      lineCap: "round",
-      lineJoin: "round"
-    }).addTo(this.routesLayer);
+    // Keep a casing for solid active navigation only. A continuous white casing
+    // beneath dotted previews makes the route look like dots on a white strip.
+    if (isNavigating) {
+      L.polyline(roadCoords, {
+        pane: 'routePane',
+        className: "route-casing-path",
+        color: "#ffffff",
+        weight: 13,
+        opacity: 0.95,
+        lineCap: "round",
+        lineJoin: "round"
+      }).addTo(this.routesLayer);
+    } else {
+      // A faint dotted rim adds definition without creating a solid strip.
+      L.polyline(roadCoords, {
+        pane: 'routePane',
+        className: "route-preview-dot-rim",
+        color: mode === "walking" ? "#123c70" : "#713b08",
+        weight: 9,
+        opacity: 0.34,
+        dashArray: "0.1, 13",
+        lineCap: "round",
+        lineJoin: "round"
+      }).addTo(this.routesLayer);
+    }
 
     // 3. Main Route Path: Dark Highlight when navigating, Dotted when previewing
     const routeMainLine = L.polyline(roadCoords, {
       pane: 'routePane',
-      className: isNavigating ? "route-highlight-path route-dark-nav-path" : "route-highlight-path route-dotted-preview-path",
+      className: isNavigating
+        ? "route-highlight-path route-dark-nav-path"
+        : `route-highlight-path route-dotted-preview-path ${mode === "walking" ? "route-preview-walking" : "route-preview-vehicle"}`,
       color: mainLineColor,
       weight: mainLineWeight,
       opacity: 1.0,

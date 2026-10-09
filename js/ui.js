@@ -920,6 +920,12 @@ class UIController {
     if (layerBtn) layerBtn.addEventListener("click", toggleMapBaseLayer);
     if (floatLayerBtn) floatLayerBtn.addEventListener("click", toggleMapBaseLayer);
 
+    // Sync initial button active state with default satellite layer
+    if (this.currentLayerMode === "satellite") {
+      if (layerBtn) layerBtn.classList.add("active");
+      if (floatLayerBtn) floatLayerBtn.classList.add("active");
+    }
+
     // 5. AI Chatbot Assistant Floating Button
     const assistantFab = document.getElementById("ctrl-assistant-fab");
     if (assistantFab) {

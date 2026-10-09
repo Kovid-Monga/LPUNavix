@@ -137,8 +137,8 @@ class CampusMapController {
       { maxZoom: 19, subdomains: "abcd" }
     );
 
-    // Start with OpenStreetMap; users can switch to satellite from the map controls.
-    this.setBaseLayer("street");
+    // Set default base layer (Google Maps Satellite)
+    this.setBaseLayer("satellite");
 
     // Dedicated Navigation Route Pane with z-index 580 (strictly above roads/footpaths in overlayPane 400)
     if (!this.map.getPane('routePane')) {
@@ -252,7 +252,7 @@ class CampusMapController {
     if (this.currentTileLayer && this.map.hasLayer(this.currentTileLayer)) {
       this.map.removeLayer(this.currentTileLayer);
     }
-    const targetLayer = this.tileLayers[layerName] || this.tileLayers.street;
+    const targetLayer = this.tileLayers[layerName] || this.tileLayers.satellite;
     if (targetLayer) {
       this.currentLayerMode = layerName;
       this.currentTileLayer = targetLayer;

@@ -659,21 +659,60 @@ class CampusMapController {
     this.renderCampusBoundary();
   }
 
-  getCategoryIconSvg(category) {
-    if (category === "food") {
-      return `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>`;
-    } else if (category === "academics" || category === "academic") {
-      return `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>`;
-    } else if (category === "hostels" || category === "hostel") {
-      return `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>`;
-    } else if (category === "parking") {
-      return `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 17V7h4a3 3 0 0 1 0 6H9"/></svg>`;
-    } else if (category === "offices" || category === "office") {
-      return `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>`;
-    } else if (category === "healthcare") {
-      return `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M2 12h20"/></svg>`;
+  getLocationTheme(category, name = "", type = "") {
+    const text = `${name} ${type} ${category}`.toLowerCase();
+    if (text.includes("library") || text.includes("reading room")) return "library";
+    if (text.includes("health") || text.includes("hospital") || text.includes("medical") || text.includes("clinic") || text.includes("doctor") || text.includes("first aid")) return "healthcare";
+    if (text.includes("gate") || text.includes("checkpoint") || text.includes("entry") || text.includes("barrier")) return "gates";
+    if (text.includes("auditorium") || text.includes("theatre") || text.includes("theater") || text.includes("audi ") || text.includes("audi-") || text.includes("convocation")) return "auditorium";
+    if (text.includes("park") || text.includes("garden") || text.includes("lawn") || text.includes("green space")) return "park";
+    if (text.includes("parking")) return "parking";
+    if (text.includes("bus") || text.includes("transport") || text.includes("transit") || text.includes("auto stand") || text.includes("kart")) return "transport";
+    if (text.includes("food") || text.includes("cafe") || text.includes("canteen") || text.includes("mess") || text.includes("dining") || text.includes("kiosk") || text.includes("bakery") || text.includes("rolls") || text.includes("burger")) return "food";
+    if (text.includes("gym") || text.includes("sports") || text.includes("stadium") || text.includes("ground") || text.includes("court") || text.includes("fitness") || text.includes("pool")) return "sports";
+    if (text.includes("hostel") || text.includes("residential") || text.includes("bh-") || text.includes("gh-") || text.includes("boys hostel") || text.includes("girls hostel")) return "hostels";
+    if (text.includes("atm") || text.includes("bank") || text.includes("finance") || text.includes("post office")) return "finance";
+    if (text.includes("mall") || text.includes("unimall") || text.includes("shop") || text.includes("mart") || text.includes("store") || text.includes("salon")) return "shop";
+    if (text.includes("cse") || text.includes("computer science") || text.includes("coding") || text.includes("software") || text.includes("tech")) return "tech";
+    if (text.includes("admin") || text.includes("office") || text.includes("dean") || text.includes("director") || text.includes("admission") || text.includes("reception") || category === "offices" || category === "office") return "offices";
+    if (category === "academics" || category === "academic" || text.includes("block") || text.includes("department") || text.includes("school of")) return "academics";
+    return category || "others";
+  }
+
+  getCategoryIconSvg(category, name = "", type = "") {
+    const theme = this.getLocationTheme(category, name, type);
+    if (theme === "library") {
+      return `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>`;
+    } else if (theme === "healthcare") {
+      return `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16"/><path d="M4 12h16"/></svg>`;
+    } else if (theme === "gates") {
+      return `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-7a3 3 0 0 1 6 0v7"/></svg>`;
+    } else if (theme === "food") {
+      return `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>`;
+    } else if (theme === "parking") {
+      return `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 17V7h4.5a3 3 0 0 1 0 6H9"/></svg>`;
+    } else if (theme === "auditorium") {
+      return `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20h20"/><path d="M4 20V9a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v11"/><polygon points="12 3 4 8 20 8 12 3"/><path d="M10 20v-5h4v5"/></svg>`;
+    } else if (theme === "park") {
+      return `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-7"/><path d="M12 15a6 6 0 1 0-6-6c0 1.5.5 2.8 1.4 3.9A4.5 4.5 0 0 0 12 15z"/><path d="M12 15a6 6 0 1 1 6-6c0 1.5-.5 2.8-1.4 3.9A4.5 4.5 0 0 1 12 15z"/></svg>`;
+    } else if (theme === "transport") {
+      return `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="14" rx="3"/><path d="M3 10h18"/><path d="M7 17v3"/><path d="M17 17v3"/><circle cx="7.5" cy="13.5" r="1.5"/><circle cx="16.5" cy="13.5" r="1.5"/></svg>`;
+    } else if (theme === "tech") {
+      return `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M2 20h20"/><path d="M9 10l-2 2 2 2"/><path d="M15 10l2 2-2 2"/></svg>`;
+    } else if (theme === "sports") {
+      return `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4a2 2 0 0 1-2-2V5h4"/><path d="M18 9h2a2 2 0 0 0 2-2V5h-4"/><path d="M4 5h16v5a6 6 0 0 1-12 0V5z"/><path d="M12 15v4"/><path d="M8 21h8"/></svg>`;
+    } else if (theme === "hostels") {
+      return `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><circle cx="6" cy="11" r="2"/></svg>`;
+    } else if (theme === "finance") {
+      return `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="21" x2="21" y2="21"/><line x1="4" y1="10" x2="20" y2="10"/><polygon points="12 3 2 10 22 10 12 3"/><line x1="6" y1="10" x2="6" y2="21"/><line x1="10" y1="10" x2="10" y2="21"/><line x1="14" y1="10" x2="14" y2="21"/><line x1="18" y1="10" x2="18" y2="21"/></svg>`;
+    } else if (theme === "shop") {
+      return `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>`;
+    } else if (theme === "offices") {
+      return `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>`;
+    } else if (theme === "academics") {
+      return `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`;
     }
-    return `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>`;
+    return `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
   }
 
   resolveLabelCollisions(items) {
@@ -954,9 +993,10 @@ class CampusMapController {
     resolvedItems.forEach(item => {
       if (item.isCluster) {
         // Render Group Cluster Marker
-        const iconSvg = this.getCategoryIconSvg(item.category);
+        const iconSvg = this.getCategoryIconSvg(item.category, item.title, item.fullTitle);
+        const clusterTheme = this.getLocationTheme(item.category, item.title, item.fullTitle);
         const clusterHtml = `
-          <div class="custom-campus-cluster cluster-${item.category || 'academics'}" data-group-id="${item.groupId}" title="${item.fullTitle} (${item.count} Buildings)">
+          <div class="custom-campus-cluster cluster-${clusterTheme} cluster-${item.category || 'academics'}" data-group-id="${item.groupId}" title="${item.fullTitle} (${item.count} Buildings)">
             <div class="cluster-pill">
               <div class="cluster-icon">${iconSvg}</div>
               <span class="cluster-title">${item.title}</span>
@@ -996,12 +1036,13 @@ class CampusMapController {
       } else {
         // Render Individual Location Marker
         const loc = item.loc;
-        const iconSvg = this.getCategoryIconSvg(loc.category);
+        const iconSvg = this.getCategoryIconSvg(loc.category, loc.name, loc.type);
+        const theme = this.getLocationTheme(loc.category, loc.name, loc.type);
         const isSelected = item.isSelected;
         const isRevealed = item.isRevealed;
         const hasLabel = Boolean(item.showLabel || isSelected || isRevealed);
 
-        const pinClass = `pin-${loc.category || 'others'} ${hasLabel ? '' : 'pin-icon-only'} ${isSelected ? 'selected' : ''} ${isRevealed ? 'revealed' : ''}`;
+        const pinClass = `pin-${theme} pin-${loc.category || 'others'} ${hasLabel ? '' : 'pin-icon-only'} ${isSelected ? 'selected' : ''} ${isRevealed ? 'revealed' : ''}`;
 
         const customHtml = `
           <div class="custom-campus-pin ${pinClass}" data-id="${loc.id}" title="${loc.name}">

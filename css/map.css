@@ -310,7 +310,7 @@
 
 
 /* ==========================================================================
-   Google Maps-Style Circular Marker Pins & Dynamic Zoom Labels
+   Clean Pill-Style Marker Pins, Dots & Data-Point Labels (Reference Design)
    ========================================================================== */
 
 .campus-pin-wrapper {
@@ -319,130 +319,317 @@
   overflow: visible !important;
 }
 
-.custom-campus-pin {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  cursor: pointer;
-  white-space: nowrap;
-  user-select: none;
-  pointer-events: auto;
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* Category Specific Color Tokens (Text + Dot Palette from Reference) */
+.pin-academics, .pin-academic, .cluster-academics, .cluster-academic {
+  --cat-color: #374151;
+  --cat-color-light: #f3f4f6;
+  --cat-color-glow: rgba(55, 65, 81, 0.22);
 }
 
+.pin-healthcare, .pin-medical, .cluster-healthcare, .cluster-medical {
+  --cat-color: #ef4444;
+  --cat-color-light: #fee2e2;
+  --cat-color-glow: rgba(239, 68, 68, 0.28);
+}
+
+.pin-food, .pin-dining, .cluster-food, .cluster-dining {
+  --cat-color: #8b5cf6;
+  --cat-color-light: #f3e8ff;
+  --cat-color-glow: rgba(139, 92, 246, 0.28);
+}
+
+.pin-library, .pin-libraries, .cluster-library, .cluster-libraries {
+  --cat-color: #0d9488;
+  --cat-color-light: #ccfbf1;
+  --cat-color-glow: rgba(13, 148, 136, 0.28);
+}
+
+.pin-transport, .pin-transit, .cluster-transport, .cluster-transit {
+  --cat-color: #2563eb;
+  --cat-color-light: #dbeafe;
+  --cat-color-glow: rgba(37, 99, 235, 0.28);
+}
+
+.pin-parking, .cluster-parking {
+  --cat-color: #0284c7;
+  --cat-color-light: #e0f2fe;
+  --cat-color-glow: rgba(2, 132, 199, 0.28);
+}
+
+.pin-gates, .pin-gate, .cluster-gates, .cluster-gate {
+  --cat-color: #d97706;
+  --cat-color-light: #fef3c7;
+  --cat-color-glow: rgba(217, 119, 6, 0.28);
+}
+
+.pin-auditorium, .cluster-auditorium {
+  --cat-color: #e11d48;
+  --cat-color-light: #ffe4e6;
+  --cat-color-glow: rgba(225, 29, 72, 0.28);
+}
+
+.pin-park, .cluster-park {
+  --cat-color: #16a34a;
+  --cat-color-light: #dcfce7;
+  --cat-color-glow: rgba(22, 163, 74, 0.28);
+}
+
+.pin-tech, .cluster-tech {
+  --cat-color: #4f46e5;
+  --cat-color-light: #eef2ff;
+  --cat-color-glow: rgba(79, 70, 229, 0.28);
+}
+
+.pin-sports, .pin-recreation, .cluster-sports, .cluster-recreation {
+  --cat-color: #059669;
+  --cat-color-light: #d1fae5;
+  --cat-color-glow: rgba(5, 150, 105, 0.28);
+}
+
+.pin-hostels, .pin-hostel, .cluster-hostels, .cluster-hostel {
+  --cat-color: #7c3aed;
+  --cat-color-light: #f5f3ff;
+  --cat-color-glow: rgba(124, 58, 237, 0.28);
+}
+
+.pin-finance, .cluster-finance {
+  --cat-color: #b45309;
+  --cat-color-light: #fef3c7;
+  --cat-color-glow: rgba(180, 83, 9, 0.28);
+}
+
+.pin-shop, .cluster-shop {
+  --cat-color: #ea580c;
+  --cat-color-light: #ffedd5;
+  --cat-color-glow: rgba(234, 88, 12, 0.28);
+}
+
+.pin-offices, .pin-office, .pin-admin, .pin-administrative, .cluster-offices, .cluster-office, .cluster-admin, .cluster-administrative {
+  --cat-color: #db2777;
+  --cat-color-light: #fce7f3;
+  --cat-color-glow: rgba(219, 39, 119, 0.28);
+}
+
+.pin-others, .pin-other, .cluster-others, .cluster-other {
+  --cat-color: #64748b;
+  --cat-color-light: #f1f5f9;
+  --cat-color-glow: rgba(100, 116, 139, 0.22);
+}
+
+/* ==========================================================================
+   Base Data-Point Marker Pin: Floating Pill + Stem + Anchor Dot
+   ========================================================================== */
+.custom-campus-pin {
+  --cat-color: #64748b;
+  --cat-color-light: #f1f5f9;
+  --cat-color-glow: rgba(100, 116, 139, 0.22);
+  position: absolute;
+  left: 13px;
+  bottom: 13px;
+  transform: translate(-50%, -12px);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  padding: 3.5px 10px 3.5px 6px;
+  border-radius: 20px;
+  border: 1px solid rgba(0, 0, 0, 0.09);
+  box-shadow: 0 2px 7px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.06);
+  white-space: nowrap;
+  user-select: none;
+  cursor: pointer;
+  pointer-events: auto;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+/* Vertical Connector Stem */
+.custom-campus-pin::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1.5px;
+  height: 12px;
+  background: var(--cat-color);
+  pointer-events: none;
+  transition: background-color 0.2s ease, height 0.18s ease;
+}
+
+/* Ground Anchor Dot (Precisely centered at [13, 13] coordinates) */
+.custom-campus-pin::before {
+  content: '';
+  position: absolute;
+  top: calc(100% + 12px);
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--cat-color);
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.28);
+  pointer-events: auto;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Hover State: Soft category border & glow */
 .custom-campus-pin:hover {
-  transform: scale(1.12);
+  transform: translate(-50%, -14px) scale(1.03);
+  border-color: var(--cat-color);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12), 0 0 0 1px var(--cat-color), 0 0 10px var(--cat-color-glow);
   z-index: 1000 !important;
 }
 
+.custom-campus-pin:hover::after {
+  height: 14px;
+}
+
+.custom-campus-pin:hover::before {
+  transform: translate(-50%, -50%) scale(1.15);
+  box-shadow: 0 0 0 2px var(--cat-color), 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Category Icon (inside the pill) */
 .custom-campus-pin .pin-circle {
-  width: 26px;
-  height: 26px;
-  min-width: 26px;
-  min-height: 26px;
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  min-height: 18px;
   border-radius: 50%;
-  background: #ffffff;
-  border: 1.5px solid rgba(255, 255, 255, 0.95);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  background: var(--cat-color-light);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   flex-shrink: 0;
-}
-
-.custom-campus-pin:hover .pin-circle {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
 }
 
 .custom-campus-pin .pin-icon {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
+  width: 12px;
+  height: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #1a73e8;
+  color: var(--cat-color);
 }
 
 .custom-campus-pin .pin-icon svg {
+  width: 11px;
+  height: 11px;
   display: block;
 }
 
+/* Label Typography */
 .custom-campus-pin .pin-label {
+  font-family: inherit;
   font-weight: 600;
-  font-size: 11.5px;
+  font-size: 12px;
   color: #1e293b;
-  background: rgba(255, 255, 255, 0.96);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  padding: 2.5px 8px;
-  border-radius: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.05);
-  line-height: 1.35;
+  letter-spacing: -0.15px;
+  line-height: 1.25;
+  white-space: nowrap;
   pointer-events: auto;
-  opacity: 1;
-  display: inline-block;
-  transform: translateX(0);
-  transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  transition: color 0.2s ease;
 }
 
-/* Category Specific Pin Themes for Icons */
-.pin-academics .pin-icon, .pin-academic .pin-icon { color: #1a73e8; }
-.pin-hostels .pin-icon, .pin-hostel .pin-icon { color: #7c3aed; }
-.pin-food .pin-icon { color: #ea580c; }
-.pin-parking .pin-icon { color: #0284c7; }
-.pin-offices .pin-icon, .pin-office .pin-icon { color: #059669; }
-.pin-healthcare .pin-icon { color: #e11d48; }
-.pin-others .pin-icon, .pin-other .pin-icon { color: #64748b; }
-
-/* Selected / Revealed Pin State */
-.custom-campus-pin.selected .pin-circle,
-.custom-campus-pin.revealed .pin-circle {
-  border-color: #f97316;
-  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.35), 0 3px 8px rgba(0, 0, 0, 0.2);
-  transform: scale(1.12);
+/* Selected / Revealed State: Active highlight */
+.custom-campus-pin.selected,
+.custom-campus-pin.revealed {
+  border-color: var(--cat-color);
+  background: #ffffff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 0 0 1.5px var(--cat-color), 0 0 14px var(--cat-color-glow);
+  z-index: 1000 !important;
 }
 
 .custom-campus-pin.selected .pin-label,
 .custom-campus-pin.revealed .pin-label {
-  border-color: rgba(249, 115, 22, 0.4);
-  background: #ffffff;
   font-weight: 700;
   color: #0f172a;
-  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.25), 0 1px 3px rgba(0, 0, 0, 0.1);
-  display: inline-block !important;
-  opacity: 1 !important;
 }
 
-/* Icon-Only Pin (Collision Avoidance Mode in crowded clusters) */
-.custom-campus-pin.pin-icon-only .pin-label {
+.custom-campus-pin.selected::before,
+.custom-campus-pin.revealed::before {
+  box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px var(--cat-color), 0 2px 8px rgba(0, 0, 0, 0.35);
+  transform: translate(-50%, -50%) scale(1.2);
+}
+
+/* Disabled or Inactive State */
+.custom-campus-pin.disabled,
+.custom-campus-pin.inactive {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.custom-campus-pin.disabled .pin-label,
+.custom-campus-pin.inactive .pin-label {
+  color: #94a3b8;
+}
+
+/* Icon-Only Pin (Collision Avoidance Mode / Dense cluster mode) */
+.custom-campus-pin.pin-icon-only {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  pointer-events: auto;
+}
+
+.custom-campus-pin.pin-icon-only .pin-circle,
+.custom-campus-pin.pin-icon-only .pin-label,
+.custom-campus-pin.pin-icon-only::after {
   display: none !important;
+}
+
+.custom-campus-pin.pin-icon-only::before {
+  display: block !important;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.custom-campus-pin.pin-icon-only:hover {
+  background: #ffffff !important;
+  border: 1px solid var(--cat-color) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14), 0 0 0 1px var(--cat-color), 0 0 10px var(--cat-color-glow) !important;
+  padding: 3.5px 10px 3.5px 6px !important;
+  width: auto !important;
+  height: auto !important;
+  z-index: 1000 !important;
+}
+
+.custom-campus-pin.pin-icon-only:hover .pin-circle {
+  display: flex !important;
+  animation: label-pop-in 0.15s ease-out;
 }
 
 .custom-campus-pin.pin-icon-only:hover .pin-label {
   display: inline-block !important;
-  position: absolute;
-  left: 28px;
-  z-index: 1000;
-  white-space: nowrap;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
   animation: label-pop-in 0.15s ease-out;
 }
 
+.custom-campus-pin.pin-icon-only:hover::after {
+  display: block !important;
+}
+
 @keyframes label-pop-in {
-  from { opacity: 0; transform: translateX(-4px); }
-  to { opacity: 1; transform: translateX(0); }
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* ==========================================================================
-   Google Maps-Style Semantic Campus Cluster Marker
+   Cluster / Grouped Label (Matching Compact Pill Style with Stem & Dot)
    ========================================================================== */
 .custom-campus-cluster {
-  display: inline-flex;
-  align-items: center;
+  --cat-color: #374151;
+  --cat-color-light: #f3f4f6;
+  --cat-color-glow: rgba(55, 65, 81, 0.22);
+  position: absolute;
+  left: 60px;
+  bottom: 15px;
+  transform: translate(-50%, -12px);
   cursor: pointer;
   user-select: none;
   pointer-events: auto;
@@ -450,110 +637,184 @@
   transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.custom-campus-cluster:hover {
-  transform: scale(1.06);
-  z-index: 999 !important;
+.custom-campus-cluster::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1.5px;
+  height: 12px;
+  background: var(--cat-color);
+  pointer-events: none;
+  transition: background-color 0.2s ease, height 0.18s ease;
+}
+
+.custom-campus-cluster::before {
+  content: '';
+  position: absolute;
+  top: calc(100% + 12px);
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--cat-color);
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.28);
+  pointer-events: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .custom-campus-cluster .cluster-pill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(255, 255, 255, 0.96);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 18px;
-  padding: 3.5px 10px 3.5px 5px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.09);
+  border-radius: 20px;
+  padding: 3.5px 8px 3.5px 5px;
+  box-shadow: 0 2px 7px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.06);
+  white-space: nowrap;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .custom-campus-cluster:hover .cluster-pill {
-  box-shadow: 0 6px 20px rgba(26, 115, 232, 0.28), 0 0 0 1px rgba(26, 115, 232, 0.2);
-  border-color: rgba(26, 115, 232, 0.35);
+  border-color: var(--cat-color);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12), 0 0 0 1px var(--cat-color), 0 0 10px var(--cat-color-glow);
+}
+
+.custom-campus-cluster:hover {
+  transform: translate(-50%, -14px) scale(1.03);
+  z-index: 999 !important;
+}
+
+.custom-campus-cluster:hover::after {
+  height: 14px;
+}
+
+.custom-campus-cluster:hover::before {
+  transform: translate(-50%, -50%) scale(1.15);
+  box-shadow: 0 0 0 2px var(--cat-color), 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
 .custom-campus-cluster .cluster-icon {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
-  background: #eff6ff;
-  color: #1a73e8;
+  background: var(--cat-color-light);
+  color: var(--cat-color);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  transition: all 0.2s ease;
 }
 
 .custom-campus-cluster .cluster-icon svg {
-  width: 13px;
-  height: 13px;
+  width: 11px;
+  height: 11px;
   display: block;
 }
 
 .custom-campus-cluster .cluster-title {
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
   color: #1e293b;
-  letter-spacing: -0.2px;
+  letter-spacing: -0.15px;
   white-space: nowrap;
 }
 
 .custom-campus-cluster .cluster-count {
   font-size: 10px;
-  font-weight: 800;
-  background: #1a73e8;
+  font-weight: 700;
+  background: var(--cat-color);
   color: #ffffff;
-  padding: 1px 6px;
+  padding: 1.5px 6px;
   border-radius: 10px;
   min-width: 18px;
   text-align: center;
-  line-height: 1.4;
-  box-shadow: 0 1px 3px rgba(26, 115, 232, 0.4);
+  line-height: 1.35;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
-/* Category Accent Themes for Clusters */
-.cluster-academics .cluster-icon { background: #eff6ff; color: #1a73e8; }
-.cluster-academics .cluster-count { background: #1a73e8; }
-.cluster-offices .cluster-icon { background: #f0fdf4; color: #059669; }
-.cluster-offices .cluster-count { background: #059669; }
-.cluster-hostels .cluster-icon { background: #faf5ff; color: #7c3aed; }
-.cluster-hostels .cluster-count { background: #7c3aed; }
-.cluster-food .cluster-icon { background: #fff7ed; color: #ea580c; }
-.cluster-food .cluster-count { background: #ea580c; }
+.custom-campus-cluster .cluster-count::before {
+  content: '+';
+}
 
 /* Dark mode support */
+[data-theme="dark"] .custom-campus-pin {
+  background: rgba(15, 23, 42, 0.94);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .custom-campus-pin::before {
+  border-color: #1e293b;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+
 [data-theme="dark"] .custom-campus-pin .pin-circle {
-  background: #1e293b;
-  border-color: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 [data-theme="dark"] .custom-campus-pin .pin-label {
-  background: rgba(15, 23, 42, 0.95);
   color: #f1f5f9;
-  border-color: rgba(255, 255, 255, 0.12);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .custom-campus-pin:hover {
+  border-color: var(--cat-color);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--cat-color);
+}
+
+[data-theme="dark"] .custom-campus-pin:hover .pin-label {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .custom-campus-pin.selected,
+[data-theme="dark"] .custom-campus-pin.revealed {
+  background: #0f172a;
+  border-color: var(--cat-color);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.7), 0 0 0 1.5px var(--cat-color), 0 0 14px var(--cat-color-glow);
 }
 
 [data-theme="dark"] .custom-campus-cluster .cluster-pill {
-  background: rgba(15, 23, 42, 0.95);
-  border-color: rgba(255, 255, 255, 0.14);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  background: rgba(15, 23, 42, 0.94);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .custom-campus-cluster::before {
+  border-color: #1e293b;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
 }
 
 [data-theme="dark"] .custom-campus-cluster .cluster-title {
-  color: #f8fafc;
+  color: #f1f5f9;
 }
 
 [data-theme="dark"] .custom-campus-cluster .cluster-icon {
-  background: rgba(37, 99, 235, 0.2);
-  color: #60a5fa;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .custom-campus-cluster:hover .cluster-pill {
+  border-color: var(--cat-color);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--cat-color);
 }
 
 /* Zoom-based POI Label Visibility compatibility */
-.hide-poi-labels .custom-campus-pin:not(.selected):not(.revealed) .pin-label {
+.hide-poi-labels .custom-campus-pin:not(.selected):not(.revealed) {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.hide-poi-labels .custom-campus-pin:not(.selected):not(.revealed) .pin-circle,
+.hide-poi-labels .custom-campus-pin:not(.selected):not(.revealed) .pin-label,
+.hide-poi-labels .custom-campus-pin:not(.selected):not(.revealed)::after {
   display: none !important;
 }
 

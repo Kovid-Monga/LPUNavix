@@ -80,6 +80,8 @@ class CampusMapController {
     this.overlayRenderFrame = null;
     this.mapResizeObserver = null;
     this.revealedLocationIds = new Set();
+    this.selectedLocationId = null;
+    this.currentFilterCategory = "all";
     this.initialCenter = null;
     this.initialZoom = null;
   }
@@ -203,10 +205,11 @@ class CampusMapController {
     this.map.on('zoomend', () => {
       scheduleRoadRender();
       this.updateMarkerLabelVisibility();
-      this.renderLocationMarkers();
+      this.renderLocationMarkers(this.currentFilterCategory || "all");
     });
     this.map.on('moveend', () => {
       this.updateMarkerLabelVisibility();
+      this.renderLocationMarkers(this.currentFilterCategory || "all");
     });
     this.map.on('rotateend', () => {
       if (this.boundaryLayer && this.boundaryLayer.redraw) this.boundaryLayer.redraw();
@@ -656,14 +659,124 @@ class CampusMapController {
     this.renderCampusBoundary();
   }
 
+  getCategoryIconSvg(category) {
+    if (category === "food") {
+      return `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>`;
+    } else if (category === "academics" || category === "academic") {
+      return `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>`;
+    } else if (category === "hostels" || category === "hostel") {
+      return `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>`;
+    } else if (category === "parking") {
+      return `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 17V7h4a3 3 0 0 1 0 6H9"/></svg>`;
+    } else if (category === "offices" || category === "office") {
+      return `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>`;
+    } else if (category === "healthcare") {
+      return `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M2 12h20"/></svg>`;
+    }
+    return `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>`;
+  }
+
+  resolveLabelCollisions(items) {
+    if (!this.map || !Array.isArray(items) || items.length === 0) return items;
+
+    // Sort descending by priority:
+    // 100+: selected / revealed
+    // 60: major campus landmarks
+    // 45: cluster markers
+    // 25: standard buildings
+    // 5: fine-grained offices/cabins
+    const sorted = [...items].sort((a, b) => (b.priority || 0) - (a.priority || 0));
+
+    const placedBoxes = [];
+
+    for (const item of sorted) {
+      if (!item.latLng) {
+        item.showLabel = true;
+        continue;
+      }
+
+      // Convert geographic coords to container pixel coordinates
+      const pt = this.map.latLngToContainerPoint(item.latLng);
+      item.containerPoint = pt;
+
+      // Group cluster markers always show their full pill
+      if (item.isCluster) {
+        const titleStr = item.title || "";
+        const clusterWidth = Math.max(90, (titleStr.length * 7.5) + 48);
+        const box = {
+          x1: pt.x - (clusterWidth / 2) - 4,
+          y1: pt.y - 15,
+          x2: pt.x + (clusterWidth / 2) + 4,
+          y2: pt.y + 15
+        };
+        placedBoxes.push(box);
+        item.showLabel = true;
+        continue;
+      }
+
+      // Selected / revealed location ALWAYS displays its label with highest priority
+      if (item.isSelected || item.isRevealed) {
+        const nameStr = item.name || "";
+        const labelWidth = Math.min(180, Math.max(50, (nameStr.length * 7.2) + 16));
+        placedBoxes.push({
+          x1: pt.x - 14,
+          y1: pt.y - 14,
+          x2: pt.x + 14 + labelWidth + 4,
+          y2: pt.y + 14
+        });
+        item.showLabel = true;
+        continue;
+      }
+
+      // Individual marker: pin circle is 26x26 (radius 13)
+      // Label extends to the right by labelWidth
+      const nameStr = item.name || "";
+      const labelWidth = Math.min(160, Math.max(55, (nameStr.length * 7.0) + 16));
+      const testBox = {
+        x1: pt.x + 10,
+        y1: pt.y - 12,
+        x2: pt.x + 10 + labelWidth + 4,
+        y2: pt.y + 12
+      };
+
+      // Check collision with already placed boxes
+      let collides = false;
+      for (const pb of placedBoxes) {
+        if (testBox.x1 < pb.x2 && testBox.x2 > pb.x1 &&
+            testBox.y1 < pb.y2 && testBox.y2 > pb.y1) {
+          collides = true;
+          break;
+        }
+      }
+
+      if (!collides) {
+        placedBoxes.push(testBox);
+        item.showLabel = true;
+      } else {
+        // Suppress text label; icon pin remains crisp, visible and clickable!
+        item.showLabel = false;
+        // Reserve small pin area so other labels don't collide directly over the pin icon
+        placedBoxes.push({
+          x1: pt.x - 14,
+          y1: pt.y - 14,
+          x2: pt.x + 14,
+          y2: pt.y + 14
+        });
+      }
+    }
+
+    return items;
+  }
+
   renderLocationMarkers(filterCategory = "all") {
     if (!this.markersLayer) return;
     this.markersLayer.clearLayers();
+    this.currentFilterCategory = filterCategory;
 
     const allLocations = (typeof getAllCampusLocations === "function") ? getAllCampusLocations() : (window.CAMPUS_LOCATIONS || []);
     if (!Array.isArray(allLocations) || allLocations.length === 0) return;
 
-    let currentZoom = 16;
+    let currentZoom = 15.25;
     let bounds = null;
     try {
       if (this.map) {
@@ -676,11 +789,13 @@ class CampusMapController {
     const lpuOnly = allLocations.filter(loc => {
       if (!loc || typeof loc.lat !== "number" || typeof loc.lng !== "number") return false;
       const isInCampus = isPointInPolygon([loc.lat, loc.lng], LPU_BOUNDARY);
-      const isRevealed = this.revealedLocationIds.has(loc.id);
+      const isRevealed = this.revealedLocationIds.has(loc.id) || this.selectedLocationId === loc.id;
       let isVisibleAtZoom = true;
       if (loc.visibleFromZoom) {
+        // High zoom details (e.g. offices/faculty cabins) visible at zoom >= 18.5
+        const zoomThreshold = Math.min(loc.visibleFromZoom, 18.5);
         isVisibleAtZoom = isRevealed || (
-          currentZoom >= loc.visibleFromZoom &&
+          currentZoom >= zoomThreshold &&
           (!bounds || (bounds.getWest() <= loc.lng && loc.lng <= bounds.getEast() && bounds.getSouth() <= loc.lat && loc.lat <= bounds.getNorth()))
         );
       }
@@ -691,51 +806,236 @@ class CampusMapController {
       ? lpuOnly
       : lpuOnly.filter(loc => loc.category === filterCategory);
 
-    filtered.forEach(loc => {
-      let iconSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>`;
-      let pinClass = `pin-${loc.category || 'others'}`;
+    // ========================================================================
+    // 3-LEVEL ZOOM-DEPENDENT MARKER & CLUSTERING LOGIC
+    // Level 1: Far zoom (< 15.6) — Campus Overview (Clusters + Key Landmarks)
+    // Level 2: Medium zoom (15.6 - 16.99) — Block & Department Level (Group Labels with Counts)
+    // Level 3: Close zoom (>= 17.0) — Individual Building Markers (Expanded with Collision Prevention)
+    // ========================================================================
+    const isCloseZoom = currentZoom >= 17.0;
+    const isMediumZoom = currentZoom >= 15.6 && currentZoom < 17.0;
 
-      if (loc.category === "food") {
-        iconSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>`;
-      } else if (loc.category === "academics") {
-        iconSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>`;
-      } else if (loc.category === "hostels") {
-        iconSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>`;
-      } else if (loc.category === "parking") {
-        iconSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 17V7h4a3 3 0 0 1 0 6H9"/></svg>`;
-      } else if (loc.category === "offices") {
-        iconSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>`;
-      } else if (loc.category === "healthcare") {
-        iconSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M2 12h20"/></svg>`;
-      }
+    // Academic & Central Zone cluster members:
+    // CSE Blocks + immediate adjacent high-density buildings: Central Library & Shanti Devi Mittal Auditorium
+    const isCentralZoneMember = (loc) => {
+      return (loc.groupId === "cse-dept" && !loc.visibleFromZoom) ||
+             loc.id === "central-library" ||
+             loc.id === "shanti-devi-mittal-auditorium";
+    };
 
-      const customHtml = `
-        <div class="custom-campus-pin ${pinClass}" data-id="${loc.id}" title="${loc.name}">
-          <div class="pin-circle">
-            <div class="pin-icon">${iconSvg}</div>
-          </div>
-          <span class="pin-label">${loc.name}</span>
-        </div>
-      `;
+    const cseGroupLocs = filtered.filter(l => isCentralZoneMember(l));
+    const otherLocs = filtered.filter(l => !isCentralZoneMember(l));
 
-      const pinIcon = L.divIcon({
-        className: "campus-pin-wrapper",
-        html: customHtml,
-        iconSize: [26, 26],
-        iconAnchor: [13, 13]
+    const itemsToRender = [];
+
+    if (!isCloseZoom && cseGroupLocs.length > 0) {
+      // User is at Far or Medium zoom: merge CSE blocks, Central Library & Shanti Devi Auditorium into unified cluster
+      const unrevealedCse = cseGroupLocs.filter(l => !this.revealedLocationIds.has(l.id) && l.id !== this.selectedLocationId);
+      const revealedCse = cseGroupLocs.filter(l => this.revealedLocationIds.has(l.id) || l.id === this.selectedLocationId);
+
+      // Any revealed/searched building (even Central Library, Shanti Devi, or Block 34) is ALWAYS shown individually and highlighted
+      revealedCse.forEach(loc => {
+        itemsToRender.push({
+          isCluster: false,
+          loc,
+          latLng: [loc.lat, loc.lng],
+          name: loc.name,
+          category: loc.category,
+          priority: 100,
+          isSelected: this.selectedLocationId === loc.id,
+          isRevealed: this.revealedLocationIds.has(loc.id)
+        });
       });
 
-      const marker = L.marker([loc.lat, loc.lng], {
-        icon: pinIcon,
-        pane: 'locationMarkerPane'
-      });
-      marker.on("click", () => {
-        if (window.UIController) {
-          window.UIController.showLocationDetails(loc);
+      if (unrevealedCse.length > 0) {
+        if (isMediumZoom && currentZoom >= 16.3) {
+          // Medium-close zoom: split into 2 natural block rows
+          const northBlocks = unrevealedCse.filter(l => ["block-25", "block-26", "block-27", "block-28"].includes(l.id));
+          const southBlocks = unrevealedCse.filter(l => !["block-25", "block-26", "block-27", "block-28"].includes(l.id));
+
+          if (northBlocks.length > 0) {
+            const nBounds = L.latLngBounds(northBlocks.map(l => [l.lat, l.lng]));
+            itemsToRender.push({
+              isCluster: true,
+              groupId: "cse-dept-north",
+              title: "Blocks 25–28 (CSE)",
+              fullTitle: "School of CSE (Blocks 25 to 28)",
+              count: northBlocks.length,
+              category: "academics",
+              latLng: [31.25286, 75.70310],
+              bounds: nBounds,
+              memberLocs: northBlocks,
+              priority: 45
+            });
+          }
+
+          if (southBlocks.length > 0) {
+            const sBounds = L.latLngBounds(southBlocks.map(l => [l.lat, l.lng]));
+            itemsToRender.push({
+              isCluster: true,
+              groupId: "cse-dept-south",
+              title: "Blocks 31–38 (CSE & Library)",
+              fullTitle: "School of CSE, Central Library & Auditorium (Blocks 31 to 38)",
+              count: southBlocks.length,
+              category: "academics",
+              latLng: [31.25193, 75.70435],
+              bounds: sBounds,
+              memberLocs: southBlocks,
+              priority: 45
+            });
+          }
+        } else {
+          // Far or broad medium zoom: single clean CSE Blocks cluster badge encompassing CSE, Library & Auditorium
+          const cseBounds = L.latLngBounds(unrevealedCse.map(l => [l.lat, l.lng]));
+          itemsToRender.push({
+            isCluster: true,
+            groupId: "cse-dept",
+            title: "CSE Blocks",
+            fullTitle: "School of Computer Science & Engineering, Central Library & Auditorium",
+            count: unrevealedCse.length,
+            category: "academics",
+            latLng: [31.25227, 75.70390],
+            bounds: cseBounds,
+            memberLocs: unrevealedCse,
+            priority: 45
+          });
         }
+      }
+    } else {
+      // Close zoom (zoom >= 17.0): expand ALL CSE buildings, Central Library & Shanti Devi Auditorium into individual markers!
+      cseGroupLocs.forEach(loc => {
+        const isSel = this.selectedLocationId === loc.id;
+        const isRev = this.revealedLocationIds.has(loc.id);
+        itemsToRender.push({
+          isCluster: false,
+          loc,
+          latLng: [loc.lat, loc.lng],
+          name: loc.name,
+          category: loc.category,
+          priority: isSel || isRev ? 100 : (loc.id === "central-library" || loc.id === "shanti-devi-mittal-auditorium" ? 60 : 25),
+          isSelected: isSel,
+          isRevealed: isRev
+        });
       });
+    }
 
-      this.markersLayer.addLayer(marker);
+    // Render other landmarks and non-CSE locations
+    otherLocs.forEach(loc => {
+      const isSel = this.selectedLocationId === loc.id;
+      const isRev = this.revealedLocationIds.has(loc.id);
+
+      // Major landmarks have higher priority
+      let priority = 20;
+      if (loc.id === "uni-health-center" || loc.id === "sh-baldevraj-mittal-auditorium") {
+        priority = 60;
+      } else if (loc.id.startsWith("main-gate")) {
+        priority = 50;
+      } else if (loc.visibleFromZoom) {
+        priority = 5;
+      }
+      if (isSel || isRev) priority = 100;
+
+      itemsToRender.push({
+        isCluster: false,
+        loc,
+        latLng: [loc.lat, loc.lng],
+        name: loc.name,
+        category: loc.category,
+        priority,
+        isSelected: isSel,
+        isRevealed: isRev
+      });
+    });
+
+    // Run Screen-Space Collision Resolution
+    const resolvedItems = this.resolveLabelCollisions(itemsToRender);
+
+    // Create Leaflet Markers
+    resolvedItems.forEach(item => {
+      if (item.isCluster) {
+        // Render Group Cluster Marker
+        const iconSvg = this.getCategoryIconSvg(item.category);
+        const clusterHtml = `
+          <div class="custom-campus-cluster cluster-${item.category || 'academics'}" data-group-id="${item.groupId}" title="${item.fullTitle} (${item.count} Buildings)">
+            <div class="cluster-pill">
+              <div class="cluster-icon">${iconSvg}</div>
+              <span class="cluster-title">${item.title}</span>
+              <span class="cluster-count">${item.count}</span>
+            </div>
+          </div>
+        `;
+
+        const clusterIcon = L.divIcon({
+          className: "campus-pin-wrapper",
+          html: clusterHtml,
+          iconSize: [120, 30],
+          iconAnchor: [60, 15]
+        });
+
+        const clusterMarker = L.marker(item.latLng, {
+          icon: clusterIcon,
+          pane: 'locationMarkerPane'
+        });
+
+        clusterMarker.on("click", (e) => {
+          if (e && e.originalEvent) L.DomEvent.stopPropagation(e.originalEvent);
+          if (item.bounds) {
+            this.map.flyToBounds(item.bounds.pad(0.22), {
+              maxZoom: 17.5,
+              duration: 0.85
+            });
+          } else if (item.latLng) {
+            this.map.flyTo(item.latLng, 17.5, {
+              duration: 0.85
+            });
+          }
+        });
+
+        this.markersLayer.addLayer(clusterMarker);
+
+      } else {
+        // Render Individual Location Marker
+        const loc = item.loc;
+        const iconSvg = this.getCategoryIconSvg(loc.category);
+        const isSelected = item.isSelected;
+        const isRevealed = item.isRevealed;
+        const hasLabel = Boolean(item.showLabel || isSelected || isRevealed);
+
+        const pinClass = `pin-${loc.category || 'others'} ${hasLabel ? '' : 'pin-icon-only'} ${isSelected ? 'selected' : ''} ${isRevealed ? 'revealed' : ''}`;
+
+        const customHtml = `
+          <div class="custom-campus-pin ${pinClass}" data-id="${loc.id}" title="${loc.name}">
+            <div class="pin-circle">
+              <div class="pin-icon">${iconSvg}</div>
+            </div>
+            <span class="pin-label">${loc.name}</span>
+          </div>
+        `;
+
+        const pinIcon = L.divIcon({
+          className: "campus-pin-wrapper",
+          html: customHtml,
+          iconSize: [26, 26],
+          iconAnchor: [13, 13]
+        });
+
+        const marker = L.marker([loc.lat, loc.lng], {
+          icon: pinIcon,
+          pane: 'locationMarkerPane',
+          zIndexOffset: isSelected || isRevealed ? 1000 : 0
+        });
+
+        marker.on("click", (e) => {
+          if (e && e.originalEvent) L.DomEvent.stopPropagation(e.originalEvent);
+          this.selectedLocationId = loc.id;
+          this.renderLocationMarkers(this.currentFilterCategory || "all");
+          if (window.UIController) {
+            window.UIController.showLocationDetails(loc);
+          }
+        });
+
+        this.markersLayer.addLayer(marker);
+      }
     });
 
     this.updateMarkerLabelVisibility();
@@ -743,13 +1043,14 @@ class CampusMapController {
 
   revealLocation(locationId) {
     this.revealedLocationIds.add(locationId);
-    this.renderLocationMarkers();
+    this.selectedLocationId = locationId;
+    this.renderLocationMarkers(this.currentFilterCategory || "all");
   }
 
   clearRevealedLocations() {
-    if (this.revealedLocationIds.size === 0) return;
     this.revealedLocationIds.clear();
-    this.renderLocationMarkers();
+    this.selectedLocationId = null;
+    this.renderLocationMarkers(this.currentFilterCategory || "all");
   }
 
   drawRoute(pathCoords, isDetour = false, closedPathCoords = null, options = {}) {

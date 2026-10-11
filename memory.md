@@ -222,6 +222,12 @@ The backend is built with **FastAPI** (`api/main.py`). It serves both the API en
   desc: "Houses the School of Computer Science & Engineering.",
   image: ""                                // Optional image URL
 }
+// Registered Groups:
+// - cse-dept: School of Computer Science & Engineering (CSE)
+// - fashion-design-dept: School of Fashion Design
+// - library: Central Library
+// - auditorium: Auditoriums
+// - residential-area: Residential Area (BH-1, BH-2, BH-3, BH-5, BH-6, BS-11, BS-12, BS-13, Apartment AB, Apartment CD)
 ```
 
 ---

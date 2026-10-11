@@ -304,6 +304,65 @@ def find_structured_matches(query: str, records: list[Record]) -> list[Record]:
         if matches:
             return matches
 
+    # 12. Hostels / Studios / Apartments / Residential Area queries
+    # e.g. "bh1", "bh-1", "bh 1", "boys hostel 1", "hostel 1", "bh2", "bh3", "bh5", "bh6"
+    # "bs 11", "bs11", "bs-11", "boys studio 11", "bs 12", "bs 13"
+    # "boys apartment ab", "apartment ab", "boys apartment cd", "apartment cd"
+    # "residential area", "hostels on campus", "boys hostels"
+    bh_m = re.search(r"\b(?:bh|boys\s+hostel|hostel)[\s-]*([1-6])\b", clean_q)
+    if bh_m:
+        h_num = bh_m.group(1)
+        target_id = f"bh-{h_num}"
+        for r in records:
+            if r.id == target_id:
+                add(r)
+        if matches:
+            return matches
+
+    bs_m = re.search(r"\b(?:bs|boys\s+studio|studio)[\s-]*(1[1-3])\b", clean_q)
+    if bs_m:
+        s_num = bs_m.group(1)
+        target_id = f"bs-{s_num}"
+        for r in records:
+            if r.id == target_id:
+                add(r)
+        if matches:
+            return matches
+
+    if re.search(r"\b(?:boys\s+apartment\s+ab|apartment\s+ab|apt\s+ab|ab\s+apartment)\b", clean_q) or ("apartment" in clean_q and "ab" in words):
+        for r in records:
+            if r.id == "boys-apartment-ab":
+                add(r)
+        if matches:
+            return matches
+
+    if re.search(r"\b(?:boys\s+apartment\s+cd|apartment\s+cd|apt\s+cd|cd\s+apartment)\b", clean_q) or ("apartment" in clean_q and "cd" in words):
+        for r in records:
+            if r.id == "boys-apartment-cd":
+                add(r)
+        if matches:
+            return matches
+
+    if any(kw in clean_q for kw in ["residential area", "residential", "boys hostel", "boys hostels", "boys studio", "boys apartment"]):
+        for r in records:
+            if r.id == "residential-area":
+                add(r)
+        for r in records:
+            if r.category == "hostels" and r.id != "residential-area":
+                add(r)
+        if matches:
+            return matches
+
+    if any(kw in clean_q for kw in ["hostels", "hostel", "where to stay", "student housing"]):
+        for r in records:
+            if r.id == "residential-area":
+                add(r)
+        for r in records:
+            if r.category == "hostels" and r.id != "residential-area":
+                add(r)
+        if matches:
+            return matches
+
     return matches
 
 

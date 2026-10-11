@@ -191,8 +191,10 @@ def has_explicit_target(question: str, records: list[Record]) -> bool:
     known_landmarks = [
         "library", "central library", "unimall", "uni mall", "health center",
         "hospital", "dispensary", "food court", "main gate", "gate 1", "gate 2",
-        "gate 3", "gate 4", "bh-1", "bh-2", "bh-3", "bh-4", "bh-5", "gh-1",
-        "gh-2", "gh-3", "gh-4", "gh-5", "swimming pool", "stadium", "auditorium",
+        "gate 3", "gate 4", "bh1", "bh-1", "bh2", "bh-2", "bh3", "bh-3", "bh-4", "bh5", "bh-5", "bh6", "bh-6",
+        "bs11", "bs-11", "bs 11", "bs12", "bs-12", "bs 12", "bs13", "bs-13", "bs 13",
+        "boys apartment", "apartment ab", "apartment cd", "residential area", "boys hostel", "boys studio",
+        "gh-1", "gh-2", "gh-3", "gh-4", "gh-5", "swimming pool", "stadium", "auditorium",
         "shanti devi mittal", "baldev raj mittal"
     ]
     for kw in known_landmarks:

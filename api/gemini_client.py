@@ -110,6 +110,14 @@ Block Connections:
   • Use the provided Connection records to state how they connect (e.g. continuous indoor corridors, shared floors, bridges).
   • Highlight connecting floors and that students/faculty can walk directly between them internally.
 
+Hostels, Studios, Apartments & Residential Area:
+- When asked about hostels, studios, apartments, or the campus residential area:
+  • BH = Boys Hostel (BH-1, BH-2, BH-3, BH-5, BH-6).
+  • BS = Boys Studio (BS-11, BS-12, BS-13).
+  • Apartments include Boys Apartment AB and Boys Apartment CD.
+  • All belong to the campus Residential Area.
+  • Highlight facilities such as hostel rooms/studio suites, mess/dining halls, study areas, Wi-Fi, and 24x7 security.
+
 Multiple Matches:
 - If multiple people or locations match (e.g. "Who is the HOS?"), keep each card super compact (2-3 lines max each):
   👩‍🏫 **[Name]** · [Role]
@@ -134,6 +142,8 @@ def _format_grounded_fallback(question: str, context_records: list[dict], match_
 
     if match_quality == "weak":
         intro = "I couldn't find an exact match, but here's the closest campus spot! 🔍\n\n"
+    elif any(w in q_lower for w in ["hostel", "hostels", "bh", "bs", "apartment", "residential", "stay", "room"]):
+        intro = "Looking for campus accommodation? 🏠 Here are the hostel details:\n\n"
     elif any(w in q_lower for w in ["project", "talk to", "contact", "guide", "who can", "whom"]):
         intro = "Working on a project? That's awesome! 🚀 Here is who can guide you:\n\n"
     elif any(w in q_lower for w in ["where is", "where does", "where can i find", "locate", "cabin"]):

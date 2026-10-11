@@ -670,7 +670,7 @@ class CampusMapController {
     if (text.includes("bus") || text.includes("transport") || text.includes("transit") || text.includes("auto stand") || text.includes("kart")) return "transport";
     if (text.includes("food") || text.includes("cafe") || text.includes("canteen") || text.includes("mess") || text.includes("dining") || text.includes("kiosk") || text.includes("bakery") || text.includes("rolls") || text.includes("burger")) return "food";
     if (text.includes("gym") || text.includes("sports") || text.includes("stadium") || text.includes("ground") || text.includes("court") || text.includes("fitness") || text.includes("pool")) return "sports";
-    if (text.includes("hostel") || text.includes("residential") || text.includes("bh-") || text.includes("gh-") || text.includes("boys hostel") || text.includes("girls hostel")) return "hostels";
+    if (text.includes("hostel") || text.includes("residential") || text.includes("bh-") || text.includes("bh ") || text.includes("bs-") || text.includes("bs ") || text.includes("apartment") || text.includes("studio") || text.includes("boys hostel") || text.includes("girls hostel") || category === "hostels") return "hostels";
     if (text.includes("atm") || text.includes("bank") || text.includes("finance") || text.includes("post office")) return "finance";
     if (text.includes("mall") || text.includes("unimall") || text.includes("shop") || text.includes("mart") || text.includes("store") || text.includes("salon")) return "shop";
     if (text.includes("cse") || text.includes("computer science") || text.includes("coding") || text.includes("software") || text.includes("tech")) return "tech";
@@ -862,8 +862,14 @@ class CampusMapController {
              loc.id === "shanti-devi-mittal-auditorium";
     };
 
+    // Residential Zone cluster members (BH Hostels, BS Studios, Apartments)
+    const isResidentialMember = (loc) => {
+      return loc.groupId === "residential-area";
+    };
+
     const cseGroupLocs = filtered.filter(l => isCentralZoneMember(l));
-    const otherLocs = filtered.filter(l => !isCentralZoneMember(l));
+    const resGroupLocs = filtered.filter(l => isResidentialMember(l));
+    const otherLocs = filtered.filter(l => !isCentralZoneMember(l) && !isResidentialMember(l));
 
     const itemsToRender = [];
 
@@ -952,6 +958,57 @@ class CampusMapController {
           name: loc.name,
           category: loc.category,
           priority: isSel || isRev ? 100 : (loc.id === "central-library" || loc.id === "shanti-devi-mittal-auditorium" ? 60 : 25),
+          isSelected: isSel,
+          isRevealed: isRev
+        });
+      });
+    }
+
+    // Residential Area clustering logic (Hostels, Studios & Apartments)
+    if (!isCloseZoom && filterCategory === "all" && resGroupLocs.length > 0) {
+      const unrevealedRes = resGroupLocs.filter(l => !this.revealedLocationIds.has(l.id) && l.id !== this.selectedLocationId);
+      const revealedRes = resGroupLocs.filter(l => this.revealedLocationIds.has(l.id) || l.id === this.selectedLocationId);
+
+      revealedRes.forEach(loc => {
+        itemsToRender.push({
+          isCluster: false,
+          loc,
+          latLng: [loc.lat, loc.lng],
+          name: loc.name,
+          category: loc.category,
+          priority: 100,
+          isSelected: this.selectedLocationId === loc.id,
+          isRevealed: this.revealedLocationIds.has(loc.id)
+        });
+      });
+
+      if (unrevealedRes.length > 0) {
+        const resBounds = L.latLngBounds(unrevealedRes.map(l => [l.lat, l.lng]));
+        itemsToRender.push({
+          isCluster: true,
+          groupId: "residential-area",
+          title: "Residential Area",
+          fullTitle: "Campus Residential Area (Hostels, Studios & Apartments)",
+          count: unrevealedRes.length,
+          category: "hostels",
+          latLng: [31.249742, 75.703481],
+          bounds: resBounds,
+          memberLocs: unrevealedRes,
+          priority: 45
+        });
+      }
+    } else {
+      // Close zoom (zoom >= 17.0) or filterCategory === "hostels": show individual hostel markers!
+      resGroupLocs.forEach(loc => {
+        const isSel = this.selectedLocationId === loc.id;
+        const isRev = this.revealedLocationIds.has(loc.id);
+        itemsToRender.push({
+          isCluster: false,
+          loc,
+          latLng: [loc.lat, loc.lng],
+          name: loc.name,
+          category: loc.category,
+          priority: isSel || isRev ? 100 : 25,
           isSelected: isSel,
           isRevealed: isRev
         });

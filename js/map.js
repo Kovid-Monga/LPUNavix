@@ -11,14 +11,14 @@
 const CAMPUS_STYLE_CONFIG = {
   // Vehicle Roads
   roadCore: '#414b69ff',          // Slightly lighter asphalt surface
-  roadOpacity: 0.98,
+  roadOpacity: 0.78,
   roadDivider: '#ffffff',       // Center dashed lane divider
   roadArrow: '#4c4c4cff',         // Directional arrowheads
 
   // Footpaths & Walkways
   footpathCore: '#c7cccf',      // Light gray brick paving surface
-  footpathOpacity: 1,
-  footpathCasing: '#626a70',    // Defined outer edge around the brick paving
+  footpathOpacity: 0.80,
+  footpathCasing: '#616161ff',    // Defined outer edge around the brick paving
   footpathCasingOpacity: 0.96,
 
   // Campus Boundary Perimeter & Outside Dimming

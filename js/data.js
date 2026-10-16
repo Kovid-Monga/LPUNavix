@@ -3150,7 +3150,7 @@ var CAMPUS_PERSONS = window.CAMPUS_PERSONS = [
     uid: "11518",
     designation: "Associate Professor",
     responsibility: "COD",
-    role: "COD",
+    role: " ",
     department_or_subject: null,
     block: "38",
     room: "507",
@@ -3361,12 +3361,12 @@ var CAMPUS_BLOCK_CONNECTIONS = window.CAMPUS_BLOCK_CONNECTIONS = [
   {
     id: "conn-28-38-37-36-33",
     blocks: ["Block 28", "Block 38", "Block 37", "Block 36", "Block 33"],
-    how: "Connected via direct continuous outdoor corridors (known as Centeral library passage) from 2nd to 6th floor."
+    how: "Connected via direct continuous indoor corridors (known as Centeral library passage) from 2nd to 6th floor."
   },
   {
     id: "conn-38-37-36",
     blocks: ["Block 38", "Block 37", "Block 36"],
-    how: "Connected via direct continuous outdoor corridors (known as Central library passage) from 2nd to 9th floor."
+    how: "Connected via direct continuous indoor corridors (known as Central library passage) from 2nd to 9th floor."
   },
   {
     id: "conn-32-33",

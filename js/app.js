@@ -5,7 +5,7 @@
 document.addEventListener("DOMContentLoaded", () => {
   console.log("🚀 Initializing LPU Map Application...");
 
-  // 1. Initialize Leaflet Campus Map
+  // 1. Initialize MapLibre Campus Map
   if (window.CampusMap) {
     window.CampusMap.init();
   }

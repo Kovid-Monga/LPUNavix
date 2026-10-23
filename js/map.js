@@ -1,5 +1,5 @@
 /**
- * LPU Map - Map Controller (Leaflet.js Engine)
+ * LPU Map - Map Controller (MapLibre GL JS Engine)
  * Manages tiles, layers, boundary polygon, custom markers, and route paths.
  * Uses exact original LPU_BOUNDARY and pre-cached static CAMPUS_ROADS_DATA.
  * Dynamically scales road/footpath strokes with zoom levels to prevent congestion.
@@ -10,16 +10,21 @@
 // ============================================================================
 const CAMPUS_STYLE_CONFIG = {
   // Vehicle Roads
-  roadCore: '#414b69ff',          // Slightly lighter asphalt surface
-  roadOpacity: 0.78,
-  roadDivider: '#ffffff',       // Center dashed lane divider
-  roadArrow: '#4c4c4cff',         // Directional arrowheads
+  roadCore: '#222d3d',           // Rich dark asphalt charcoal
+  roadOpacity: 0.95,
+  roadCasing: '#ffffff',          // Crisp clean white border
+  roadCasingOpacity: 0.65,       // High clarity white outer border
+  showRoadDivider: true,         // White dashed center line for realistic roads
+  roadDivider: '#ffffff',        // Clean white painted dashes
+  roadArrow: 'rgba(255, 255, 255, 0.9)', // Directional chevron color
 
-  // Footpaths & Walkways
-  footpathCore: '#c7cccf',      // Light gray brick paving surface
-  footpathOpacity: 0.80,
-  footpathCasing: '#616161ff',    // Defined outer edge around the brick paving
-  footpathCasingOpacity: 0.96,
+  // Footpaths & Walkways (Natural Sandstone & Architectural Paver)
+  footpathCore: '#dfd7cc',        // Elegant warm sandstone paver surface
+  footpathOpacity: 0.94,
+  footpathBrickSeam: '#37332fff',   // Dark, distinct brick joints
+  footpathBrickSeamOpacity: 0.80, // High contrast, clearly defined brick lines
+  footpathCasing: '#4a3f33',      // Dark stone curb border (stands out clearly against sandstone)
+  footpathCasingOpacity: 0.60,    // Defined outer curb border
 
   // Campus Boundary Perimeter & Outside Dimming
   boundaryLine: '#c5ffc1ff',        // Boundary line color (Green / Blue / Black)
@@ -42,183 +47,139 @@ function isPointInPolygon(point, vs) {
   return inside;
 }
 
-// ============================================================================
-// 🛠️ LEAFLET 1.9.4 & LEAFLET-ROTATE HARDWARE ACCELERATION COMPATIBILITY PATCH
-// Ensures SVG and Canvas renderers receive dynamic CSS rotation & zoom transforms simultaneously
-// ============================================================================
-if (typeof L !== 'undefined' && L.Renderer) {
-  L.Renderer.addInitHook(function () {
-    this.on('add', function () {
-      if (this._container) {
-        this._container.classList.add('leaflet-zoom-animated');
-        this._container.style.transformOrigin = '0 0';
-      }
-    });
-  });
+class MapLibreMarkerCollection {
+  constructor(map) {
+    this.map = map;
+    this.markers = new Set();
+  }
+
+  addLayer(marker) {
+    if (!marker) return this;
+    marker.addTo(this.map);
+    this.markers.add(marker);
+    return this;
+  }
+
+  removeLayer(marker) {
+    if (!marker) return this;
+    marker.remove();
+    this.markers.delete(marker);
+    return this;
+  }
+
+  clearLayers() {
+    this.markers.forEach(marker => marker.remove());
+    this.markers.clear();
+    return this;
+  }
 }
 
 class CampusMapController {
   constructor() {
     this.map = null;
     this.tileLayers = {};
-    this.currentTileLayer = null;
     this.markersLayer = null;
     this.routesLayer = null;
     this.kartsLayer = null;
-    this.roadsLayer = null;
-    this.footpathsLayer = null;
-    this.boundaryLayer = null;
-    this.outsideMaskLayer = null;
     this.userLocationMarker = null;
     this.locationWatchId = null;
     this.currentUserCoords = null;
     this.currentTheme = "light";
     this.currentLayerMode = "satellite";
+    this.defaultZoom = 15.7;
+    this.defaultPitch = 45;
+    this.defaultBearing = -15;
     this.showRoads = true;
     this.showFootpaths = true;
     this.showBoundary = true;
-    this.overlayRenderFrame = null;
     this.mapResizeObserver = null;
     this.revealedLocationIds = new Set();
     this.selectedLocationId = null;
     this.currentFilterCategory = "all";
     this.initialCenter = null;
     this.initialZoom = null;
+    this.mapReady = false;
+    this.geoJsonData = {};
   }
 
   init() {
-    // Exact original LPU Boundary bounds
-    const lpuBounds = (typeof LPU_BOUNDARY !== "undefined" && Array.isArray(LPU_BOUNDARY) && LPU_BOUNDARY.length > 0)
-      ? L.latLngBounds(LPU_BOUNDARY)
-      : L.latLngBounds([[31.2450, 75.6970], [31.2620, 75.7100]]);
-
-    // Initialize Leaflet Map: Free campus movement when zooming, locked from seeing other cities
-    this.map = L.map("map", {
-      center: CAMPUS_CENTER,
-      zoom: 15.25,
-      maxZoom: 19.5,
-      zoomSnap: 0.25,                  // Crisp fractional zooming matching web view
-      zoomDelta: 0.5,
-      wheelPxPerZoomLevel: 100,
-      inertia: true,
-      inertiaDeceleration: 3000,
-      zoomControl: false,
-      attributionControl: false,
-      rotate: true,
-      touchRotate: false,              // Disables accidental gesture rotation skewing mobile pinch-zoom
-      rotateControl: false
-    });
-
-    // Initial comfortable framing
     const isMobile = window.innerWidth <= 768;
-    this.map.fitBounds(lpuBounds.pad(isMobile ? 0.04 : 0.12), { 
-      paddingTopLeft: isMobile ? [95, 10] : [70, 70],
-      paddingBottomRight: isMobile ? [10, 85] : [70, 70]
+    this.map = new maplibregl.Map({
+      container: "map",
+      style: { version: 8, sources: {}, layers: [] },
+      center: [CAMPUS_CENTER[1], CAMPUS_CENTER[0]],
+      zoom: this.defaultZoom,
+      pitch: this.defaultPitch,
+      bearing: this.defaultBearing,
+      maxZoom: 20,
+      attributionControl: { compact: true },
+      cooperativeGestures: false,
+      renderWorldCopies: false,
+      minPitch: 0,
+      maxPitch: 85,
+      dragRotate: true,
+      touchPitch: true,
+      touchZoomRotate: true,
+      pitchWithRotate: true
     });
+    // Shift + drag and middle-button drag are used for camera rotation below.
+    this.map.boxZoom.disable();
 
-    // Store exact initial center coordinates and zoom level captured on fresh page load
-    const initialPos = this.map.getCenter();
-    this.initialCenter = [initialPos.lat, initialPos.lng];
-    this.initialZoom = this.map.getZoom();
+    this.markersLayer = new MapLibreMarkerCollection(this.map);
+    this.routesLayer = new MapLibreMarkerCollection(this.map);
+    this.kartsLayer = new MapLibreMarkerCollection(this.map);
 
-    // 1. Clean OpenStreetMap Standard Tile Layer (Guaranteed universal availability)
-    this.tileLayers.street = L.tileLayer(
-      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-      { maxZoom: 19, subdomains: "abc", attribution: "© OpenStreetMap contributors" }
-    );
-
-    // 2. Google Maps Satellite
-    this.tileLayers.satellite = L.tileLayer(
-      "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
-      { maxZoom: 20, attribution: "© Google" }
-    );
-
-    // 3. CartoDB Positron
-    this.tileLayers.carto = L.tileLayer(
-      "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
-      { maxZoom: 19, subdomains: "abcd" }
-    );
-
-    // Set default base layer (Google Maps Satellite)
-    this.setBaseLayer("satellite");
-
-    // Dedicated Navigation Route Pane with z-index 580 (strictly above roads/footpaths in overlayPane 400)
-    if (!this.map.getPane('routePane')) {
-      const rp = this.map.createPane('routePane');
-      rp.style.zIndex = '580';
-      rp.style.pointerEvents = 'none';
-    }
-
-    // Keep both network layers above other campus overlays; roads must paint above walkways.
-    if (!this.map.getPane('footpathPane')) {
-      const fp = this.map.createPane('footpathPane');
-      fp.style.zIndex = '410';
-    }
-    this.footpathRenderer = L.svg({ pane: 'footpathPane' }).addTo(this.map);
-    if (!this.map.getPane('roadPane')) {
-      const rp = this.map.createPane('roadPane');
-      rp.style.zIndex = '420';
-    }
-    this.roadRenderer = L.svg({ pane: 'roadPane' }).addTo(this.map);
-
-    // POI icons and their text labels must stay above both network panes.
-    if (!this.map.getPane('locationMarkerPane')) {
-      const lp = this.map.createPane('locationMarkerPane');
-      lp.style.zIndex = '640';
-    }
-
-    // Explicit panes also keep both networks above boundary/area overlays in overlayPane.
-    this.footpathsLayer = L.layerGroup().addTo(this.map);
-    this.roadsLayer = L.layerGroup().addTo(this.map);
-    this.routesLayer = L.layerGroup([], { pane: 'routePane' }).addTo(this.map);
-    this.markersLayer = L.layerGroup().addTo(this.map);
-    this.kartsLayer = L.layerGroup().addTo(this.map);
-
-    // Render Campus Perimeter Boundary
-    this.renderCampusBoundary();
-
-    // Start Location Tracking
-    this.startLocationTracking();
-
-    // Render Campus Road & Footpath Network from local cached dataset
-    this.renderCampusRoadNetwork();
-
-    const scheduleRoadRender = () => {
-      if (this.overlayRenderFrame !== null) return;
-      this.overlayRenderFrame = requestAnimationFrame(() => {
-        this.overlayRenderFrame = null;
+    this.map.on("load", async () => {
+      try {
+        await this.loadGeoJsonAssets();
+        this.addBaseMapSources();
+        this.addCampusMapLayers();
+        this.mapReady = true;
+        this.setBaseLayer(this.currentLayerMode);
+        this.renderCampusBoundary();
         this.renderCampusRoadNetwork();
-        if (this.boundaryLayer && this.boundaryLayer.redraw) this.boundaryLayer.redraw();
-      });
-    };
-
-    this.map.on('zoomstart', () => {
-      if (this.overlayRenderFrame !== null) {
-        cancelAnimationFrame(this.overlayRenderFrame);
-        this.overlayRenderFrame = null;
+        this.setupIntuitiveRotationHandlers();
+        this.startLocationTracking();
+        this.renderLocationMarkers();
+        if (this.pendingRoute) {
+          const pending = this.pendingRoute;
+          this.pendingRoute = null;
+          this.drawRoute(pending.path, pending.isDetour, pending.closedPathCoords, pending.options);
+        }
+        this.map.fitBounds(this.getBoundaryBounds(), {
+          padding: { top: isMobile ? 95 : 70, right: isMobile ? 10 : 70, bottom: isMobile ? 85 : 70, left: isMobile ? 95 : 70 },
+          maxZoom: this.defaultZoom,
+          pitch: this.defaultPitch,
+          bearing: this.defaultBearing,
+          duration: 0
+        });
+        // fitBounds chooses a zoom that fits the entire campus. Apply the
+        // chosen default afterward to start closer in.
+        this.map.setZoom(this.defaultZoom);
+        const initialCenter = this.map.getCenter();
+        this.initialCenter = [initialCenter.lng, initialCenter.lat];
+        this.initialZoom = this.map.getZoom();
+      } catch (error) {
+        console.error("MapLibre map setup failed:", error);
       }
     });
 
-    this.map.on('zoom', () => {
-      this.updateMarkerLabelVisibility();
-    });
-    this.map.on('zoomend', () => {
-      scheduleRoadRender();
+    this.map.on("zoom", () => this.updateMarkerLabelVisibility());
+    this.map.on("zoomend", () => {
       this.updateMarkerLabelVisibility();
       this.renderLocationMarkers(this.currentFilterCategory || "all");
     });
-    this.map.on('moveend', () => {
+    this.map.on("moveend", () => {
       this.updateMarkerLabelVisibility();
       this.renderLocationMarkers(this.currentFilterCategory || "all");
     });
-    this.map.on('rotateend', () => {
-      if (this.boundaryLayer && this.boundaryLayer.redraw) this.boundaryLayer.redraw();
+    this.map.on("rotate", () => {
+      const dial = document.querySelector("#ctrl-compass .compass-dial");
+      if (dial) dial.style.transform = `rotate(${-this.map.getBearing()}deg)`;
     });
 
     const refreshMapSize = () => {
-      if (this.map) {
-        requestAnimationFrame(() => this.map.invalidateSize({ pan: false }));
-      }
+      if (this.map) requestAnimationFrame(() => this.map.resize());
     };
     this.mapResizeObserver = new ResizeObserver(refreshMapSize);
     const mapEl = document.getElementById('map');
@@ -226,18 +187,583 @@ class CampusMapController {
     window.addEventListener('orientationchange', refreshMapSize);
     window.addEventListener('resize', refreshMapSize);
 
-    // Immediate and delayed resize invalidation to ensure map is visible instantly
-    setTimeout(() => {
-      if (this.map) this.map.invalidateSize({ pan: false });
-    }, 100);
-    setTimeout(() => {
-      if (this.map) this.map.invalidateSize({ pan: false });
-    }, 500);
-
-    // Render Campus Locations
-    this.renderLocationMarkers();
-
     return this;
+  }
+
+  getBoundaryCoordinates() {
+    if (this.geoJsonData && this.geoJsonData.boundary && Array.isArray(this.geoJsonData.boundary.features) && this.geoJsonData.boundary.features.length > 0) {
+      const feat = this.geoJsonData.boundary.features[0];
+      if (feat.geometry && feat.geometry.type === "Polygon" && Array.isArray(feat.geometry.coordinates) && feat.geometry.coordinates[0]) {
+        return feat.geometry.coordinates[0].map(([lng, lat]) => [lat, lng]);
+      }
+    }
+    if (typeof window !== "undefined" && window.LPU_BOUNDARY && Array.isArray(window.LPU_BOUNDARY) && window.LPU_BOUNDARY.length > 0) {
+      return window.LPU_BOUNDARY;
+    }
+    return (typeof LPU_BOUNDARY !== "undefined" && Array.isArray(LPU_BOUNDARY)) ? LPU_BOUNDARY : [];
+  }
+
+  getBoundaryBounds() {
+    const coords = this.getBoundaryCoordinates();
+    if (!coords.length) return [[75.697, 31.245], [75.710, 31.262]];
+    const lngs = coords.map(point => point[1]);
+    const lats = coords.map(point => point[0]);
+    return [[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]];
+  }
+
+  async loadGeoJsonAssets() {
+    const load = async (file, fallback = { type: "FeatureCollection", features: [] }) => {
+      try {
+        const response = await fetch(`geoJson/${file}`, { cache: "no-store" });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return await response.json();
+      } catch (error) {
+        console.warn(`Could not load geoJson/${file}`, error);
+        return fallback;
+      }
+    };
+
+    const emptyCollection = { type: "FeatureCollection", features: [] };
+
+    let loadedAreas = null;
+    let loadedCasings = null;
+    [
+      this.geoJsonData.roads,
+      this.geoJsonData.footpaths,
+      this.geoJsonData.boundary,
+      this.geoJsonData.campusData,
+      loadedAreas,
+      loadedCasings
+    ] = await Promise.all([
+      load("roads.geojson", emptyCollection),
+      load("footpath.geojson", emptyCollection),
+      load("boundry.geojson", emptyCollection),
+      load("campus_data.geojson", null),
+      load("footpath_areas.geojson", emptyCollection),
+      load("footpath_casings.geojson", emptyCollection)
+    ]);
+
+    this.geoJsonData.footpathAreas = (loadedAreas && Array.isArray(loadedAreas.features)) ? loadedAreas : emptyCollection;
+    this.geoJsonData.footpathCasings = (loadedCasings && Array.isArray(loadedCasings.features)) ? loadedCasings : emptyCollection;
+    this.geoJsonData.footpathLines = emptyCollection;
+
+    this.geoJsonData.footpathBricks = this.buildFootpathBrickSeams(this.geoJsonData.footpaths);
+    this.geoJsonData.roadDividers = this.buildRoadDividers(this.geoJsonData.roads);
+
+    // Convert GeoJSON roads and footpaths into window.CAMPUS_ROADS_DATA
+    const combinedRoads = [];
+    const pushFeatures = (col) => {
+      if (col && Array.isArray(col.features)) {
+        col.features.forEach(f => {
+          if (f.geometry && Array.isArray(f.geometry.coordinates) && f.geometry.coordinates.length >= 2) {
+            combinedRoads.push({
+              id: f.id !== undefined ? f.id : (f.properties && f.properties.id),
+              tags: {
+                highway: (f.properties && f.properties.highway) || "road",
+                name: (f.properties && f.properties.name) || "",
+                oneway: (f.properties && f.properties.oneway) || "",
+                junction: (f.properties && f.properties.junction) || ""
+              },
+              coords: f.geometry.coordinates.map(([lng, lat]) => [lat, lng]),
+              areaGeometry: (f.properties && f.properties.area_geometry) || null
+            });
+          }
+        });
+      }
+    };
+    pushFeatures(this.geoJsonData.roads);
+    pushFeatures(this.geoJsonData.footpaths);
+
+    if (typeof window !== "undefined") {
+      window.CAMPUS_ROADS_DATA = combinedRoads;
+      window.LPU_BOUNDARY = this.getBoundaryCoordinates();
+    }
+    if (typeof window !== "undefined" && window.Directions && window.Directions.roadGraph) {
+      window.Directions.roadGraph.buildGraphFromGeoJson(this.geoJsonData.roads, this.geoJsonData.footpaths);
+    }
+  }
+
+  buildFootpathBrickSeams(footpathCollection) {
+    const features = [];
+    if (!footpathCollection || !Array.isArray(footpathCollection.features)) {
+      return { type: "FeatureCollection", features };
+    }
+
+    const metresPerDegree = 111320;
+    const courseLength = 1.6; // 1.6m course length along the path
+    const halfWidth = 2.15;   // 2.15m half-width (stays cleanly within paver walkway, zero whiskers!)
+    const numBricksAcross = 3; // 3 bricks across the walkway in running bond
+
+    // Precalculate junction hubs across the footpath network (fuzzy clustering within 6.5m)
+    const endpoints = [];
+    footpathCollection.features.forEach((f, idx) => {
+      const c = f.geometry && f.geometry.coordinates;
+      if (!Array.isArray(c) || c.length < 2) return;
+      endpoints.push({ idx, coord: c[0] });
+      endpoints.push({ idx, coord: c[c.length - 1] });
+    });
+
+    const distM = (c1, c2, cosLat) => {
+      const dx = (c1[0] - c2[0]) * metresPerDegree * cosLat;
+      const dy = (c1[1] - c2[1]) * metresPerDegree;
+      return Math.hypot(dx, dy);
+    };
+
+    const junctionHubs = [];
+    const visited = new Set();
+    for (let i = 0; i < endpoints.length; i++) {
+      if (visited.has(i)) continue;
+      const group = [endpoints[i]];
+      visited.add(i);
+      const cosLat0 = Math.cos(endpoints[i].coord[1] * Math.PI / 180);
+      for (let j = i + 1; j < endpoints.length; j++) {
+        if (distM(endpoints[i].coord, endpoints[j].coord, cosLat0) < 6.5) {
+          group.push(endpoints[j]);
+          visited.add(j);
+        }
+      }
+      if (group.length > 1) {
+        const sum = group.reduce((acc, p) => [acc[0] + p.coord[0], acc[1] + p.coord[1]], [0, 0]);
+        junctionHubs.push([sum[0] / group.length, sum[1] / group.length]);
+      }
+    }
+
+    footpathCollection.features.forEach(feature => {
+      const coords = feature.geometry && feature.geometry.coordinates;
+      if (!Array.isArray(coords) || coords.length < 2) return;
+
+      const originLat = coords[0][1];
+      const cosLat = Math.cos(originLat * Math.PI / 180);
+      if (!Number.isFinite(cosLat) || Math.abs(cosLat) < 1e-5) return;
+
+      // Project path coordinates to local metric space
+      const pts = coords.map(([lng, lat]) => ({
+        x: (lng - coords[0][0]) * metresPerDegree * cosLat,
+        y: (lat - coords[0][1]) * metresPerDegree
+      }));
+
+      // Precalculate segment lengths and cumulative distances
+      const segLengths = [];
+      const cumLengths = [0];
+      let totalLen = 0;
+      for (let i = 0; i < pts.length - 1; i++) {
+        const dx = pts[i + 1].x - pts[i].x;
+        const dy = pts[i + 1].y - pts[i].y;
+        const len = Math.hypot(dx, dy);
+        segLengths.push(len);
+        totalLen += len;
+        cumLengths.push(totalLen);
+      }
+
+      if (totalLen < 2.0) return;
+
+      // Inset from junction endpoints so seams stop cleanly before intersection zones
+      const isStartJunction = junctionHubs.some(jh => distM(coords[0], jh, cosLat) < 6.5);
+      const isEndJunction = junctionHubs.some(jh => distM(coords[coords.length - 1], jh, cosLat) < 6.5);
+
+      const startOffset = isStartJunction ? Math.min(3.2, totalLen * 0.4) : 0.8;
+      const endOffset = isEndJunction ? totalLen - Math.min(3.2, totalLen * 0.4) : totalLen - 0.8;
+
+      if (endOffset <= startOffset + 0.8) return;
+
+      // Interpolates position and perpendicular normal at distance d along the path
+      const getStateAt = (d) => {
+        d = Math.max(0, Math.min(totalLen, d));
+        let segIdx = segLengths.length - 1;
+        for (let i = 0; i < segLengths.length; i++) {
+          if (d <= cumLengths[i + 1] || i === segLengths.length - 1) {
+            segIdx = i;
+            break;
+          }
+        }
+        const segLen = Math.max(1e-6, segLengths[segIdx]);
+        const segStartDist = cumLengths[segIdx];
+        const t = (d - segStartDist) / segLen;
+        const p1 = pts[segIdx];
+        const p2 = pts[segIdx + 1];
+
+        const x = p1.x + t * (p2.x - p1.x);
+        const y = p1.y + t * (p2.y - p1.y);
+
+        // Unit tangent and normal (perpendicular) vectors
+        const tx = (p2.x - p1.x) / segLen;
+        const ty = (p2.y - p1.y) / segLen;
+        const nx = -ty;
+        const ny = tx;
+
+        return { x, y, nx, ny };
+      };
+
+      const toLngLat = (x, y) => [
+        Number((coords[0][0] + x / (metresPerDegree * cosLat)).toFixed(7)),
+        Number((coords[0][1] + y / metresPerDegree).toFixed(7))
+      ];
+
+      let courseIndex = 0;
+      for (let d = startOffset; d <= endOffset; d += courseLength) {
+        const state = getStateAt(d);
+
+        // 1. Transverse joint: clean cross seam fanning perpendicular to curve
+        const leftX = state.x + state.nx * halfWidth;
+        const leftY = state.y + state.ny * halfWidth;
+        const rightX = state.x - state.nx * halfWidth;
+        const rightY = state.y - state.ny * halfWidth;
+
+        features.push({
+          type: "Feature",
+          properties: { type: "course" },
+          geometry: {
+            type: "LineString",
+            coordinates: [toLngLat(leftX, leftY), toLngLat(rightX, rightY)]
+          }
+        });
+
+        // 2. Longitudinal joints: running-bond stagger between courses
+        const nextD = Math.min(endOffset, d + courseLength);
+        if (nextD - d > 0.4) {
+          const nextState = getStateAt(nextD);
+          const offsetFraction = (courseIndex % 2 === 0) ? 0 : 0.5;
+
+          for (let b = 1; b < numBricksAcross; b++) {
+            const u = -halfWidth + ((b + offsetFraction) / numBricksAcross) * (2 * halfWidth);
+            if (u > -halfWidth + 0.25 && u < halfWidth - 0.25) {
+              const startX = state.x + state.nx * u;
+              const startY = state.y + state.ny * u;
+              const endX = nextState.x + nextState.nx * u;
+              const endY = nextState.y + nextState.ny * u;
+
+              features.push({
+                type: "Feature",
+                properties: { type: "head" },
+                geometry: {
+                  type: "LineString",
+                  coordinates: [toLngLat(startX, startY), toLngLat(endX, endY)]
+                }
+              });
+            }
+          }
+        }
+        courseIndex++;
+      }
+    });
+
+    return { type: "FeatureCollection", features };
+  }
+
+  buildRoadDividers(roadsCollection) {
+    const features = [];
+    if (!roadsCollection || !Array.isArray(roadsCollection.features)) {
+      return { type: "FeatureCollection", features };
+    }
+
+    const metresPerDegree = 111320;
+    const dashLength = 4.8; // 4.8m painted dash
+    const gapLength = 3.6;  // 3.6m space between dashes
+    const cycle = dashLength + gapLength;
+    const minRoadLength = 7.0;
+
+    roadsCollection.features.forEach(feature => {
+      if (!feature.geometry || feature.geometry.type !== "LineString") return;
+      const coords = feature.geometry.coordinates;
+      if (!Array.isArray(coords) || coords.length < 2) return;
+
+      const originLat = coords[0][1];
+      const cosLat = Math.cos(originLat * Math.PI / 180);
+      if (!Number.isFinite(cosLat) || Math.abs(cosLat) < 1e-5) return;
+
+      const segmentDistances = [];
+      const cumDistances = [0];
+      let totalLength = 0;
+
+      for (let i = 0; i < coords.length - 1; i++) {
+        const p1 = coords[i];
+        const p2 = coords[i + 1];
+        const dx = (p2[0] - p1[0]) * metresPerDegree * cosLat;
+        const dy = (p2[1] - p1[1]) * metresPerDegree;
+        const dist = Math.hypot(dx, dy);
+        segmentDistances.push(dist);
+        totalLength += dist;
+        cumDistances.push(totalLength);
+      }
+
+      if (totalLength < minRoadLength) return;
+
+      const getPointAt = (d) => {
+        if (d <= 0) return coords[0];
+        if (d >= totalLength) return coords[coords.length - 1];
+
+        for (let i = 0; i < segmentDistances.length; i++) {
+          const segDist = segmentDistances[i];
+          if (segDist <= 1e-6) continue;
+          const startDist = cumDistances[i];
+          const endDist = cumDistances[i + 1];
+
+          if (d >= startDist && d <= endDist) {
+            const t = (d - startDist) / segDist;
+            const p1 = coords[i];
+            const p2 = coords[i + 1];
+            return [
+              Number((p1[0] + t * (p2[0] - p1[0])).toFixed(7)),
+              Number((p1[1] + t * (p2[1] - p1[1])).toFixed(7))
+            ];
+          }
+        }
+        return coords[coords.length - 1];
+      };
+
+      const startOffset = Math.min(gapLength * 0.75, totalLength * 0.1);
+      const endOffset = totalLength - startOffset;
+
+      for (let d = startOffset; d + 1.2 < endOffset; d += cycle) {
+        const dashStart = d;
+        const dashEnd = Math.min(d + dashLength, endOffset);
+        if (dashEnd - dashStart < 1.2) break;
+
+        const dashCoords = [];
+        dashCoords.push(getPointAt(dashStart));
+
+        for (let i = 1; i < coords.length - 1; i++) {
+          const vDist = cumDistances[i];
+          if (vDist > dashStart + 0.2 && vDist < dashEnd - 0.2) {
+            dashCoords.push(coords[i]);
+          }
+        }
+
+        dashCoords.push(getPointAt(dashEnd));
+
+        features.push({
+          type: "Feature",
+          properties: { roadId: feature.id || (feature.properties && feature.properties.id) || "" },
+          geometry: { type: "LineString", coordinates: dashCoords }
+        });
+      }
+    });
+
+    return { type: "FeatureCollection", features };
+  }
+
+  addBaseMapSources() {
+    const sources = {
+      street: {
+        type: "raster", tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"], tileSize: 256,
+        attribution: "© OpenStreetMap contributors", maxzoom: 19
+      },
+      satellite: {
+        type: "raster", tiles: ["https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"], tileSize: 256,
+        attribution: "© Google", maxzoom: 20
+      },
+      carto: {
+        type: "raster", tiles: ["https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png"], tileSize: 256,
+        attribution: "© OpenStreetMap © CARTO", maxzoom: 19
+      }
+    };
+
+    Object.entries(sources).forEach(([id, source]) => {
+      this.map.addSource(`basemap-${id}`, source);
+      this.map.addLayer({
+        id: `basemap-${id}`,
+        type: "raster",
+        source: `basemap-${id}`,
+        layout: { visibility: "none" },
+        paint: { "raster-fade-duration": 0 }
+      });
+      this.tileLayers[id] = `basemap-${id}`;
+    });
+  }
+
+  addCampusMapLayers() {
+    this.map.addSource("campus-boundary", { type: "geojson", data: this.geoJsonData.boundary });
+    this.map.addSource("campus-roads", { type: "geojson", data: this.geoJsonData.roads, lineMetrics: true });
+    this.map.addSource("campus-road-dividers", { type: "geojson", data: this.geoJsonData.roadDividers });
+    this.map.addSource("campus-footpath-areas", { type: "geojson", data: this.geoJsonData.footpathAreas });
+    this.map.addSource("campus-footpath-casings", { type: "geojson", data: this.geoJsonData.footpathCasings });
+    this.map.addSource("campus-footpath-lines", { type: "geojson", data: this.geoJsonData.footpathLines, lineMetrics: true });
+    this.map.addSource("campus-footpath-bricks", { type: "geojson", data: this.geoJsonData.footpathBricks });
+
+    this.map.addLayer({ id: "campus-boundary-fill", type: "fill", source: "campus-boundary", paint: { "fill-color": "#020617", "fill-opacity": 0 } });
+    this.map.addLayer({
+      id: "campus-boundary-line", type: "line", source: "campus-boundary", layout: { "line-join": "round" }, paint: {
+        "line-color": CAMPUS_STYLE_CONFIG.boundaryLine || "#3b82f6", "line-width": 3.5, "line-opacity": CAMPUS_STYLE_CONFIG.boundaryOpacity || 0.9
+      }
+    });
+
+    this.map.addLayer({
+      id: "footpath-area-fill", type: "fill", source: "campus-footpath-areas", paint: {
+        "fill-color": CAMPUS_STYLE_CONFIG.footpathCore, "fill-opacity": CAMPUS_STYLE_CONFIG.footpathOpacity
+      }
+    });
+    this.map.addLayer({
+      id: "footpath-brick-seams", type: "line", source: "campus-footpath-bricks", minzoom: 10.5, layout: { "line-cap": "round", "line-join": "round" }, paint: {
+        "line-color": CAMPUS_STYLE_CONFIG.footpathBrickSeam,
+        "line-opacity": CAMPUS_STYLE_CONFIG.footpathBrickSeamOpacity,
+        "line-width": ["interpolate", ["linear"], ["zoom"], 16.0, 0.1, 18, 0.3, 20, 0.5]
+      }
+    });
+    this.map.addLayer({
+      id: "footpath-area-casing", type: "line", source: "campus-footpath-casings", minzoom: 10.5, layout: { "line-cap": "round", "line-join": "round" }, paint: {
+        "line-color": CAMPUS_STYLE_CONFIG.footpathCasing, "line-opacity": CAMPUS_STYLE_CONFIG.footpathCasingOpacity,
+        "line-width": 0.8
+      }
+    });
+    this.map.addLayer({
+      id: "footpath-line-casing", type: "line", source: "campus-footpath-lines", minzoom: 10.5, layout: { "line-cap": "round", "line-join": "round" }, paint: {
+        "line-color": CAMPUS_STYLE_CONFIG.footpathCasing, "line-opacity": CAMPUS_STYLE_CONFIG.footpathCasingOpacity,
+        "line-width": 1.0
+      }
+    });
+    this.map.addLayer({
+      id: "footpath-line-core", type: "line", source: "campus-footpath-lines", layout: { "line-cap": "round", "line-join": "round" }, paint: {
+        "line-color": CAMPUS_STYLE_CONFIG.footpathCore, "line-opacity": CAMPUS_STYLE_CONFIG.footpathOpacity,
+        "line-width": ["interpolate", ["linear"], ["zoom"], 13, 1.5, 15, 2.5, 17, 4.0, 19, 5.5]
+      }
+    });
+
+    // Roads are deliberately added after footpaths so vehicle routes sit on top.
+    this.map.addLayer({
+      id: "road-casing", type: "line", source: "campus-roads", layout: { "line-cap": "round", "line-join": "round" }, paint: {
+        "line-color": CAMPUS_STYLE_CONFIG.roadCasing, "line-opacity": CAMPUS_STYLE_CONFIG.roadCasingOpacity,
+        "line-width": [
+          "interpolate", ["linear"], ["zoom"],
+          13, 5.0,
+          15, 8.5,
+          17, 14.5,
+          18.5, 21.0,
+          20, 29.0
+        ]
+      }
+    });
+    this.map.addLayer({
+      id: "road-core", type: "line", source: "campus-roads", layout: { "line-cap": "round", "line-join": "round" }, paint: {
+        "line-color": CAMPUS_STYLE_CONFIG.roadCore, "line-opacity": CAMPUS_STYLE_CONFIG.roadOpacity,
+        "line-width": [
+          "interpolate", ["linear"], ["zoom"],
+          13, 3.0,
+          15, 5.8,
+          17, 11.0,
+          18.5, 16.5,
+          20, 23.5
+        ]
+      }
+    });
+
+    if (CAMPUS_STYLE_CONFIG.showRoadDivider) {
+      this.map.addLayer({
+        id: "road-divider", type: "line", source: "campus-road-dividers", minzoom: 10.5, layout: { "line-cap": "round", "line-join": "round" }, paint: {
+          "line-color": CAMPUS_STYLE_CONFIG.roadDivider, "line-opacity": 0.95,
+          "line-width": [
+            "interpolate", ["linear"], ["zoom"],
+            15, 1.0,
+            17, 1.5,
+            18.5, 2.0,
+            20, 2.6
+          ]
+        }
+      });
+    }
+
+    this.addOneWayArrowImage();
+    this.map.addLayer({
+      id: "road-oneway-arrows", type: "symbol", source: "campus-roads", minzoom: 17.5, filter: ["any", ["==", ["get", "oneway"], "yes"], ["==", ["get", "oneway"], "1"], ["==", ["get", "junction"], "roundabout"]], layout: {
+        "symbol-placement": "line", "symbol-spacing": 260, "icon-image": "lpu-oneway-arrow", "icon-size": 0.45,
+        "icon-rotation-alignment": "map", "icon-allow-overlap": false, "icon-ignore-placement": false
+      }, paint: { "icon-opacity": 0.85 }
+    });
+
+    this.addRouteLayers();
+    this.map.on("click", "road-core", event => this.showNetworkPopup(event, "Road"));
+    this.map.on("click", "footpath-area-fill", event => this.showNetworkPopup(event, "Footpath / Walkway"));
+    this.map.on("click", "footpath-line-core", event => this.showNetworkPopup(event, "Footpath / Walkway"));
+    this.map.on("mouseenter", "road-core", () => { this.map.getCanvas().style.cursor = "pointer"; });
+    this.map.on("mouseleave", "road-core", () => { this.map.getCanvas().style.cursor = ""; });
+    this.map.on("mouseenter", "footpath-area-fill", () => { this.map.getCanvas().style.cursor = "pointer"; });
+    this.map.on("mouseleave", "footpath-area-fill", () => { this.map.getCanvas().style.cursor = ""; });
+  }
+
+  addOneWayArrowImage() {
+    if (!this.map || this.map.hasImage("lpu-oneway-arrow")) return;
+    const canvas = document.createElement("canvas");
+    canvas.width = 48;
+    canvas.height = 48;
+    const context = canvas.getContext("2d");
+    // Draw a clean, modern directional chevron pointing along the road
+    context.strokeStyle = "#ffffff";
+    context.lineWidth = 4.5;
+    context.lineCap = "round";
+    context.lineJoin = "round";
+    context.beginPath();
+    context.moveTo(14, 12);
+    context.lineTo(32, 24);
+    context.lineTo(14, 36);
+    context.stroke();
+    this.map.addImage("lpu-oneway-arrow", context.getImageData(0, 0, 48, 48), { pixelRatio: 2 });
+  }
+
+  addRouteLayers() {
+    const empty = { type: "FeatureCollection", features: [] };
+    ["route-main", "route-casing", "route-rim", "route-alternate", "route-closed", "route-connectors"].forEach(id => {
+      this.map.addSource(id, { type: "geojson", data: empty, lineMetrics: true });
+    });
+    const line = (id, source, paint, minzoom = 0) => this.map.addLayer({
+      id, type: "line", source, minzoom,
+      layout: { "line-cap": "round", "line-join": "round" }, paint
+    });
+    line("route-alternate-line", "route-alternate", { "line-color": "#94a3b8", "line-width": 5, "line-opacity": 0.75, "line-dasharray": [0.1, 2.2] });
+    line("route-closed-line", "route-closed", { "line-color": "#ef4444", "line-width": 5, "line-opacity": 0.9, "line-dasharray": [2, 2.6] });
+    line("route-connector-outline", "route-connectors", { "line-color": "#334155", "line-width": 7, "line-dasharray": [0.1, 1.8] });
+    line("route-connector-dots", "route-connectors", { "line-color": "#ffffff", "line-width": 4.5, "line-dasharray": [0.1, 1.8] });
+    line("route-nav-casing", "route-casing", { "line-color": "#ffffff", "line-width": 13, "line-opacity": 0.95 });
+    line("route-preview-rim", "route-rim", { "line-color": "#123c70", "line-width": 9, "line-opacity": 0.34, "line-dasharray": [0.1, 1.8] });
+    line("route-main-preview", "route-main", { "line-color": "#1683ff", "line-width": 7.5, "line-dasharray": [0.1, 1.8] });
+    line("route-main-active", "route-main", { "line-color": "#0f172a", "line-width": 8.5 });
+    this.map.setLayoutProperty("route-main-active", "visibility", "none");
+  }
+
+  lineFeature(coords) {
+    return { type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: coords.map(([lat, lng]) => [lng, lat]) } };
+  }
+
+  setGeoJsonSource(id, features) {
+    if (!this.map || !this.mapReady) return;
+    const source = this.map.getSource(id);
+    if (source) source.setData({ type: "FeatureCollection", features });
+  }
+
+  addHtmlMarker(coords, html, wrapperClass = "", zIndex = 0) {
+    const element = document.createElement("div");
+    element.className = wrapperClass;
+    element.innerHTML = html;
+    element.style.zIndex = String(zIndex);
+    return new maplibregl.Marker({ element, anchor: "center" }).setLngLat([coords[1], coords[0]]);
+  }
+
+  getBoundsForLatLngs(points) {
+    if (!Array.isArray(points) || points.length === 0) return null;
+    const lngs = points.map(point => point[1]);
+    const lats = points.map(point => point[0]);
+    return [[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]];
+  }
+
+  expandBounds(bounds, fraction = 0.2) {
+    if (!bounds) return null;
+    const [[west, south], [east, north]] = bounds;
+    const dx = (east - west) * fraction;
+    const dy = (north - south) * fraction;
+    return [[west - dx, south - dy], [east + dx, north + dy]];
+  }
+
+  showNetworkPopup(event, title) {
+    const feature = event.features && event.features[0];
+    if (!feature) return;
+    const name = feature.properties && feature.properties.name;
+    const content = document.createElement("div");
+    const heading = document.createElement("strong");
+    heading.textContent = title;
+    content.appendChild(heading);
+    if (name) {
+      content.appendChild(document.createElement("br"));
+      content.appendChild(document.createTextNode(String(name)));
+    }
+    new maplibregl.Popup({ closeButton: true, closeOnClick: true }).setLngLat(event.lngLat).setDOMContent(content).addTo(this.map);
   }
 
   updateMarkerLabelVisibility() {
@@ -252,102 +778,24 @@ class CampusMapController {
   }
 
   setBaseLayer(layerName) {
-    if (this.currentTileLayer && this.map.hasLayer(this.currentTileLayer)) {
-      this.map.removeLayer(this.currentTileLayer);
-    }
-    const targetLayer = this.tileLayers[layerName] || this.tileLayers.satellite;
-    if (targetLayer) {
-      this.currentLayerMode = layerName;
-      this.currentTileLayer = targetLayer;
-      this.currentTileLayer.addTo(this.map);
-    }
-  }
-
-  getFootpathTextureAngle(coords) {
-    if (!Array.isArray(coords) || coords.length < 2) return 0;
-
-    let axisX = 0;
-    let axisY = 0;
-    for (let index = 1; index < coords.length; index += 1) {
-      const start = coords[index - 1];
-      const end = coords[index];
-      const meanLat = ((start[0] + end[0]) / 2) * Math.PI / 180;
-      const dx = (end[1] - start[1]) * Math.cos(meanLat);
-      const dy = -(end[0] - start[0]);
-      const length = Math.hypot(dx, dy);
-      if (length < 1e-12) continue;
-
-      const angle = Math.atan2(dy, dx);
-      axisX += length * Math.cos(2 * angle);
-      axisY += length * Math.sin(2 * angle);
-    }
-
-    return Math.atan2(axisY, axisX) * 90 / Math.PI;
-  }
-
-  ensureFootpathBrickPattern(renderer, patternId, angle, anchor) {
-    const svg = renderer && renderer._container;
-    if (!svg || typeof svg.querySelector !== 'function') return false;
-
-    const transform = `translate(${anchor.x} ${anchor.y}) rotate(${angle})`;
-    const existingPattern = svg.querySelector(`#${patternId}`);
-    if (existingPattern) {
-      existingPattern.setAttribute('patternTransform', transform);
-      return true;
-    }
-
-    const svgNs = 'http://www.w3.org/2000/svg';
-    let defs = svg.querySelector('defs');
-    if (!defs) {
-      defs = document.createElementNS(svgNs, 'defs');
-      svg.insertBefore(defs, svg.firstChild);
-    }
-
-    const pattern = document.createElementNS(svgNs, 'pattern');
-    pattern.setAttribute('id', patternId);
-    pattern.setAttribute('patternUnits', 'userSpaceOnUse');
-    pattern.setAttribute('width', '72');
-    pattern.setAttribute('height', '72');
-    pattern.setAttribute('patternTransform', transform);
-
-    const textureImage = document.createElementNS(svgNs, 'image');
-    textureImage.setAttribute('href', 'assets/footpath-gray-brick-light.png');
-    textureImage.setAttribute('x', '0');
-    textureImage.setAttribute('y', '0');
-    textureImage.setAttribute('width', '72');
-    textureImage.setAttribute('height', '72');
-    textureImage.setAttribute('preserveAspectRatio', 'none');
-    pattern.appendChild(textureImage);
-    defs.appendChild(pattern);
-    return true;
+    const selected = this.tileLayers[layerName] ? layerName : "satellite";
+    this.currentLayerMode = selected;
+    if (!this.map || !this.mapReady) return;
+    Object.entries(this.tileLayers).forEach(([name, layerId]) => {
+      if (this.map.getLayer(layerId)) this.map.setLayoutProperty(layerId, "visibility", name === selected ? "visible" : "none");
+    });
   }
 
   renderCampusBoundary() {
-    if (typeof LPU_BOUNDARY !== "undefined" && Array.isArray(LPU_BOUNDARY) && LPU_BOUNDARY.length > 0) {
-      if (this.boundaryLayer && this.map.hasLayer(this.boundaryLayer)) {
-        this.map.removeLayer(this.boundaryLayer);
-      }
-      if (this.outsideMaskLayer && this.map.hasLayer(this.outsideMaskLayer)) {
-        this.map.removeLayer(this.outsideMaskLayer);
-      }
-
-      // Solid Perimeter Boundary Line
-      if (this.showBoundary) {
-        this.boundaryLayer = L.polygon(LPU_BOUNDARY, {
-          className: "lpu-boundary-perimeter",
-          color: CAMPUS_STYLE_CONFIG.boundaryLine || "#3b82f6",
-          weight: 3.5,
-          opacity: 0.9,
-          fillColor: "#3b82f6",
-          fillOpacity: 0.02
-        }).addTo(this.map);
-      }
-    }
+    if (!this.map || !this.mapReady) return;
+    ["campus-boundary-line", "campus-boundary-fill"].forEach(id => {
+      if (this.map.getLayer(id)) this.map.setLayoutProperty(id, "visibility", this.showBoundary ? "visible" : "none");
+    });
   }
 
   renderUserLocation(coords) {
     if (this.userLocationMarker) {
-      this.userLocationMarker.setLatLng(coords);
+      this.userLocationMarker.setLngLat([coords[1], coords[0]]);
       return;
     }
 
@@ -358,14 +806,8 @@ class CampusMapController {
       </div>
     `;
 
-    const userIcon = L.divIcon({
-      className: "user-loc-div-icon",
-      html: iconHtml,
-      iconSize: [24, 24],
-      iconAnchor: [12, 12]
-    });
-
-    this.userLocationMarker = L.marker(coords, { icon: userIcon, zIndexOffset: 2000 }).addTo(this.map);
+    this.userLocationMarker = this.addHtmlMarker(coords, iconHtml, "user-loc-div-icon", 2000);
+    this.userLocationMarker.addTo(this.map);
   }
 
   startLocationTracking() {
@@ -407,231 +849,12 @@ class CampusMapController {
   }
 
   renderCampusRoadNetwork() {
-    if (!this.roadsLayer || !this.footpathsLayer) return;
-    this.roadsLayer.clearLayers();
-    this.footpathsLayer.clearLayers();
-
-    const roadList = (typeof CAMPUS_ROADS_DATA !== "undefined" && Array.isArray(CAMPUS_ROADS_DATA) && CAMPUS_ROADS_DATA.length > 0)
-      ? CAMPUS_ROADS_DATA
-      : (typeof LPU_ROAD_NETWORK !== "undefined" && Array.isArray(LPU_ROAD_NETWORK))
-        ? LPU_ROAD_NETWORK.map(way => ({
-            id: way.id,
-            tags: { highway: way.highway, name: way.name || "", oneway: way.oneway || "", junction: way.junction || "" },
-            coords: way.geometry,
-            areaGeometry: way.area_geometry || null
-          }))
-        : [];
-
-    if (roadList.length === 0) {
-      return;
-    }
-
-    const zoom = this.map ? this.map.getZoom() : 16;
-    const isFootpath = (hw) => hw === 'footway' || hw === 'path' || hw === 'steps' || hw === 'pedestrian' || hw === 'track' || hw === 'cycleway';
-
-    // DYNAMIC ZOOM-DEPENDENT STROKE WEIGHTS (prevents congestion when zooming out)
-    let roadCoreWeight, dividerWeight, footpathCasingWeight, footpathCoreWeight;
-    let showDividers = false;
-    let showArrows = false;
-
-    if (zoom >= 18) {
-      roadCoreWeight = 15;
-      dividerWeight = 2.2;
-      footpathCasingWeight = 8;
-      footpathCoreWeight = 5.5;
-      showDividers = true;
-      showArrows = true;
-    } else if (zoom >= 17) {
-      roadCoreWeight = 11;
-      dividerWeight = 1.8;
-      footpathCasingWeight = 6.5;
-      footpathCoreWeight = 4.5;
-      showDividers = true;
-      showArrows = true;
-    } else if (zoom >= 16) {
-      roadCoreWeight = 6;
-      dividerWeight = 1;
-      footpathCasingWeight = 4.8;
-      footpathCoreWeight = 3.2;
-      showDividers = true;
-      showArrows = false;
-    } else {
-      // Zoom <= 15: keep the network legible in the campus overview.
-      roadCoreWeight = 4.2;
-      dividerWeight = 1;
-      footpathCasingWeight = 4.8;
-      footpathCoreWeight = 3.2;
-      showDividers = zoom >= 14;
-      showArrows = false;
-    }
-
-    const footpathAreas = [];
-    roadList.forEach(way => {
-      const highway = (way.tags && way.tags.highway) || 'road';
-      const coords = way.coords;
-
-      if (!coords || coords.length < 2) return;
-
-      if (isFootpath(highway)) {
-        // ====================================================================
-        // FOOTPATH: render its estimated mapped surface area; preserve line fallback for older data.
-        // ====================================================================
-        if (!this.showFootpaths) return;
-
-        const areaGeometry = way.areaGeometry || way.area_geometry;
-        if (Array.isArray(areaGeometry) && areaGeometry.length >= 4) {
-          footpathAreas.push({ way, areaGeometry, coords });
-          return;
-        }
-
-        // Both layers use identical, unsimplified geometry so their edges stay aligned.
-        L.polyline(coords, {
-          color: CAMPUS_STYLE_CONFIG.footpathCasing,
-          weight: footpathCasingWeight,
-          opacity: CAMPUS_STYLE_CONFIG.footpathCasingOpacity,
-          lineCap: 'round',
-          lineJoin: 'round',
-          smoothFactor: 0,
-          pane: 'footpathPane',
-          renderer: this.footpathRenderer
-        }).addTo(this.footpathsLayer);
-
-        // Terracotta orange path core
-        L.polyline(coords, {
-          color: CAMPUS_STYLE_CONFIG.footpathCore,
-          weight: footpathCoreWeight,
-          opacity: CAMPUS_STYLE_CONFIG.footpathOpacity,
-          lineCap: 'round',
-          lineJoin: 'round',
-          smoothFactor: 0,
-          pane: 'footpathPane',
-          renderer: this.footpathRenderer
-        }).bindPopup(`<b>Footpath / Walkway</b>`).addTo(this.footpathsLayer);
-
-      } else {
-        // ====================================================================
-        // VEHICLE ROAD: wide asphalt surface + center line + arrows
-        // ====================================================================
-        if (!this.showRoads) return;
-
-        if (zoom >= 16) {
-          // Draw the asphalt directly; no contrasting outer casing.
-          const roadLine = L.polyline(coords, {
-            color: CAMPUS_STYLE_CONFIG.roadCore,
-            weight: roadCoreWeight,
-            opacity: CAMPUS_STYLE_CONFIG.roadOpacity,
-            lineCap: 'round',
-            lineJoin: 'round',
-            smoothFactor: 0,
-            pane: 'roadPane',
-            renderer: this.roadRenderer
-          }).bindPopup(`<b>Road:</b> ${way.tags?.name || highway}`).addTo(this.roadsLayer);
-
-          // 3. Dashed White Center Lane Divider
-          if (showDividers) {
-            L.polyline(coords, {
-              color: CAMPUS_STYLE_CONFIG.roadDivider,
-              weight: dividerWeight,
-              dashArray: '5, 8',
-              opacity: 0.9,
-              lineCap: 'butt',
-              smoothFactor: 0,
-              pane: 'roadPane',
-              renderer: this.roadRenderer
-            }).addTo(this.roadsLayer);
-          }
-
-          // 4. White Direction Arrows on Oneway Roads
-          const isOneWay = way.tags && (way.tags.oneway === 'yes' || way.tags.oneway === '1' || way.tags.junction === 'roundabout');
-          if (showArrows && isOneWay && typeof L.polylineDecorator !== 'undefined') {
-            try {
-              L.polylineDecorator(roadLine, {
-                pane: 'roadPane',
-                patterns: [
-                  {
-                    offset: 35,
-                    repeat: 120,
-                    symbol: L.Symbol.arrowHead({
-                    pixelSize: 7,
-                    polygon: false,
-                    pathOptions: {
-                      stroke: true,
-                      color: CAMPUS_STYLE_CONFIG.roadArrow,
-                      weight: 1.6,
-                      opacity: 0.95
-                    }
-                  })
-                }
-              ]
-            }).addTo(this.roadsLayer);
-          } catch (e) {
-            // fallback gracefully
-          }
-        }
-      } else {
-        // Zoomed-out overview: keep roads and lane dashes visible together.
-        L.polyline(coords, {
-          color: CAMPUS_STYLE_CONFIG.roadCore,
-          weight: roadCoreWeight,
-          opacity: CAMPUS_STYLE_CONFIG.roadOpacity,
-          smoothFactor: 0,
-          pane: 'roadPane',
-          renderer: this.roadRenderer
-        }).bindPopup(`<b>Road:</b> ${way.tags?.name || highway}`).addTo(this.roadsLayer);
-
-        if (showDividers) {
-          L.polyline(coords, {
-            color: CAMPUS_STYLE_CONFIG.roadDivider,
-            weight: dividerWeight,
-            dashArray: '4, 7',
-            opacity: 0.9,
-            lineCap: 'butt',
-            smoothFactor: 0,
-            pane: 'roadPane',
-            renderer: this.roadRenderer
-          }).addTo(this.roadsLayer);
-        }
-      }
-    }
+    if (!this.map || !this.mapReady) return;
+    ["road-casing", "road-core", "road-divider", "road-oneway-arrows"].forEach(id => {
+      if (this.map.getLayer(id)) this.map.setLayoutProperty(id, "visibility", this.showRoads ? "visible" : "none");
     });
-
-    this.renderFootpathAreas(footpathAreas);
-  }
-
-  renderFootpathAreas(footpathAreas) {
-    if (!Array.isArray(footpathAreas) || footpathAreas.length === 0) return;
-
-    // Put every outline down first. The textured fills drawn afterward cover
-    // internal borders wherever paths overlap, leaving a cleaner junction.
-    footpathAreas.forEach(({ areaGeometry }) => {
-      L.polygon(areaGeometry, {
-        color: CAMPUS_STYLE_CONFIG.footpathCasing,
-        weight: 2.5,
-        opacity: CAMPUS_STYLE_CONFIG.footpathCasingOpacity,
-        fill: false,
-        interactive: false,
-        lineJoin: 'round',
-        smoothFactor: 0,
-        pane: 'footpathPane',
-        renderer: this.footpathRenderer
-      }).addTo(this.footpathsLayer);
-    });
-
-    footpathAreas.forEach(({ way, areaGeometry, coords }) => {
-      const walkwayArea = L.polygon(areaGeometry, {
-        stroke: false,
-        fillColor: CAMPUS_STYLE_CONFIG.footpathCore,
-        fillOpacity: CAMPUS_STYLE_CONFIG.footpathOpacity,
-        smoothFactor: 0,
-        pane: 'footpathPane',
-        renderer: this.footpathRenderer
-      }).bindPopup(`<b>Footpath / Walkway</b>`).addTo(this.footpathsLayer);
-      const patternId = `lpu-footpath-gray-brick-${way.id}`;
-      const textureAngle = this.getFootpathTextureAngle(coords);
-      const textureAnchor = this.map.latLngToLayerPoint(coords[0]);
-      if (this.ensureFootpathBrickPattern(walkwayArea._renderer, patternId, textureAngle, textureAnchor)) {
-        walkwayArea.setStyle({ fillColor: `url(#${patternId})` });
-      }
+    ["footpath-area-casing", "footpath-area-fill", "footpath-brick-seams", "footpath-line-casing", "footpath-line-core"].forEach(id => {
+      if (this.map.getLayer(id)) this.map.setLayoutProperty(id, "visibility", this.showFootpaths ? "visible" : "none");
     });
   }
 
@@ -735,7 +958,8 @@ class CampusMapController {
       }
 
       // Convert geographic coords to container pixel coordinates
-      const pt = this.map.latLngToContainerPoint(item.latLng);
+      const projected = this.map.project([item.latLng[1], item.latLng[0]]);
+      const pt = { x: projected.x, y: projected.y };
       item.containerPoint = pt;
 
       // Group cluster markers always show their full pill
@@ -782,7 +1006,7 @@ class CampusMapController {
       let collides = false;
       for (const pb of placedBoxes) {
         if (testBox.x1 < pb.x2 && testBox.x2 > pb.x1 &&
-            testBox.y1 < pb.y2 && testBox.y2 > pb.y1) {
+          testBox.y1 < pb.y2 && testBox.y2 > pb.y1) {
           collides = true;
           break;
         }
@@ -808,12 +1032,31 @@ class CampusMapController {
   }
 
   renderLocationMarkers(filterCategory = "all") {
-    if (!this.markersLayer) return;
+    if (!this.markersLayer || !this.mapReady) return;
     this.markersLayer.clearLayers();
     this.currentFilterCategory = filterCategory;
 
     const allLocations = (typeof getAllCampusLocations === "function") ? getAllCampusLocations() : (window.CAMPUS_LOCATIONS || []);
     if (!Array.isArray(allLocations) || allLocations.length === 0) return;
+
+    // If campus_data.geojson was loaded, sync any coordinates from it
+    if (this.geoJsonData && this.geoJsonData.campusData && Array.isArray(this.geoJsonData.campusData.features)) {
+      const geoCoordsMap = new Map();
+      this.geoJsonData.campusData.features.forEach(f => {
+        const id = f.id || (f.properties && f.properties.id);
+        const geom = f.geometry;
+        if (id && geom && geom.coordinates && geom.coordinates.length >= 2) {
+          geoCoordsMap.set(id, [geom.coordinates[1], geom.coordinates[0]]); // [lat, lng]
+        }
+      });
+      allLocations.forEach(loc => {
+        if (loc && loc.id && geoCoordsMap.has(loc.id)) {
+          const [glat, glng] = geoCoordsMap.get(loc.id);
+          loc.lat = glat;
+          loc.lng = glng;
+        }
+      });
+    }
 
     let currentZoom = 15.25;
     let bounds = null;
@@ -822,12 +1065,13 @@ class CampusMapController {
         currentZoom = this.map.getZoom();
         bounds = this.map.getBounds();
       }
-    } catch (e) {}
+    } catch (e) { }
 
     // Filter locations strictly within LPU campus boundary
+    const boundaryCoords = this.getBoundaryCoordinates();
     const lpuOnly = allLocations.filter(loc => {
       if (!loc || typeof loc.lat !== "number" || typeof loc.lng !== "number") return false;
-      const isInCampus = isPointInPolygon([loc.lat, loc.lng], LPU_BOUNDARY);
+      const isInCampus = boundaryCoords.length ? isPointInPolygon([loc.lat, loc.lng], boundaryCoords) : true;
       const isRevealed = this.revealedLocationIds.has(loc.id) || this.selectedLocationId === loc.id;
       let isVisibleAtZoom = true;
       if (loc.visibleFromZoom) {
@@ -858,8 +1102,8 @@ class CampusMapController {
     // CSE Blocks + immediate adjacent high-density buildings: Central Library & Shanti Devi Mittal Auditorium
     const isCentralZoneMember = (loc) => {
       return (loc.groupId === "cse-dept" && !loc.visibleFromZoom) ||
-             loc.id === "central-library" ||
-             loc.id === "shanti-devi-mittal-auditorium";
+        loc.id === "central-library" ||
+        loc.id === "shanti-devi-mittal-auditorium";
     };
 
     // Residential Zone cluster members (BH Hostels, BS Studios, Apartments)
@@ -899,7 +1143,7 @@ class CampusMapController {
           const southBlocks = unrevealedCse.filter(l => !["block-25", "block-26", "block-27", "block-28"].includes(l.id));
 
           if (northBlocks.length > 0) {
-            const nBounds = L.latLngBounds(northBlocks.map(l => [l.lat, l.lng]));
+            const nBounds = this.getBoundsForLatLngs(northBlocks.map(l => [l.lat, l.lng]));
             itemsToRender.push({
               isCluster: true,
               groupId: "cse-dept-north",
@@ -915,7 +1159,7 @@ class CampusMapController {
           }
 
           if (southBlocks.length > 0) {
-            const sBounds = L.latLngBounds(southBlocks.map(l => [l.lat, l.lng]));
+            const sBounds = this.getBoundsForLatLngs(southBlocks.map(l => [l.lat, l.lng]));
             itemsToRender.push({
               isCluster: true,
               groupId: "cse-dept-south",
@@ -931,7 +1175,7 @@ class CampusMapController {
           }
         } else {
           // Far or broad medium zoom: single clean CSE Blocks cluster badge encompassing CSE, Library & Auditorium
-          const cseBounds = L.latLngBounds(unrevealedCse.map(l => [l.lat, l.lng]));
+          const cseBounds = this.getBoundsForLatLngs(unrevealedCse.map(l => [l.lat, l.lng]));
           itemsToRender.push({
             isCluster: true,
             groupId: "cse-dept",
@@ -983,7 +1227,7 @@ class CampusMapController {
       });
 
       if (unrevealedRes.length > 0) {
-        const resBounds = L.latLngBounds(unrevealedRes.map(l => [l.lat, l.lng]));
+        const resBounds = this.getBoundsForLatLngs(unrevealedRes.map(l => [l.lat, l.lng]));
         itemsToRender.push({
           isCluster: true,
           groupId: "residential-area",
@@ -1046,7 +1290,7 @@ class CampusMapController {
     // Run Screen-Space Collision Resolution
     const resolvedItems = this.resolveLabelCollisions(itemsToRender);
 
-    // Create Leaflet Markers
+    // Keep the existing location marker styles and zoom/cluster behavior as DOM markers.
     resolvedItems.forEach(item => {
       if (item.isCluster) {
         // Render Group Cluster Marker
@@ -1062,29 +1306,13 @@ class CampusMapController {
           </div>
         `;
 
-        const clusterIcon = L.divIcon({
-          className: "campus-pin-wrapper",
-          html: clusterHtml,
-          iconSize: [120, 30],
-          iconAnchor: [60, 15]
-        });
-
-        const clusterMarker = L.marker(item.latLng, {
-          icon: clusterIcon,
-          pane: 'locationMarkerPane'
-        });
-
-        clusterMarker.on("click", (e) => {
-          if (e && e.originalEvent) L.DomEvent.stopPropagation(e.originalEvent);
+        const clusterMarker = this.addHtmlMarker(item.latLng, clusterHtml, "campus-pin-wrapper", 1000);
+        clusterMarker.getElement().addEventListener("click", (e) => {
+          e.stopPropagation();
           if (item.bounds) {
-            this.map.flyToBounds(item.bounds.pad(0.22), {
-              maxZoom: 17.5,
-              duration: 0.85
-            });
+            this.map.fitBounds(this.expandBounds(item.bounds, 0.22), { maxZoom: 17.5, duration: 850, padding: 60 });
           } else if (item.latLng) {
-            this.map.flyTo(item.latLng, 17.5, {
-              duration: 0.85
-            });
+            this.map.flyTo({ center: [item.latLng[1], item.latLng[0]], zoom: 17.5, duration: 850 });
           }
         });
 
@@ -1110,21 +1338,9 @@ class CampusMapController {
           </div>
         `;
 
-        const pinIcon = L.divIcon({
-          className: "campus-pin-wrapper",
-          html: customHtml,
-          iconSize: [26, 26],
-          iconAnchor: [13, 13]
-        });
-
-        const marker = L.marker([loc.lat, loc.lng], {
-          icon: pinIcon,
-          pane: 'locationMarkerPane',
-          zIndexOffset: isSelected || isRevealed ? 1000 : 0
-        });
-
-        marker.on("click", (e) => {
-          if (e && e.originalEvent) L.DomEvent.stopPropagation(e.originalEvent);
+        const marker = this.addHtmlMarker([loc.lat, loc.lng], customHtml, "campus-pin-wrapper", isSelected || isRevealed ? 1000 : 0);
+        marker.getElement().addEventListener("click", (e) => {
+          e.stopPropagation();
           this.selectedLocationId = loc.id;
           this.renderLocationMarkers(this.currentFilterCategory || "all");
           if (window.UIController) {
@@ -1152,297 +1368,81 @@ class CampusMapController {
   }
 
   drawRoute(pathCoords, isDetour = false, closedPathCoords = null, options = {}) {
+    if (!this.mapReady) {
+      this.pendingRoute = { path: pathCoords, isDetour, closedPathCoords, options };
+      return;
+    }
     this.routesLayer.clearLayers();
-
     if (!Array.isArray(pathCoords) || pathCoords.length < 2) return;
-
-    // Filter valid coordinates
-    const validPath = pathCoords.filter(pt => Array.isArray(pt) && pt.length >= 2 && typeof pt[0] === 'number' && typeof pt[1] === 'number');
+    const validPath = pathCoords.filter(pt => Array.isArray(pt) && pt.length >= 2 && typeof pt[0] === "number" && typeof pt[1] === "number");
     if (validPath.length < 2) return;
 
     this.currentRouteData = { pathCoords: validPath, isDetour, closedPathCoords, options };
-
-    const mode = options.mode || (window.Directions ? window.Directions.currentMode : 'walking');
-    const originName = options.originName || (window.Directions ? window.Directions.currentOrigin : 'Start Location');
-    const destName = options.destName || (window.Directions ? window.Directions.currentDestination : 'Destination');
-    const skipFitBounds = options.skipFitBounds === true;
-
-    // Dynamic mode styling colors
-    let dotColor = "#1717ecff"; // Walking: electric blue
-    let glowColor = "#432399ff";
-    if (mode === "bicycle") {
-      dotColor = "#059669"; // Bicycle: emerald
-      glowColor = "#10b981";
-    } else if (mode === "kart") {
-      dotColor = "#d97706"; // Kart: amber / gold
-      glowColor = "#f59e0b";
-    }
-
-    // 1. Closed / Construction / Detour Path (if detour mode)
-    if (closedPathCoords && closedPathCoords.length > 0) {
-      const validClosed = closedPathCoords.filter(pt => Array.isArray(pt) && pt.length >= 2);
-      if (validClosed.length >= 2) {
-        L.polyline(validClosed, {
-          className: "route-closed-line",
-          color: "#ef4444",
-          weight: 5,
-          opacity: 0.85,
-          dashArray: "6, 8",
-          lineCap: "round"
-        }).addTo(this.routesLayer);
-      }
-    }
-
-    // Determine effective road polyline coordinates
-    const roadCoords = (options.roadPath && Array.isArray(options.roadPath) && options.roadPath.length >= 2)
-      ? options.roadPath.filter(pt => Array.isArray(pt) && pt.length >= 2)
-      : validPath;
-
+    const mode = options.mode || (window.Directions ? window.Directions.currentMode : "walking");
+    const originName = options.originName || (window.Directions ? window.Directions.currentOrigin : "Start Location");
+    const destName = options.destName || (window.Directions ? window.Directions.currentDestination : "Destination");
     const isNavigating = options.isNavigating === true;
-    const ROUTE_ACCENT_COLOR = '#f97316'; // Brand accent orange preserved for compatibility & kart mode
+    const roadCoords = options.roadPath && options.roadPath.length >= 2 ? options.roadPath : validPath;
+    const mainLineColor = "#0f172a";
+    const color = isNavigating ? mainLineColor : (mode === "walking" ? "#1683ff" : "#f97316");
+    // Leaflet compatibility note: dashArray: mainLineDashArray
 
-    // In active navigation: solid bold dark line highlighted like normal Google Maps
-    // In preview mode: dotted format with circular beads
-    let mainLineColor;
-    let mainLineWeight;
-    let mainLineDashArray;
+    this.setGeoJsonSource("route-main", [this.lineFeature(roadCoords)]);
+    this.setGeoJsonSource("route-casing", isNavigating ? [this.lineFeature(roadCoords)] : []);
+    this.setGeoJsonSource("route-rim", isNavigating ? [] : [this.lineFeature(roadCoords)]);
+    this.map.setPaintProperty("route-main-preview", "line-color", color);
+    this.map.setLayoutProperty("route-main-preview", "visibility", isNavigating ? "none" : "visible");
+    this.map.setLayoutProperty("route-main-active", "visibility", isNavigating ? "visible" : "none");
+    this.map.setPaintProperty("route-preview-rim", "line-color", mode === "walking" ? "#123c70" : "#713b08");
 
-    if (isNavigating) {
-      // Normal Google Maps style dark active navigation line
-      mainLineColor = "#0f172a"; // Deep high-contrast dark slate
-      mainLineWeight = 8.5;
-      mainLineDashArray = null; // Solid
-    } else {
-      // Dotted format for route preview
-      mainLineColor = (mode === "walking") ? "#1683ff" : "#ff8a00";
-      mainLineWeight = 7.5;
-      mainLineDashArray = "0.1, 13"; // Round dotted beads
-    }
+    const closed = Array.isArray(closedPathCoords) ? closedPathCoords.filter(pt => Array.isArray(pt) && pt.length >= 2) : [];
+    this.setGeoJsonSource("route-closed", closed.length >= 2 ? [this.lineFeature(closed)] : []);
+    const alt = !isNavigating && options.alternateRoute && Array.isArray(options.alternateRoute.path)
+      ? options.alternateRoute.path.filter(pt => Array.isArray(pt) && pt.length >= 2)
+      : [];
+    this.setGeoJsonSource("route-alternate", alt.length >= 2 ? [this.lineFeature(alt)] : []);
+    const connectors = Array.isArray(options.connectors) ? options.connectors.filter(line => Array.isArray(line) && line.length >= 2).map(line => this.lineFeature(line)) : [];
+    this.setGeoJsonSource("route-connectors", connectors);
 
-    // Optional alternate route in preview if kart & walk differ
-    if (!isNavigating && options.alternateRoute && Array.isArray(options.alternateRoute.path) && options.alternateRoute.path.length >= 2) {
-      const altCoords = options.alternateRoute.path.filter(pt => Array.isArray(pt) && pt.length >= 2);
-      if (altCoords.length >= 2) {
-        L.polyline(altCoords, {
-          pane: 'routePane',
-          className: "route-alternate-dotted-path",
-          color: "#94a3b8",
-          weight: 5,
-          opacity: 0.75,
-          dashArray: "0.1, 13",
-          lineCap: "round",
-          lineJoin: "round"
-        }).addTo(this.routesLayer);
-      }
-    }
-
-    // Keep a casing for solid active navigation only. A continuous white casing
-    // beneath dotted previews makes the route look like dots on a white strip.
-    if (isNavigating) {
-      L.polyline(roadCoords, {
-        pane: 'routePane',
-        className: "route-casing-path",
-        color: "#ffffff",
-        weight: 13,
-        opacity: 0.95,
-        lineCap: "round",
-        lineJoin: "round"
-      }).addTo(this.routesLayer);
-    } else {
-      // A faint dotted rim adds definition without creating a solid strip.
-      L.polyline(roadCoords, {
-        pane: 'routePane',
-        className: "route-preview-dot-rim",
-        color: mode === "walking" ? "#123c70" : "#713b08",
-        weight: 9,
-        opacity: 0.34,
-        dashArray: "0.1, 13",
-        lineCap: "round",
-        lineJoin: "round"
-      }).addTo(this.routesLayer);
-    }
-
-    // 3. Main Route Path: Dark Highlight when navigating, Dotted when previewing
-    const routeMainLine = L.polyline(roadCoords, {
-      pane: 'routePane',
-      className: isNavigating
-        ? "route-highlight-path route-dark-nav-path"
-        : `route-highlight-path route-dotted-preview-path ${mode === "walking" ? "route-preview-walking" : "route-preview-vehicle"}`,
-      color: mainLineColor,
-      weight: mainLineWeight,
-      opacity: 1.0,
-      dashArray: mainLineDashArray,
-      lineCap: "round",
-      lineJoin: "round"
-    }).addTo(this.routesLayer);
-
-    // 3a. On-Route Floating ETA Badge (Preview Mode showing both Walk & Kart with distances)
     if (!isNavigating && roadCoords.length >= 2) {
-      const midIdx = Math.floor(roadCoords.length * 0.45);
-      const midCoord = roadCoords[midIdx];
-      const walkDur = options.walkDuration || options.duration || "16 min";
-      const walkDist = options.walkDistance || options.distance || "1.1 km";
-      const kartDur = options.kartDuration || "5 min";
-      const kartDist = options.kartDistance || options.distance || "1.2 km";
-
-      const etaPillHtml = `
-        <div class="map-route-floating-badge">
-          <div class="floating-badge-item ${mode === 'walking' ? 'active-item' : ''}">
-            <span class="badge-icon">🚶</span>
-            <span class="badge-time">${walkDur}</span>
-            <span class="badge-dist">(${walkDist})</span>
-          </div>
-          <span class="badge-divider">|</span>
-          <div class="floating-badge-item ${mode === 'drive' || mode === 'kart' ? 'active-item' : ''}">
-            <span class="badge-icon">🛺</span>
-            <span class="badge-time">${kartDur}</span>
-            <span class="badge-dist">(${kartDist})</span>
-          </div>
-        </div>
-      `;
-      const etaPillIcon = L.divIcon({
-        className: "route-eta-pill-badge-wrap",
-        html: etaPillHtml,
-        iconSize: [0, 0],
-        iconAnchor: [80, 18]
-      });
-      L.marker(midCoord, { icon: etaPillIcon, zIndexOffset: 2950 }).addTo(this.routesLayer);
+      const midCoord = roadCoords[Math.floor(roadCoords.length * 0.45)];
+      const etaHtml = `<div class="map-route-floating-badge"><div class="floating-badge-item ${mode === "walking" ? "active-item" : ""}"><span class="badge-icon">🚶</span><span class="badge-time">${options.walkDuration || options.duration || "16 min"}</span><span class="badge-dist">(${options.walkDistance || options.distance || "1.1 km"})</span></div><span class="badge-divider">|</span><div class="floating-badge-item ${mode === "drive" || mode === "kart" ? "active-item" : ""}"><span class="badge-icon">🛺</span><span class="badge-time">${options.kartDuration || "5 min"}</span><span class="badge-dist">(${options.kartDistance || options.distance || "1.2 km"})</span></div></div>`;
+      this.routesLayer.addLayer(this.addHtmlMarker(midCoord, etaHtml, "route-eta-pill-badge-wrap", 2950));
     }
 
-    // 3b. Off-road Floating Circular Dots Connectors (Origin, Stops, Destination)
-    if (options.connectors && Array.isArray(options.connectors)) {
-      options.connectors.forEach(conn => {
-        if (Array.isArray(conn) && conn.length >= 2) {
-          // Layer 1: Dark subtle outline bead dots
-          L.polyline(conn, {
-            pane: 'routePane',
-            className: 'route-connector-outline',
-            color: '#334155',
-            weight: 7,
-            dashArray: '0.1, 13',
-            lineCap: 'round',
-            lineJoin: 'round'
-          }).addTo(this.routesLayer);
-
-          // Layer 2: White circular bead dots
-          L.polyline(conn, {
-            pane: 'routePane',
-            className: 'route-connector-dots',
-            color: '#ffffff',
-            weight: 4.5,
-            dashArray: '0.1, 13',
-            lineCap: 'round',
-            lineJoin: 'round'
-          }).addTo(this.routesLayer);
-        }
-      });
-    }
-
-    // 3c. Road Transition Junction Markers (White disc with dark border)
-    if (options.junctions && Array.isArray(options.junctions)) {
-      options.junctions.forEach(junc => {
-        if (Array.isArray(junc) && junc.length >= 2) {
-          const juncIcon = L.divIcon({
-            className: 'route-junction-icon',
-            html: '<div class="route-junction-dot"></div>',
-            iconSize: [0, 0],
-            iconAnchor: [7, 7]
-          });
-          L.marker(junc, { icon: juncIcon, zIndexOffset: 2600 }).addTo(this.routesLayer);
-        }
-      });
-    }
-
-    // 4. Origin Marker (Hollow Orange/White Disc with Labeled Pill Badge to the right)
-    const startCoords = validPath[0];
-    const startIconHtml = `
-      <div class="map-route-marker start-route-marker">
-        <div class="origin-ring-dot"></div>
-        <div class="route-marker-pill origin-pill">${originName}</div>
-      </div>
-    `;
-    const startIcon = L.divIcon({
-      className: "map-route-marker-icon",
-      html: startIconHtml,
-      iconSize: [0, 0],
-      iconAnchor: [9, 9]
-    });
-    L.marker(startCoords, { icon: startIcon, zIndexOffset: 2500 }).addTo(this.routesLayer);
-
-    // 4b. Multiple Intermediate Waypoint / Stop Markers (Amber Discs with Labeled Pill Badges)
-    if (options.waypoints && Array.isArray(options.waypoints) && options.waypoints.length > 0) {
-      options.waypoints.forEach(wp => {
-        if (wp && typeof wp.lat === 'number' && typeof wp.lon === 'number') {
-          const wpName = wp.display || wp.originalName || `Stop ${wp.stopIndex}`;
-          const stopIconHtml = `
-            <div class="map-route-marker stop-route-marker">
-              <div class="stop-dot-marker">${wp.stopIndex || ''}</div>
-              <div class="route-marker-pill stop-pill">${wpName}</div>
-            </div>
-          `;
-          const stopIcon = L.divIcon({
-            className: "map-route-marker-icon",
-            html: stopIconHtml,
-            iconSize: [0, 0],
-            iconAnchor: [8, 8]
-          });
-          L.marker([wp.lat, wp.lon], { icon: stopIcon, zIndexOffset: 2800 }).addTo(this.routesLayer);
-        }
-      });
-    } else if (options.viaName && options.viaCoords && Array.isArray(options.viaCoords) && options.viaCoords.length >= 2) {
-      const stopIconHtml = `
-        <div class="map-route-marker stop-route-marker">
-          <div class="stop-dot-marker"></div>
-          <div class="route-marker-pill stop-pill">${options.viaName}</div>
-        </div>
-      `;
-      const stopIcon = L.divIcon({
-        className: "map-route-marker-icon",
-        html: stopIconHtml,
-        iconSize: [0, 0],
-        iconAnchor: [8, 8]
-      });
-      L.marker(options.viaCoords, { icon: stopIcon, zIndexOffset: 2800 }).addTo(this.routesLayer);
-    }
-
-    // 5. Destination Target Pin (Red Pin with Labeled Pill Badge to the right)
-    const destCoords = validPath[validPath.length - 1];
-    const destIconHtml = `
-      <div class="map-route-marker dest-route-marker">
-        <div class="dest-pin-svg-wrap">
-          <svg width="24" height="30" viewBox="0 0 24 30" fill="none">
-            <path d="M12 0C5.37 0 0 5.37 0 12C0 21 12 30 12 30C12 30 24 21 24 12C24 5.37 18.63 0 12 0Z" fill="#DC2626"/>
-            <circle cx="12" cy="11" r="4.5" fill="#FFFFFF"/>
-          </svg>
-        </div>
-        <div class="route-marker-pill dest-pill">${destName}</div>
-      </div>
-    `;
-    const destIcon = L.divIcon({
-      className: "map-route-marker-icon",
-      html: destIconHtml,
-      iconSize: [0, 0],
-      iconAnchor: [12, 30]
-    });
-    L.marker(destCoords, { icon: destIcon, zIndexOffset: 3000 }).addTo(this.routesLayer);
-
-    // 7. Auto-fit map bounds smoothly (only on first calculation)
-    if (!skipFitBounds) {
-      try {
-        this.map.fitBounds(routeMainLine.getBounds(), {
-          padding: [80, 80],
-          maxZoom: 17.5,
-          animate: true
-        });
-      } catch (e) {
-        console.warn("Could not fit route bounds:", e);
+    (options.junctions || []).forEach(junction => {
+      if (Array.isArray(junction) && junction.length >= 2) {
+        this.routesLayer.addLayer(this.addHtmlMarker(junction, '<div class="route-junction-dot"></div>', "route-junction-icon", 2600));
       }
+    });
+
+    const startHtml = `<div class="map-route-marker start-route-marker"><div class="origin-ring-dot"></div><div class="route-marker-pill origin-pill">${originName}</div></div>`;
+    this.routesLayer.addLayer(this.addHtmlMarker(validPath[0], startHtml, "map-route-marker-icon", 2500));
+
+    if (Array.isArray(options.waypoints) && options.waypoints.length) {
+      options.waypoints.forEach(wp => {
+        if (!wp || typeof wp.lat !== "number" || typeof wp.lon !== "number") return;
+        const html = `<div class="map-route-marker stop-route-marker"><div class="stop-dot-marker">${wp.stopIndex || ""}</div><div class="route-marker-pill stop-pill">${wp.display || wp.originalName || `Stop ${wp.stopIndex}`}</div></div>`;
+        this.routesLayer.addLayer(this.addHtmlMarker([wp.lat, wp.lon], html, "map-route-marker-icon", 2800));
+      });
+    } else if (options.viaName && Array.isArray(options.viaCoords) && options.viaCoords.length >= 2) {
+      const html = `<div class="map-route-marker stop-route-marker"><div class="stop-dot-marker"></div><div class="route-marker-pill stop-pill">${options.viaName}</div></div>`;
+      this.routesLayer.addLayer(this.addHtmlMarker(options.viaCoords, html, "map-route-marker-icon", 2800));
+    }
+
+    const destHtml = `<div class="map-route-marker dest-route-marker"><div class="dest-pin-svg-wrap"><svg width="24" height="30" viewBox="0 0 24 30" fill="none"><path d="M12 0C5.37 0 0 5.37 0 12C0 21 12 30 12 30C12 30 24 21 24 12C24 5.37 18.63 0 12 0Z" fill="#DC2626"/><circle cx="12" cy="11" r="4.5" fill="#FFFFFF"/></svg></div><div class="route-marker-pill dest-pill">${destName}</div></div>`;
+    this.routesLayer.addLayer(this.addHtmlMarker(validPath[validPath.length - 1], destHtml, "map-route-marker-icon", 3000));
+
+    if (!options.skipFitBounds) {
+      const bounds = this.getBoundsForLatLngs(roadCoords);
+      if (bounds) this.map.fitBounds(bounds, { padding: 80, maxZoom: 17.5, duration: 700 });
     }
   }
 
   clearRoutes() {
     this.currentRouteData = null;
     this.routesLayer.clearLayers();
+    ["route-main", "route-casing", "route-rim", "route-alternate", "route-closed", "route-connectors"].forEach(id => this.setGeoJsonSource(id, []));
   }
 
   clearRoute() {
@@ -1451,20 +1451,14 @@ class CampusMapController {
 
   resetView() {
     if (typeof CAMPUS_CENTER !== "undefined" && typeof CAMPUS_DEFAULT_ZOOM !== "undefined") {
-      this.map.flyTo(CAMPUS_CENTER, CAMPUS_DEFAULT_ZOOM, {
-        animate: true,
-        duration: 1.0
-      });
+      this.map.flyTo({ center: [CAMPUS_CENTER[1], CAMPUS_CENTER[0]], zoom: CAMPUS_DEFAULT_ZOOM, duration: 1000 });
     }
   }
 
   flyToLocation(lat, lng, zoom = 17) {
     // Temporarily allow testing locations outside the LPU boundary.
     // if (!isPointInPolygon([lat, lng], LPU_BOUNDARY)) return;
-    this.map.flyTo([lat, lng], zoom, {
-      animate: true,
-      duration: 1.2
-    });
+    this.map.flyTo({ center: [lng, lat], zoom, duration: 1200 });
   }
 
   locateUser() {
@@ -1474,10 +1468,7 @@ class CampusMapController {
     }
 
     if (this.currentUserCoords && this.map) {
-      this.map.flyTo(this.currentUserCoords, 17, {
-        animate: true,
-        duration: 1.2
-      });
+      this.map.flyTo({ center: [this.currentUserCoords[1], this.currentUserCoords[0]], zoom: 17, duration: 1200 });
       return;
     }
 
@@ -1490,10 +1481,7 @@ class CampusMapController {
         this.renderUserLocation([lat, lng]);
 
         if (this.map) {
-          this.map.flyTo([lat, lng], 17, {
-            animate: true,
-            duration: 1.2
-          });
+          this.map.flyTo({ center: [lng, lat], zoom: 17, duration: 1200 });
         }
       },
       (error) => {
@@ -1510,16 +1498,13 @@ class CampusMapController {
 
   recenterCampus() {
     const isMobile = window.innerWidth <= 768;
-    if (typeof LPU_BOUNDARY !== "undefined" && Array.isArray(LPU_BOUNDARY) && LPU_BOUNDARY.length > 0) {
-      const bounds = L.latLngBounds(LPU_BOUNDARY);
-      this.map.fitBounds(bounds.pad(isMobile ? 0.04 : 0.12), {
-        paddingTopLeft: isMobile ? [95, 10] : [70, 70],
-        paddingBottomRight: isMobile ? [10, 85] : [70, 70],
-        animate: true,
-        duration: 1
+    if (this.getBoundaryCoordinates().length > 0) {
+      this.map.fitBounds(this.expandBounds(this.getBoundaryBounds(), isMobile ? 0.04 : 0.12), {
+        padding: { top: isMobile ? 95 : 70, right: isMobile ? 10 : 70, bottom: isMobile ? 85 : 70, left: isMobile ? 95 : 70 },
+        duration: 1000
       });
     } else {
-      this.map.flyTo(CAMPUS_CENTER, isMobile ? 15.8 : 15.5, { animate: true, duration: 1 });
+      this.map.flyTo({ center: [CAMPUS_CENTER[1], CAMPUS_CENTER[0]], zoom: isMobile ? 15.8 : 15.5, duration: 1000 });
     }
   }
 
@@ -1528,12 +1513,9 @@ class CampusMapController {
     if (typeof this.resetOrientation === "function") {
       this.resetOrientation();
     }
-    const center = this.initialCenter || (typeof CAMPUS_CENTER !== "undefined" ? CAMPUS_CENTER : [31.2536, 75.7037]);
+    const center = this.initialCenter || (typeof CAMPUS_CENTER !== "undefined" ? [CAMPUS_CENTER[1], CAMPUS_CENTER[0]] : [75.7037, 31.2536]);
     const zoom = (this.initialZoom !== null && this.initialZoom !== undefined) ? this.initialZoom : 15.25;
-    this.map.flyTo(center, zoom, {
-      animate: true,
-      duration: 0.8
-    });
+    this.map.flyTo({ center, zoom, duration: 800 });
   }
 
   zoomIn() {
@@ -1542,6 +1524,54 @@ class CampusMapController {
 
   zoomOut() {
     this.map.zoomOut();
+  }
+
+  setupIntuitiveRotationHandlers() {
+    if (!this.map) return;
+    const canvas = this.map.getCanvas();
+    if (!canvas || canvas.dataset.cameraGesturesReady === "true") return;
+    canvas.dataset.cameraGesturesReady = "true";
+
+    let isDraggingCamera = false;
+    let startX = 0;
+    let startY = 0;
+    let startBearing = 0;
+    let startPitch = 0;
+    let restoreDragPan = false;
+    let restoreDragRotate = false;
+
+    canvas.addEventListener("mousedown", event => {
+      const wantsCameraDrag = event.button === 1 || (event.button === 0 && (event.shiftKey || event.altKey));
+      if (!wantsCameraDrag) return;
+
+      isDraggingCamera = true;
+      startX = event.clientX;
+      startY = event.clientY;
+      startBearing = this.map.getBearing();
+      startPitch = this.map.getPitch();
+      restoreDragPan = this.map.dragPan.isEnabled();
+      restoreDragRotate = this.map.dragRotate.isEnabled();
+      this.map.dragPan.disable();
+      this.map.dragRotate.disable();
+      canvas.style.cursor = "grabbing";
+      event.preventDefault();
+    });
+
+    window.addEventListener("mousemove", event => {
+      if (!isDraggingCamera || !this.map) return;
+      this.map.jumpTo({
+        bearing: startBearing + (event.clientX - startX) * 0.45,
+        pitch: Math.max(0, Math.min(85, startPitch - (event.clientY - startY) * 0.4))
+      });
+    });
+
+    window.addEventListener("mouseup", () => {
+      if (!isDraggingCamera) return;
+      isDraggingCamera = false;
+      canvas.style.cursor = "";
+      if (restoreDragPan) this.map.dragPan.enable();
+      if (restoreDragRotate) this.map.dragRotate.enable();
+    });
   }
 
   resetOrientation() {

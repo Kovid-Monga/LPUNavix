@@ -8,121 +8,9 @@
    ============================================================================ */
 class CampusRoadGraph {
   constructor() {
-    this.nodes = new Map(); // id -> { lat, lng, neighbors: [{ id, dist, highway, isFoot, isVeh, isOneway, forward, isTransition }], hasFootEdge, hasVehEdge }
+    this.nodes = new Map(); // id -> { id, lat, lng, neighbors: [], hasFootEdge, hasVehEdge, wayIds: Set, isEndpoint }
+    this.segments = []; // array of segments for orthogonal projection
     this.initialized = false;
-  }
-
-  buildGraph() {
-    if (this.initialized) return;
-    const roadData = (typeof CAMPUS_ROADS_DATA !== "undefined" && Array.isArray(CAMPUS_ROADS_DATA) && CAMPUS_ROADS_DATA.length > 0)
-      ? CAMPUS_ROADS_DATA
-      : (typeof LPU_ROAD_NETWORK !== "undefined" && Array.isArray(LPU_ROAD_NETWORK))
-        ? LPU_ROAD_NETWORK.map(way => ({
-            id: way.id,
-            tags: { highway: way.highway, name: way.name || "", oneway: way.oneway || "", junction: way.junction || "" },
-            coords: way.geometry
-          }))
-        : [];
-    if (roadData.length === 0) return;
-
-    // Helper: Generate unique node id from lat/lng
-    const getNodeId = (lat, lng) => `${lat.toFixed(6)},${lng.toFixed(6)}`;
-
-    // 1. Add all road & footpath segments with multimodal tags
-    roadData.forEach(way => {
-      const coords = way.coords || [];
-      const tags = way.tags || {};
-      const highway = tags.highway || 'road';
-
-      const isFoot = ['footway', 'path', 'steps', 'pedestrian', 'track', 'cycleway'].includes(highway);
-      const isVeh = ['service', 'residential', 'unclassified', 'tertiary', 'trunk', 'living_street', 'road'].includes(highway);
-      const isOneway = tags.oneway === 'yes' || tags.oneway === '1' || tags.junction === 'roundabout';
-
-      for (let i = 0; i < coords.length - 1; i++) {
-        const [lat1, lng1] = coords[i];
-        const [lat2, lng2] = coords[i + 1];
-
-        const id1 = getNodeId(lat1, lng1);
-        const id2 = getNodeId(lat2, lng2);
-
-        if (!this.nodes.has(id1)) this.nodes.set(id1, { lat: lat1, lng: lng1, neighbors: [], hasFootEdge: false, hasVehEdge: false });
-        if (!this.nodes.has(id2)) this.nodes.set(id2, { lat: lat2, lng: lng2, neighbors: [], hasFootEdge: false, hasVehEdge: false });
-
-        const dist = this.haversineDistance(lat1, lng1, lat2, lng2);
-
-        const node1 = this.nodes.get(id1);
-        const node2 = this.nodes.get(id2);
-
-        if (isFoot) {
-          node1.hasFootEdge = true;
-          node2.hasFootEdge = true;
-        }
-        if (isVeh) {
-          node1.hasVehEdge = true;
-          node2.hasVehEdge = true;
-        }
-
-        // Forward edge
-        node1.neighbors.push({
-          id: id2,
-          dist,
-          highway,
-          isFoot,
-          isVeh,
-          isOneway,
-          forward: true
-        });
-
-        // Reverse edge: Only mark isVeh if the way itself is a vehicle road and not oneway
-        node2.neighbors.push({
-          id: id1,
-          dist,
-          highway,
-          isFoot,
-          isVeh: isVeh && !isOneway,
-          isOneway,
-          forward: false
-        });
-      }
-    });
-
-    // 2. Connect nearby junction nodes (intersections within ~15 meters)
-    const nodeList = Array.from(this.nodes.values());
-    for (let i = 0; i < nodeList.length; i++) {
-      const n1 = nodeList[i];
-      const id1 = getNodeId(n1.lat, n1.lng);
-      for (let j = i + 1; j < nodeList.length; j++) {
-        const n2 = nodeList[j];
-        const d = this.haversineDistance(n1.lat, n1.lng, n2.lat, n2.lng);
-        if (d <= 15) {
-          const id2 = getNodeId(n2.lat, n2.lng);
-          const vehJunction = n1.hasVehEdge && n2.hasVehEdge;
-
-          this.nodes.get(id1).neighbors.push({
-            id: id2,
-            dist: d,
-            highway: 'junction',
-            isFoot: true,
-            isVeh: vehJunction,
-            isOneway: false,
-            isTransition: true,
-            forward: true
-          });
-          this.nodes.get(id2).neighbors.push({
-            id: id1,
-            dist: d,
-            highway: 'junction',
-            isFoot: true,
-            isVeh: vehJunction,
-            isOneway: false,
-            isTransition: true,
-            forward: true
-          });
-        }
-      }
-    }
-
-    this.initialized = true;
   }
 
   haversineDistance(lat1, lon1, lat2, lon2) {
@@ -136,44 +24,331 @@ class CampusRoadGraph {
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }
 
-  findNearestNode(lat, lng, mode = 'walking') {
-    let bestId = null;
-    let minDist = Infinity;
+  getNodeId(lat, lng) {
+    return `${lat.toFixed(6)},${lng.toFixed(6)}`;
+  }
 
-    for (const [id, node] of this.nodes.entries()) {
-      let isEligible = true;
-      if (mode === 'kart' || mode === 'drive' || mode === 'moto') {
-        isEligible = node.hasVehEdge;
-      } else if (mode === 'walking') {
-        isEligible = node.hasFootEdge;
+  // Orthogonal projection of coordinate P onto line segment [A, B]
+  projectPointOnSegment(pLat, pLng, aLat, aLng, bLat, bLng) {
+    const dx = bLng - aLng;
+    const dy = bLat - aLat;
+    const lenSq = dx * dx + dy * dy;
+    if (lenSq === 0) return { lat: aLat, lng: aLng, t: 0 };
+
+    let t = ((pLng - aLng) * dx + (pLat - aLat) * dy) / lenSq;
+    t = Math.max(0, Math.min(1, t));
+
+    return {
+      lat: aLat + t * dy,
+      lng: aLng + t * dx,
+      t
+    };
+  }
+
+  buildGraph(roadDataOverride) {
+    if (this.initialized) return;
+    let roadData = roadDataOverride;
+    if (!roadData || !roadData.length) {
+      if (typeof window !== "undefined" && window.CAMPUS_ROADS_DATA && Array.isArray(window.CAMPUS_ROADS_DATA) && window.CAMPUS_ROADS_DATA.length > 0) {
+        roadData = window.CAMPUS_ROADS_DATA;
+      } else if (typeof window !== "undefined" && window.CampusMap && window.CampusMap.geoJsonData && (window.CampusMap.geoJsonData.roads || window.CampusMap.geoJsonData.footpaths)) {
+        return this.buildGraphFromGeoJson(window.CampusMap.geoJsonData.roads, window.CampusMap.geoJsonData.footpaths);
       }
+    }
+    if (!roadData || roadData.length === 0) return;
 
-      if (isEligible) {
-        const d = this.haversineDistance(lat, lng, node.lat, node.lng);
-        if (d < minDist) {
-          minDist = d;
-          bestId = id;
+    this.nodes.clear();
+    this.segments = [];
+
+    const getOrCreateNode = (lat, lng, wayId) => {
+      const id = this.getNodeId(lat, lng);
+      if (!this.nodes.has(id)) {
+        this.nodes.set(id, {
+          id,
+          lat,
+          lng,
+          neighbors: [],
+          hasFootEdge: false,
+          hasVehEdge: false,
+          wayIds: new Set(),
+          isEndpoint: false
+        });
+      }
+      const n = this.nodes.get(id);
+      if (wayId) n.wayIds.add(wayId);
+      return n;
+    };
+
+    // 1. Build sequential edges along ways (strict curve & geometry preservation)
+    roadData.forEach(way => {
+      const coords = way.coords || [];
+      const tags = way.tags || {};
+      const highway = tags.highway || 'road';
+
+      const isPedestrianOnly = ['footway', 'path', 'steps', 'pedestrian'].includes(highway);
+      // On campus, pedestrian walkways and shared campus roads are walkable by foot
+      const isFoot = true;
+      // Vehicles are strictly allowed only on drivable roads, forbidden on footpaths and steps
+      const isVeh = !isPedestrianOnly;
+      const isOneway = tags.oneway === 'yes' || tags.oneway === '1' || tags.junction === 'roundabout';
+
+      for (let i = 0; i < coords.length - 1; i++) {
+        const [lat1, lng1] = coords[i];
+        const [lat2, lng2] = coords[i + 1];
+
+        const node1 = getOrCreateNode(lat1, lng1, way.id);
+        const node2 = getOrCreateNode(lat2, lng2, way.id);
+
+        if (i === 0) node1.isEndpoint = true;
+        if (i === coords.length - 2) node2.isEndpoint = true;
+
+        const dist = this.haversineDistance(lat1, lng1, lat2, lng2);
+
+        if (isFoot) {
+          node1.hasFootEdge = true;
+          node2.hasFootEdge = true;
         }
+        if (isVeh) {
+          node1.hasVehEdge = true;
+          node2.hasVehEdge = true;
+        }
+
+        const id1 = node1.id;
+        const id2 = node2.id;
+
+        // Forward edge
+        node1.neighbors.push({
+          id: id2,
+          dist,
+          highway,
+          isFoot,
+          isVeh,
+          isOneway,
+          wayId: way.id,
+          forward: true
+        });
+
+        // Reverse edge
+        node2.neighbors.push({
+          id: id1,
+          dist,
+          highway,
+          isFoot,
+          isVeh: isVeh && !isOneway,
+          isOneway,
+          wayId: way.id,
+          forward: false
+        });
+
+        // Store road segment for orthogonal projection
+        this.segments.push({
+          p1: [lat1, lng1],
+          p2: [lat2, lng2],
+          id1,
+          id2,
+          dist,
+          isFoot,
+          isVeh,
+          isOneway,
+          wayId: way.id,
+          highway
+        });
+      }
+    });
+
+    // 2. Connect legitimate intersections ONLY between DIFFERENT ways at endpoints (tolerance ~8.5m)
+    // CRUCIAL: Never connect non-consecutive nodes belonging to the same way (preserves curved roads, bends, and roundabouts!)
+    const allNodes = Array.from(this.nodes.values());
+    const endpoints = allNodes.filter(n => n.isEndpoint);
+
+    endpoints.forEach(ep => {
+      allNodes.forEach(other => {
+        if (ep.id === other.id) return;
+        // Never connect if both nodes share a way (NO SHORTCUTS ALONG CURVED ROADS)
+        let sharesWay = false;
+        for (const w of ep.wayIds) {
+          if (other.wayIds.has(w)) {
+            sharesWay = true;
+            break;
+          }
+        }
+        if (sharesWay) return;
+
+        const d = this.haversineDistance(ep.lat, ep.lng, other.lat, other.lng);
+        if (d <= 8.5) {
+          const vehJunction = ep.hasVehEdge && other.hasVehEdge;
+          ep.neighbors.push({
+            id: other.id,
+            dist: d,
+            highway: 'junction',
+            isFoot: true,
+            isVeh: vehJunction,
+            isOneway: false,
+            isTransition: true,
+            forward: true
+          });
+          other.neighbors.push({
+            id: ep.id,
+            dist: d,
+            highway: 'junction',
+            isFoot: true,
+            isVeh: vehJunction,
+            isOneway: false,
+            isTransition: true,
+            forward: true
+          });
+        }
+      });
+    });
+
+    // 3. Bridge disconnected network components so no campus location ever hits a straight-line fallback
+    this.bridgeComponents();
+
+    this.initialized = true;
+  }
+
+  bridgeComponents() {
+    const visited = new Set();
+    const components = [];
+
+    for (const id of this.nodes.keys()) {
+      if (!visited.has(id)) {
+        const comp = [];
+        const q = [id];
+        visited.add(id);
+        while (q.length > 0) {
+          const curr = q.pop();
+          comp.push(curr);
+          const node = this.nodes.get(curr);
+          if (node) {
+            for (const neighbor of node.neighbors) {
+              if (!visited.has(neighbor.id)) {
+                visited.add(neighbor.id);
+                q.push(neighbor.id);
+              }
+            }
+          }
+        }
+        components.push(comp);
       }
     }
 
-    // Fallback: If no dedicated mode node is nearby, search all nodes
-    if (!bestId || minDist > 250) {
+    if (components.length <= 1) return;
+    components.sort((a, b) => b.length - a.length);
+
+    const mainComp = components[0];
+    for (let c = 1; c < components.length; c++) {
+      const otherComp = components[c];
+      let minDist = Infinity;
+      let bestMainId = null;
+      let bestOtherId = null;
+
+      for (const id1 of otherComp) {
+        const n1 = this.nodes.get(id1);
+        for (const id2 of mainComp) {
+          const n2 = this.nodes.get(id2);
+          const d = this.haversineDistance(n1.lat, n1.lng, n2.lat, n2.lng);
+          if (d < minDist) {
+            minDist = d;
+            bestOtherId = id1;
+            bestMainId = id2;
+          }
+        }
+      }
+
+      if (bestOtherId && bestMainId && minDist < 50) {
+        const n1 = this.nodes.get(bestOtherId);
+        const n2 = this.nodes.get(bestMainId);
+        const veh = n1.hasVehEdge && n2.hasVehEdge;
+        n1.neighbors.push({
+          id: bestMainId,
+          dist: minDist,
+          highway: 'bridge',
+          isFoot: true,
+          isVeh: veh,
+          isOneway: false,
+          isTransition: true,
+          forward: true
+        });
+        n2.neighbors.push({
+          id: bestOtherId,
+          dist: minDist,
+          highway: 'bridge',
+          isFoot: true,
+          isVeh: veh,
+          isOneway: false,
+          isTransition: true,
+          forward: true
+        });
+        otherComp.forEach(id => mainComp.push(id));
+      }
+    }
+  }
+
+  // Snap to closest road segment with exact orthogonal projected coordinate
+  snapToNetwork(lat, lng, mode = 'walking') {
+    let bestProj = null;
+    let minDist = Infinity;
+    let bestSeg = null;
+
+    for (const seg of this.segments) {
+      if (mode === 'drive' || mode === 'kart' || mode === 'moto') {
+        if (!seg.isVeh) continue;
+      } else {
+        if (!seg.isFoot) continue;
+      }
+
+      const proj = this.projectPointOnSegment(lat, lng, seg.p1[0], seg.p1[1], seg.p2[0], seg.p2[1]);
+      const d = this.haversineDistance(lat, lng, proj.lat, proj.lng);
+      if (d < minDist) {
+        minDist = d;
+        bestProj = proj;
+        bestSeg = seg;
+      }
+    }
+
+    if (!bestSeg) {
+      let bestNodeId = null;
+      let minNodeDist = Infinity;
       for (const [id, node] of this.nodes.entries()) {
         const d = this.haversineDistance(lat, lng, node.lat, node.lng);
-        if (d < minDist) {
-          minDist = d;
-          bestId = id;
+        if (d < minNodeDist) {
+          minNodeDist = d;
+          bestNodeId = id;
         }
       }
+      const node = this.nodes.get(bestNodeId);
+      return {
+        lat: node ? node.lat : lat,
+        lng: node ? node.lng : lng,
+        dist: minNodeDist,
+        nearestNodeId: bestNodeId,
+        seg: null,
+        t: 0
+      };
     }
 
-    return bestId;
+    return {
+      lat: bestProj.lat,
+      lng: bestProj.lng,
+      dist: minDist,
+      seg: bestSeg,
+      node1Id: bestSeg.id1,
+      node2Id: bestSeg.id2,
+      t: bestProj.t
+    };
+  }
+
+  findNearestNode(lat, lng, mode = 'walking') {
+    const snap = this.snapToNetwork(lat, lng, mode);
+    if (snap.seg) {
+      return snap.t < 0.5 ? snap.seg.id1 : snap.seg.id2;
+    }
+    return snap.nearestNodeId;
   }
 
   getEdgeCost(edge, mode = 'walking') {
-    if (mode === 'kart' || mode === 'drive' || mode === 'moto') {
-      // Vehicles/Karts/Cars: strictly forbidden on pedestrian steps, walkways, and footpaths
+    if (mode === 'drive' || mode === 'kart' || mode === 'moto') {
       if (edge.highway === 'steps' || edge.highway === 'footway' || edge.highway === 'pedestrian' || edge.highway === 'path') {
         return Infinity;
       }
@@ -181,56 +356,135 @@ class CampusRoadGraph {
       return edge.dist * 1.0;
     }
 
-    // Walking Mode: Strictly prioritize footpaths & pedestrian walkways
-    if (edge.isFoot) {
+    // Walking mode:
+    if (edge.highway === 'footway' || edge.highway === 'path' || edge.highway === 'pedestrian') {
       return edge.dist * 1.0;
     }
-    if (edge.highway === 'living_street') {
-      return edge.dist * 1.5;
+    if (edge.highway === 'steps') {
+      return edge.dist * 1.1;
     }
-    if (edge.isVeh) {
-      // High penalty on vehicle roads ensures walking uses footpaths wherever available
-      return edge.dist * 7.0;
-    }
-
-    return edge.dist * 2.0;
+    // Shared campus roads: gentle 1.15 multiplier guarantees true shortest path without detour penalties
+    return edge.dist * 1.15;
   }
 
-  // Multi-modal A* Shortest Path Search
+  // Multi-modal A* Shortest Path Search with curve preservation
   findPath(startLat, startLng, endLat, endLng, mode = 'walking') {
     this.buildGraph();
     if (this.nodes.size === 0) return null;
 
-    const startNodeId = this.findNearestNode(startLat, startLng, mode);
-    const endNodeId = this.findNearestNode(endLat, endLng, mode);
+    const startSnap = this.snapToNetwork(startLat, startLng, mode);
+    const endSnap = this.snapToNetwork(endLat, endLng, mode);
 
-    if (!startNodeId || !endNodeId) return null;
-    if (startNodeId === endNodeId) {
-      const node = this.nodes.get(startNodeId);
-      const dStart = this.haversineDistance(startLat, startLng, node.lat, node.lng);
-      const dEnd = this.haversineDistance(node.lat, node.lng, endLat, endLng);
+    if (!startSnap || !endSnap) return null;
+
+    // Special case: Both points project onto the exact same road segment
+    if (startSnap.seg && endSnap.seg && startSnap.seg === endSnap.seg) {
+      const roadPath = [
+        [startSnap.lat, startSnap.lng],
+        [endSnap.lat, endSnap.lng]
+      ];
+      const dStart = this.haversineDistance(startLat, startLng, startSnap.lat, startSnap.lng);
+      const dEnd = this.haversineDistance(endSnap.lat, endSnap.lng, endLat, endLng);
+      const startConnector = dStart > 5 ? [[startLat, startLng], [startSnap.lat, startSnap.lng]] : null;
+      const endConnector = dEnd > 5 ? [[endSnap.lat, endSnap.lng], [endLat, endLng]] : null;
+
+      const pathCoords = [
+        ...(startConnector ? [[startLat, startLng]] : []),
+        ...roadPath,
+        ...(endConnector ? [[endLat, endLng]] : [])
+      ];
+
       return {
-        path: [[startLat, startLng], [node.lat, node.lng], [endLat, endLng]],
-        roadPath: [[node.lat, node.lng], [node.lat, node.lng]],
-        startConnector: dStart > 6 ? [[startLat, startLng], [node.lat, node.lng]] : null,
-        endConnector: dEnd > 6 ? [[node.lat, node.lng], [endLat, endLng]] : null,
-        startJunction: dStart > 6 ? [node.lat, node.lng] : null,
-        endJunction: dEnd > 6 ? [node.lat, node.lng] : null
+        path: pathCoords,
+        roadPath,
+        startConnector,
+        endConnector,
+        startJunction: startConnector ? [startSnap.lat, startSnap.lng] : null,
+        endJunction: endConnector ? [endSnap.lat, endSnap.lng] : null
       };
     }
 
-    const openSet = new Set([startNodeId]);
+    // Insert temporary virtual start and end nodes into graph
+    const tempStartId = `__start_${Date.now()}`;
+    const tempEndId = `__end_${Date.now()}`;
+
+    const tempStartNode = {
+      id: tempStartId,
+      lat: startSnap.lat,
+      lng: startSnap.lng,
+      neighbors: []
+    };
+
+    const tempEndNode = {
+      id: tempEndId,
+      lat: endSnap.lat,
+      lng: endSnap.lng,
+      neighbors: []
+    };
+
+    this.nodes.set(tempStartId, tempStartNode);
+    this.nodes.set(tempEndId, tempEndNode);
+
+    // Connect start to segment endpoints
+    if (startSnap.seg) {
+      const seg = startSnap.seg;
+      const d1 = this.haversineDistance(startSnap.lat, startSnap.lng, seg.p1[0], seg.p1[1]);
+      const d2 = this.haversineDistance(startSnap.lat, startSnap.lng, seg.p2[0], seg.p2[1]);
+
+      tempStartNode.neighbors.push({
+        id: seg.id1,
+        dist: d1,
+        highway: seg.highway,
+        isFoot: seg.isFoot,
+        isVeh: seg.isVeh,
+        isOneway: false
+      });
+      tempStartNode.neighbors.push({
+        id: seg.id2,
+        dist: d2,
+        highway: seg.highway,
+        isFoot: seg.isFoot,
+        isVeh: seg.isVeh,
+        isOneway: false
+      });
+    } else {
+      tempStartNode.neighbors.push({
+        id: startSnap.nearestNodeId,
+        dist: startSnap.dist,
+        highway: 'connect',
+        isFoot: true,
+        isVeh: true,
+        isOneway: false
+      });
+    }
+
+    // Connect segment endpoints to end node
+    if (endSnap.seg) {
+      const seg = endSnap.seg;
+      const d1 = this.haversineDistance(endSnap.lat, endSnap.lng, seg.p1[0], seg.p1[1]);
+      const d2 = this.haversineDistance(endSnap.lat, endSnap.lng, seg.p2[0], seg.p2[1]);
+
+      const n1 = this.nodes.get(seg.id1);
+      const n2 = this.nodes.get(seg.id2);
+      if (n1) n1.neighbors.push({ id: tempEndId, dist: d1, highway: seg.highway, isFoot: seg.isFoot, isVeh: seg.isVeh, isOneway: false, isTemp: true });
+      if (n2) n2.neighbors.push({ id: tempEndId, dist: d2, highway: seg.highway, isFoot: seg.isFoot, isVeh: seg.isVeh, isOneway: false, isTemp: true });
+    } else {
+      const n = this.nodes.get(endSnap.nearestNodeId);
+      if (n) n.neighbors.push({ id: tempEndId, dist: endSnap.dist, highway: 'connect', isFoot: true, isVeh: true, isOneway: false, isTemp: true });
+    }
+
+    // A* Shortest Path Search
+    const openSet = new Set([tempStartId]);
     const cameFrom = new Map();
-
     const gScore = new Map();
-    gScore.set(startNodeId, 0);
+    gScore.set(tempStartId, 0);
 
-    const endNode = this.nodes.get(endNodeId);
     const fScore = new Map();
-    fScore.set(startNodeId, this.haversineDistance(startLat, startLng, endNode.lat, endNode.lng));
+    fScore.set(tempStartId, this.haversineDistance(startSnap.lat, startSnap.lng, endSnap.lat, endSnap.lng));
+
+    let pathFound = false;
 
     while (openSet.size > 0) {
-      // Find node with lowest fScore
       let current = null;
       let lowestF = Infinity;
       for (const id of openSet) {
@@ -241,42 +495,15 @@ class CampusRoadGraph {
         }
       }
 
-      if (current === endNodeId) {
-        // Reconstruct path
-        const roadPath = [];
-        let curr = current;
-        while (curr) {
-          const n = this.nodes.get(curr);
-          roadPath.unshift([n.lat, n.lng]);
-          curr = cameFrom.get(curr);
-        }
-
-        const startNode = this.nodes.get(startNodeId);
-        const dStart = this.haversineDistance(startLat, startLng, startNode.lat, startNode.lng);
-        const dEnd = this.haversineDistance(endNode.lat, endNode.lng, endLat, endLng);
-
-        const startConnector = dStart > 6 ? [[startLat, startLng], [startNode.lat, startNode.lng]] : null;
-        const endConnector = dEnd > 6 ? [[endNode.lat, endNode.lng], [endLat, endLng]] : null;
-
-        const pathCoords = [
-          ...(startConnector ? [[startLat, startLng]] : []),
-          ...roadPath,
-          ...(endConnector ? [[endLat, endLng]] : [])
-        ];
-
-        return {
-          path: pathCoords,
-          roadPath: roadPath.length >= 2 ? roadPath : pathCoords,
-          startConnector,
-          endConnector,
-          startJunction: startConnector ? [startNode.lat, startNode.lng] : null,
-          endJunction: endConnector ? [endNode.lat, endNode.lng] : null
-        };
+      if (current === tempEndId) {
+        pathFound = true;
+        break;
       }
 
       openSet.delete(current);
       const currG = gScore.get(current);
       const currNode = this.nodes.get(current);
+      if (!currNode) continue;
 
       for (const neighbor of currNode.neighbors) {
         const edgeCost = this.getEdgeCost(neighbor, mode);
@@ -289,23 +516,120 @@ class CampusRoadGraph {
           cameFrom.set(neighbor.id, current);
           gScore.set(neighbor.id, tentativeG);
           const nObj = this.nodes.get(neighbor.id);
-          const h = this.haversineDistance(nObj.lat, nObj.lng, endNode.lat, endNode.lng);
-          fScore.set(neighbor.id, tentativeG + h);
-          openSet.add(neighbor.id);
+          if (nObj) {
+            const h = this.haversineDistance(nObj.lat, nObj.lng, endSnap.lat, endSnap.lng);
+            fScore.set(neighbor.id, tentativeG + h);
+            openSet.add(neighbor.id);
+          }
         }
       }
     }
 
-    // Direct interpolation fallback if graph disconnected
-    const fallbackPath = [[startLat, startLng], [(startLat + endLat) / 2, (startLng + endLng) / 2], [endLat, endLng]];
+    // Clean up temporary graph nodes
+    this.nodes.delete(tempStartId);
+    this.nodes.delete(tempEndId);
+    if (endSnap.seg) {
+      const n1 = this.nodes.get(endSnap.seg.id1);
+      const n2 = this.nodes.get(endSnap.seg.id2);
+      if (n1) n1.neighbors = n1.neighbors.filter(e => !e.isTemp);
+      if (n2) n2.neighbors = n2.neighbors.filter(e => !e.isTemp);
+    } else {
+      const n = this.nodes.get(endSnap.nearestNodeId);
+      if (n) n.neighbors = n.neighbors.filter(e => !e.isTemp);
+    }
+
+    if (!pathFound) {
+      const fallbackPath = [[startLat, startLng], [(startLat + endLat) / 2, (startLng + endLng) / 2], [endLat, endLng]];
+      return {
+        path: fallbackPath,
+        roadPath: fallbackPath,
+        startConnector: null,
+        endConnector: null,
+        startJunction: null,
+        endJunction: null
+      };
+    }
+
+    // Reconstruct road path
+    const rawRoadPath = [];
+    let curr = tempEndId;
+    while (curr) {
+      if (curr === tempEndId) {
+        rawRoadPath.unshift([endSnap.lat, endSnap.lng]);
+      } else if (curr === tempStartId) {
+        rawRoadPath.unshift([startSnap.lat, startSnap.lng]);
+      } else {
+        const n = this.nodes.get(curr);
+        if (n) rawRoadPath.unshift([n.lat, n.lng]);
+      }
+      curr = cameFrom.get(curr);
+    }
+
+    // Deduplicate consecutive identical points
+    const cleanRoadPath = [];
+    for (let i = 0; i < rawRoadPath.length; i++) {
+      if (cleanRoadPath.length === 0) {
+        cleanRoadPath.push(rawRoadPath[i]);
+      } else {
+        const prev = cleanRoadPath[cleanRoadPath.length - 1];
+        const d = this.haversineDistance(prev[0], prev[1], rawRoadPath[i][0], rawRoadPath[i][1]);
+        if (d > 0.3) {
+          cleanRoadPath.push(rawRoadPath[i]);
+        }
+      }
+    }
+
+    const dStart = this.haversineDistance(startLat, startLng, startSnap.lat, startSnap.lng);
+    const dEnd = this.haversineDistance(endSnap.lat, endSnap.lng, endLat, endLng);
+
+    const startConnector = dStart > 5 ? [[startLat, startLng], [startSnap.lat, startSnap.lng]] : null;
+    const endConnector = dEnd > 5 ? [[endSnap.lat, endSnap.lng], [endLat, endLng]] : null;
+
+    const pathCoords = [
+      ...(startConnector ? [[startLat, startLng]] : []),
+      ...cleanRoadPath,
+      ...(endConnector ? [[endLat, endLng]] : [])
+    ];
+
     return {
-      path: fallbackPath,
-      roadPath: fallbackPath,
-      startConnector: null,
-      endConnector: null,
-      startJunction: null,
-      endJunction: null
+      path: pathCoords,
+      roadPath: cleanRoadPath.length >= 2 ? cleanRoadPath : pathCoords,
+      startConnector,
+      endConnector,
+      startJunction: startConnector ? [startSnap.lat, startSnap.lng] : null,
+      endJunction: endConnector ? [endSnap.lat, endSnap.lng] : null
     };
+  }
+
+  buildGraphFromGeoJson(roadsGeoJson, footpathsGeoJson) {
+    const roadData = [];
+    const extractWays = (collection) => {
+      if (!collection || !Array.isArray(collection.features)) return;
+      collection.features.forEach(feature => {
+        const coords = (feature.geometry && feature.geometry.coordinates) ? feature.geometry.coordinates : [];
+        if (!Array.isArray(coords) || coords.length < 2) return;
+        const props = feature.properties || {};
+        roadData.push({
+          id: feature.id !== undefined ? feature.id : (props.id !== undefined ? props.id : Math.random()),
+          tags: {
+            highway: props.highway || 'road',
+            name: props.name || '',
+            oneway: props.oneway || '',
+            junction: props.junction || ''
+          },
+          coords: coords.map(([lng, lat]) => [lat, lng]),
+          areaGeometry: props.area_geometry || null
+        });
+      });
+    };
+    extractWays(roadsGeoJson);
+    extractWays(footpathsGeoJson);
+    if (typeof window !== "undefined") {
+      window.CAMPUS_ROADS_DATA = roadData;
+    }
+    this.initialized = false;
+    this.buildGraph(roadData);
+    return roadData;
   }
 }
 
@@ -324,10 +648,36 @@ class DirectionsController {
     this.roadGraph = new CampusRoadGraph();
   }
 
+  async ensureGraphLoaded() {
+    if (this.roadGraph && this.roadGraph.initialized && this.roadGraph.nodes && this.roadGraph.nodes.size > 0) {
+      return;
+    }
+    if (typeof window !== "undefined" && window.CampusMap && window.CampusMap.geoJsonData &&
+        window.CampusMap.geoJsonData.roads && window.CampusMap.geoJsonData.footpaths) {
+      this.roadGraph.buildGraphFromGeoJson(window.CampusMap.geoJsonData.roads, window.CampusMap.geoJsonData.footpaths);
+      return;
+    }
+    if (typeof fetch !== "undefined") {
+      try {
+        const [roadsRes, footpathsRes] = await Promise.all([
+          fetch("geoJson/roads.geojson", { cache: "no-store" }),
+          fetch("geoJson/footpath.geojson", { cache: "no-store" })
+        ]);
+        if (roadsRes.ok && footpathsRes.ok) {
+          const [roadsData, footpathsData] = await Promise.all([roadsRes.json(), footpathsRes.json()]);
+          this.roadGraph.buildGraphFromGeoJson(roadsData, footpathsData);
+        }
+      } catch (err) {
+        console.warn("Directions could not auto-fetch GeoJSON networks:", err);
+      }
+    }
+  }
+
   init() {
     this.roadGraph.buildGraph();
     this.bindEvents();
     this.setupAutocomplete();
+    this.ensureGraphLoaded();
   }
 
   /* ==========================================================================
@@ -425,6 +775,7 @@ class DirectionsController {
      🛣️ Route Calculation Engine
      ========================================================================== */
   async fetchRoute(start, end, mode = "walking") {
+    await this.ensureGraphLoaded();
     // 1. Calculate mode-aware route (footpaths for walking, vehicle roads for kart/cars)
     const rawResult = this.roadGraph.findPath(start.lat, start.lon, end.lat, end.lon, mode);
 
@@ -490,29 +841,92 @@ class DirectionsController {
   }
 
   generateTurnSteps(start, end, path, totalDist, mode = "walking") {
+    if (!Array.isArray(path) || path.length < 2) {
+      return [
+        { instruction: `Start from ${start.display}`, distance: "0 m", icon: "map-pin" },
+        { instruction: `Arrive at ${end.display}`, distance: "0 m", icon: "map-pin", isArrival: true }
+      ];
+    }
+
     const steps = [];
     steps.push({
       instruction: `Start from ${start.display}`,
-      distance: `${Math.round(totalDist * 0.2)} m`,
+      distance: "0 m",
       icon: "map-pin"
     });
 
-    if (totalDist > 200) {
-      const pathwayDesc = mode === "walking" 
-        ? "Follow campus walkway & pedestrian footpath" 
-        : "Follow campus vehicle road";
+    const calculateBearing = (p1, p2) => {
+      const lat1 = p1[0] * Math.PI / 180;
+      const lat2 = p2[0] * Math.PI / 180;
+      const dLon = (p2[1] - p1[1]) * Math.PI / 180;
+      const y = Math.sin(dLon) * Math.cos(lat2);
+      const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+      return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+    };
+
+    let accumulatedDist = 0;
+    let lastBearing = null;
+    let pendingInstruction = null;
+    let pendingIcon = "navigation";
+
+    // Sample along path to detect significant turns (> 35 deg) or curved sections
+    for (let i = 0; i < path.length - 1; i++) {
+      const p1 = path[i];
+      const p2 = path[i + 1];
+      const segDist = this.roadGraph.haversineDistance(p1[0], p1[1], p2[0], p2[1]);
+      accumulatedDist += segDist;
+
+      if (segDist < 1.0) continue;
+      const currentBearing = calculateBearing(p1, p2);
+
+      if (lastBearing !== null) {
+        let diff = currentBearing - lastBearing;
+        while (diff > 180) diff -= 360;
+        while (diff < -180) diff += 360;
+
+        // Detect sharp turns or significant curves
+        if (Math.abs(diff) >= 38) {
+          const isRight = diff > 0;
+          const turnDesc = isRight ? "Turn right onto campus road/pathway" : "Turn left onto campus road/pathway";
+          const icon = isRight ? "corner-up-right" : "corner-up-left";
+
+          if (accumulatedDist >= 25) {
+            steps.push({
+              instruction: pendingInstruction || (mode === "walking" ? "Follow walkway & pedestrian path" : "Follow campus vehicle road"),
+              distance: `${Math.round(accumulatedDist)} m`,
+              icon: pendingIcon
+            });
+            accumulatedDist = 0;
+            pendingInstruction = turnDesc;
+            pendingIcon = icon;
+          }
+        } else if (Math.abs(diff) >= 20 && Math.abs(diff) < 38) {
+          // Moderate curve along path
+          if (accumulatedDist >= 50 && !pendingInstruction) {
+            pendingInstruction = diff > 0 ? "Follow curve to the right" : "Follow curve to the left";
+            pendingIcon = diff > 0 ? "corner-up-right" : "corner-up-left";
+          }
+        }
+      }
+      lastBearing = currentBearing;
+    }
+
+    if (accumulatedDist > 0) {
       steps.push({
-        instruction: pathwayDesc,
-        distance: `${Math.round(totalDist * 0.5)} m`,
-        icon: "corner-up-right"
+        instruction: pendingInstruction || (mode === "walking" ? "Continue toward destination" : "Drive toward destination"),
+        distance: `${Math.round(accumulatedDist)} m`,
+        icon: pendingIcon
       });
     }
 
-    steps.push({
-      instruction: `Turn toward ${end.display}`,
-      distance: `${Math.round(totalDist * 0.3)} m`,
-      icon: "corner-up-left"
-    });
+    // Ensure we don't have too few steps
+    if (steps.length <= 1) {
+      steps.push({
+        instruction: mode === "walking" ? "Follow campus walkway & pedestrian footpath" : "Follow campus vehicle road",
+        distance: `${Math.round(totalDist)} m`,
+        icon: "corner-up-right"
+      });
+    }
 
     steps.push({
       instruction: `Arrive at ${end.display}`,
@@ -1279,7 +1693,7 @@ class DirectionsController {
         mode: this.currentMode
       };
 
-      // 2. DRAW DOTTED ROUTE ON LEAFLET MAP IN PREVIEW MODE (With Walk & Kart ETAs and distances)
+      // 2. Draw the dotted route on the campus map in preview mode.
       if (window.CampusMap) {
         window.CampusMap.drawRoute(activeRoute.path, false, null, {
           mode: this.currentMode,
@@ -1350,10 +1764,6 @@ class DirectionsController {
     if (topDestInput) topDestInput.value = destName;
     this.currentDestination = destName;
     this.updateDestinationState(destName);
-  }
-
-  selectDestinationAndShow(destName) {
-    this.selectDestination(destName);
   }
 
   renderGoogleMapsPreview(start, end, driveRoute, walkRoute, activeRoute) {

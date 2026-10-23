@@ -1023,14 +1023,6 @@
     display: none !important;
   }
 
-  body.gmaps-route-active .leaflet-top.leaflet-right {
-    top: calc(140px + env(safe-area-inset-top, 0px)) !important;
-  }
-
-  body.gmaps-route-active .leaflet-bottom.leaflet-right {
-    bottom: calc(290px + env(safe-area-inset-bottom, 0px)) !important;
-  }
-
   /* ==========================================================================
      11. CAMPUS ASSISTANT MOBILE BOTTOM SHEET DRAWER
      ========================================================================== */

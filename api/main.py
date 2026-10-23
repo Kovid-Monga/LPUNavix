@@ -9,14 +9,13 @@ Run it with:
     uvicorn api.main:app --host 0.0.0.0 --port 3000
 """
 
-import hashlib
 import json
 import os
 import time
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import List, Optional
+from typing import List
 from urllib.parse import parse_qs
 
 try:
@@ -34,13 +33,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-import api.rag as rag
 from api.rag import (
-    ChatRequest,
-    ChatResponse,
-    embed_query,
-    embed_texts,
-    generate_reply,
     init_rag,
     router as rag_router,
     shutdown_rag,
@@ -96,14 +89,6 @@ karts = {}
 ACTIVE_WINDOW_SECONDS = 30
 
 
-class LocationUpdate(BaseModel):
-    id: str
-    lat: Optional[float] = None
-    lng: Optional[float] = None
-    latitude: Optional[float] = None
-    longitude: Optional[float] = None
-    lon: Optional[float] = None
-    timestamp: Optional[str] = None
 
 
 class KartStatus(BaseModel):

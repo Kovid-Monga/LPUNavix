@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Map & Custom Leaflet Markers Styles
+   Map & Custom Map Markers Styles
    ========================================================================== */
 
 #map {
@@ -147,25 +147,27 @@
 }
 
 .legend-preview-road {
-  background: #757b80;
-  border: 0;
-  height: 9px;
+  background: #273342;
+  border: 1px solid #ffffff;
+  border-radius: 2px;
+  height: 8px;
+  position: relative;
+  display: flex;
+  align-items: center;
 }
 
 .legend-preview-road::after {
   content: '';
   width: 100%;
   height: 1px;
-  background: #ffffff;
   border-top: 1px dashed #ffffff;
   position: absolute;
 }
 
 .legend-preview-footpath {
-  background-color: #c7cccf;
-  background-image: url('../assets/footpath-gray-brick-light.png');
-  background-size: 21px 21px;
-  border: 1px solid #626a70;
+  background-color: #dfd7cc;
+  border: 1px solid #4a3f33;
+  border-radius: 2px;
   height: 7px;
 }
 
@@ -314,9 +316,17 @@
    ========================================================================== */
 
 .campus-pin-wrapper {
+  width: 0 !important;
+  height: 0 !important;
+  position: relative !important;
   background: transparent !important;
   border: none !important;
   overflow: visible !important;
+  pointer-events: none;
+}
+
+.campus-pin-wrapper > * {
+  pointer-events: auto;
 }
 
 /* Category Specific Color Tokens (Text + Dot Palette from Reference) */
@@ -424,9 +434,9 @@
   --cat-color-light: #f1f5f9;
   --cat-color-glow: rgba(100, 116, 139, 0.22);
   position: absolute;
-  left: 13px;
-  bottom: 13px;
-  transform: translate(-50%, -12px);
+  left: 0;
+  bottom: 12px;
+  transform: translateX(-50%);
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -443,7 +453,7 @@
   transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
-/* Vertical Connector Stem */
+/* Vertical Connector Stem: goes from bottom of pill (y = -12px) down to ground (y = 0) */
 .custom-campus-pin::after {
   content: '';
   position: absolute;
@@ -457,7 +467,7 @@
   transition: background-color 0.2s ease, height 0.18s ease;
 }
 
-/* Ground Anchor Dot (Precisely centered at [13, 13] coordinates) */
+/* Ground Anchor Dot: precisely centered at (0, 0) coordinates */
 .custom-campus-pin::before {
   content: '';
   position: absolute;
@@ -474,9 +484,9 @@
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* Hover State: Soft category border & glow */
+/* Hover State: Soft category border & glow, ground dot stays pinned to coordinate */
 .custom-campus-pin:hover {
-  transform: translate(-50%, -14px) scale(1.03);
+  transform: translateX(-50%) translateY(-2px) scale(1.03);
   border-color: var(--cat-color);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12), 0 0 0 1px var(--cat-color), 0 0 10px var(--cat-color-glow);
   z-index: 1000 !important;
@@ -487,6 +497,7 @@
 }
 
 .custom-campus-pin:hover::before {
+  top: calc(100% + 14px);
   transform: translate(-50%, -50%) scale(1.15);
   box-shadow: 0 0 0 2px var(--cat-color), 0 2px 6px rgba(0, 0, 0, 0.3);
 }
@@ -541,6 +552,7 @@
   background: #ffffff;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 0 0 1.5px var(--cat-color), 0 0 14px var(--cat-color-glow);
   z-index: 1000 !important;
+  transform: translateX(-50%) translateY(-2px);
 }
 
 .custom-campus-pin.selected .pin-label,
@@ -549,8 +561,14 @@
   color: #0f172a;
 }
 
+.custom-campus-pin.selected::after,
+.custom-campus-pin.revealed::after {
+  height: 14px;
+}
+
 .custom-campus-pin.selected::before,
 .custom-campus-pin.revealed::before {
+  top: calc(100% + 14px);
   box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px var(--cat-color), 0 2px 8px rgba(0, 0, 0, 0.35);
   transform: translate(-50%, -50%) scale(1.2);
 }
@@ -575,6 +593,9 @@
   padding: 0 !important;
   width: 0 !important;
   height: 0 !important;
+  left: 0 !important;
+  bottom: 0 !important;
+  transform: none !important;
   pointer-events: auto;
 }
 
@@ -586,6 +607,9 @@
 
 .custom-campus-pin.pin-icon-only::before {
   display: block !important;
+  top: 0 !important;
+  left: 0 !important;
+  transform: translate(-50%, -50%) !important;
   pointer-events: auto;
   cursor: pointer;
 }
@@ -597,6 +621,9 @@
   padding: 3.5px 10px 3.5px 6px !important;
   width: auto !important;
   height: auto !important;
+  left: 0 !important;
+  bottom: 12px !important;
+  transform: translateX(-50%) translateY(-2px) !important;
   z-index: 1000 !important;
 }
 
@@ -612,6 +639,16 @@
 
 .custom-campus-pin.pin-icon-only:hover::after {
   display: block !important;
+  top: 100% !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  height: 14px !important;
+}
+
+.custom-campus-pin.pin-icon-only:hover::before {
+  top: calc(100% + 14px) !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) scale(1.15) !important;
 }
 
 @keyframes label-pop-in {
@@ -627,9 +664,9 @@
   --cat-color-light: #f3f4f6;
   --cat-color-glow: rgba(55, 65, 81, 0.22);
   position: absolute;
-  left: 60px;
-  bottom: 15px;
-  transform: translate(-50%, -12px);
+  left: 0;
+  bottom: 12px;
+  transform: translateX(-50%);
   cursor: pointer;
   user-select: none;
   pointer-events: auto;
@@ -664,6 +701,19 @@
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.28);
   pointer-events: none;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.custom-campus-cluster:hover {
+  transform: translateX(-50%) translateY(-2px) scale(1.03);
+}
+
+.custom-campus-cluster:hover::after {
+  height: 14px;
+}
+
+.custom-campus-cluster:hover::before {
+  top: calc(100% + 14px);
+  transform: translate(-50%, -50%) scale(1.15);
 }
 
 .custom-campus-cluster .cluster-pill {
@@ -810,12 +860,22 @@
   padding: 0 !important;
   width: 0 !important;
   height: 0 !important;
+  left: 0 !important;
+  bottom: 0 !important;
+  transform: none !important;
 }
 
 .hide-poi-labels .custom-campus-pin:not(.selected):not(.revealed) .pin-circle,
 .hide-poi-labels .custom-campus-pin:not(.selected):not(.revealed) .pin-label,
 .hide-poi-labels .custom-campus-pin:not(.selected):not(.revealed)::after {
   display: none !important;
+}
+
+.hide-poi-labels .custom-campus-pin:not(.selected):not(.revealed)::before {
+  display: block !important;
+  top: 0 !important;
+  left: 0 !important;
+  transform: translate(-50%, -50%) !important;
 }
 
 /* Destination Target Pin (Red Drop Pin - Zero-Drift Bottom Tip Anchor) */
@@ -974,7 +1034,16 @@
   pointer-events: none;
 }
 
-/* Road Network Transition Junction Marker (White disc with dark border) */
+/* Road Network Transition Junction Marker (White disc with dark border centered at (0,0)) */
+.route-junction-icon {
+  width: 0 !important;
+  height: 0 !important;
+  position: relative !important;
+  background: transparent !important;
+  border: none !important;
+  overflow: visible !important;
+}
+
 .route-junction-dot {
   width: 14px;
   height: 14px;
@@ -984,10 +1053,17 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
   box-sizing: border-box;
   flex-shrink: 0;
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%);
 }
 
 /* Map Route Markers and Attached Pill Badges */
 .map-route-marker-icon {
+  width: 0 !important;
+  height: 0 !important;
+  position: relative !important;
   background: transparent !important;
   border: none !important;
   overflow: visible !important;
@@ -1003,8 +1079,8 @@
   user-select: none;
 }
 
-/* Origin Marker: White Disc with Orange Rim */
-.origin-ring-dot {
+/* Origin Marker: White Disc with Orange Rim centered at (0, 0) */
+.start-route-marker .origin-ring-dot {
   width: 18px;
   height: 18px;
   border-radius: 50%;
@@ -1013,10 +1089,21 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
   box-sizing: border-box;
   flex-shrink: 0;
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%);
 }
 
-/* Destination Pin Wrap */
-.dest-pin-svg-wrap {
+.start-route-marker .origin-pill {
+  position: absolute;
+  left: 14px;
+  top: -11px;
+  margin-left: 0;
+}
+
+/* Destination Pin Wrap: pointed needle tip precisely at (0, 0) */
+.dest-route-marker .dest-pin-svg-wrap {
   width: 24px;
   height: 30px;
   display: flex;
@@ -1024,6 +1111,10 @@
   justify-content: center;
   filter: drop-shadow(0 3px 8px rgba(220, 38, 38, 0.45));
   flex-shrink: 0;
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-12px, -30px);
 }
 
 .dest-pin-svg-wrap svg {
@@ -1050,13 +1141,20 @@
   z-index: 10;
 }
 
+.dest-route-marker .dest-pill {
+  position: absolute;
+  left: 16px;
+  top: -24px;
+  margin-left: 0;
+}
+
 .route-marker-pill.dest-pill {
   background: #7f1d1d;
   border-color: rgba(239, 68, 68, 0.4);
 }
 
-/* Intermediate Stop / Waypoint Marker (Amber / Orange disc) */
-.stop-dot-marker {
+/* Intermediate Stop / Waypoint Marker (Amber / Orange disc centered at (0, 0)) */
+.stop-route-marker .stop-dot-marker {
   width: 16px;
   height: 16px;
   border-radius: 50%;
@@ -1065,6 +1163,20 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
   box-sizing: border-box;
   flex-shrink: 0;
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stop-route-marker .stop-pill {
+  position: absolute;
+  left: 14px;
+  top: -11px;
+  margin-left: 0;
 }
 
 .route-marker-pill.stop-pill {
@@ -1159,6 +1271,9 @@
    Floating Route ETA Badge (Dotted Preview Mode)
    ============================================================================ */
 .route-eta-pill-badge-wrap {
+  width: 0 !important;
+  height: 0 !important;
+  position: relative !important;
   background: transparent !important;
   border: none !important;
   overflow: visible !important;
@@ -1166,6 +1281,9 @@
 }
 
 .map-route-floating-badge {
+  position: absolute;
+  left: 0;
+  top: 0;
   display: flex;
   align-items: center;
   gap: 8px;

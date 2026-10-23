@@ -48,16 +48,24 @@ d:\LPUNavix\
 │   ├── map.css              # Leaflet map container, custom marker pins, pulse animations
 │   ├── panels.css           # Sliding drawers, location cards, directions sheet, assistant panel
 │   └── mobile.css           # Responsive breakpoints (<768px), mobile bottom sheets
-├── js\
+├── js/
 │   ├── app.js               # Application bootstrap: calls init() across all controllers on DOMContentLoaded
 │   ├── assistant.js         # AssistantController: AI chat panel, cards, and Show on Map action dispatch
-│   ├── boundary.js          # GeoJSON polygon array for the LPU campus outer boundary
-│   ├── campus_roads.js      # Raw coordinate arrays and geometry tags for roads & footpaths
 │   ├── data.js              # Ground truth database: CAMPUS_LOCATIONS, CAMPUS_GROUPS, CAMPUS_OFFICES, etc.
 │   ├── directions.js        # Graph builder (CampusRoadGraph), A* pathfinder, turn instructions, preview sheet
 │   ├── karts.js             # KartTrackingController: polls /api/locations, EMA smoothing, marker animator
-│   ├── map.js               # CampusMap controller: Leaflet instance, tile switchers, markers, layers, click handler
+│   ├── map.js               # CampusMap controller: MapLibre GL instance, tile switchers, markers, layers, click handler
+│   ├── martinez.min.js      # Martinez 2D polygon clipping algorithm for walkway unions
 │   └── ui.js                # UIController: search suggestions, category filtering, drawer views, modals
+├── geoJson/
+│   ├── boundry.geojson      # Campus outer boundary polygon
+│   ├── roads.geojson        # Drivable road network
+│   ├── footpath.geojson     # Walkway & footpath centerlines
+│   ├── footpath_areas.geojson   # Pre-computed corridor polygon fills
+│   └── footpath_casings.geojson # Pre-computed corridor borders
+├── scripts/
+│   ├── recreate_footpath_layers.js # Buffers footpath.geojson and unions into areas & casings GeoJSON
+│   └── recreate_footpath_layers.py # Convenient Python runner for recreate_footpath_layers.js
 ├── tests\
 │   ├── test_api.py          # Unit tests for /health, /api/location, /api/locations
 │   ├── test_personnel_rag.py # Unit tests for faculty/HOD RAG retrieval, chat API, and map triggers
@@ -392,9 +400,15 @@ The backend is built with **FastAPI** (`api/main.py`). It serves both the API en
 2. Add or modify the personnel entry under `CAMPUS_OFFICES` with `tags` including faculty name, cabin notation (e.g. `34-402`), block, and UID.
 3. On server restart, `api/main.py` detects changes in `data.js` via SHA256 hashing and automatically refreshes `api/embeddings_cache.json`.
 
-### C. Updating Campus Road Graph
-1. If adding individual path segments, add them directly to `js/campus_roads.js` under `CAMPUS_ROADS_DATA` with appropriate `highway` tag (`service` for cars/karts, `footway` for walking-only paths).
-2. To regenerate from OpenStreetMap: run `python sync_campus_osm.py` (queries Overpass API for LPU bounding box and outputs updated JS arrays).
+### C. Updating Campus Road & Footpath Graph
+1. Edit footpaths or roads directly in QGIS (or any GIS software) via `geoJson/footpath.geojson` or `geoJson/roads.geojson` (CRS: EPSG:4326).
+2. Whenever `geoJson/footpath.geojson` is edited, regenerate the visual polygon fill and casing layers by running:
+   ```bash
+   node scripts/recreate_footpath_layers.js
+   # or:
+   python scripts/recreate_footpath_layers.py
+   ```
+3. The directions engine (`js/directions.js`) and map renderer (`js/map.js`) load directly from GeoJSON. No `.js` network file compilation is required!
 
 ### D. Adding or Simulating a Kart
 1. To send a live GPS coordinate to the tracker:

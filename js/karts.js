@@ -1,7 +1,7 @@
 /**
  * LPU Map - Live Kart Tracking Controller (Panel 4)
  * Manages active shuttle karts, real-time GPS locations from tracking server,
- * and live Leaflet map markers.
+ * and live MapLibre DOM markers.
  *
  * GPS smoothing strategy:
  *  1. EMA (Exponential Moving Average) — blends new raw GPS with the last
@@ -25,7 +25,7 @@ const ANIM_DURATION_MS = 2500;
 
 class KartTrackingController {
   constructor() {
-    this.activeKartMarkers = {};  // id → Leaflet marker
+    this.activeKartMarkers = {};  // id → MapLibre marker
     this.smoothedPositions = {};  // id → { lat, lng }  (EMA state)
     this.animationFrames   = {};  // id → rAF handle
     this.selectedKartId    = null;
@@ -73,7 +73,7 @@ class KartTrackingController {
   // ── Deadband check ─────────────────────────────────────────────────────────
   // Returns true only if the kart moved more than MIN_MOVE_DEG (~3 m).
   _hasMoved(marker, newLat, newLng) {
-    const cur = marker.getLatLng();
+    const cur = marker.getLngLat();
     return Math.abs(cur.lat - newLat) > MIN_MOVE_DEG ||
            Math.abs(cur.lng - newLng) > MIN_MOVE_DEG;
   }
@@ -90,7 +90,7 @@ class KartTrackingController {
       delete this.animationFrames[id];
     }
 
-    const from      = marker.getLatLng();
+    const from      = marker.getLngLat();
     const startTime = performance.now();
 
     const step = (now) => {
@@ -98,9 +98,9 @@ class KartTrackingController {
       const t       = Math.min(elapsed / ANIM_DURATION_MS, 1);
       const ease    = 1 - Math.pow(1 - t, 3); // ease-out cubic
 
-      marker.setLatLng([
-        from.lat + (toLat - from.lat) * ease,
-        from.lng + (toLng - from.lng) * ease
+      marker.setLngLat([
+        from.lng + (toLng - from.lng) * ease,
+        from.lat + (toLat - from.lat) * ease
       ]);
 
       if (t < 1) {
@@ -131,22 +131,24 @@ class KartTrackingController {
         if (this._hasMoved(this.activeKartMarkers[k.id], lat, lng)) {
           this._animateMarker(k.id, lat, lng);
         }
-        this.activeKartMarkers[k.id].setPopupContent(popupContent);
+        const popup = this.activeKartMarkers[k.id].getPopup();
+        if (popup) popup.setHTML(popupContent);
 
       } else if (kartsLayer) {
         // 3. First sighting — create the marker.
-        const kartIcon = L.icon({
-          iconUrl: "kar.png",
-          iconSize: [56, 56],
-          iconAnchor: [28, 28],
-          popupAnchor: [0, -28]
-        });
+        const image = document.createElement("img");
+        image.src = "kar.png";
+        image.alt = `${k.id} shuttle`;
+        image.width = 56;
+        image.height = 56;
+        image.style.objectFit = "contain";
+        image.style.cursor = "pointer";
+        const marker = new maplibregl.Marker({ element: image, anchor: "center" })
+          .setLngLat([lng, lat])
+          .setPopup(new maplibregl.Popup({ offset: 28 }).setHTML(popupContent));
 
-        const marker = L.marker([lat, lng], { icon: kartIcon })
-          .addTo(kartsLayer)
-          .bindPopup(popupContent);
-
-        marker.on("click", () => this.focusKart(k));
+        image.addEventListener("click", () => this.focusKart(k));
+        kartsLayer.addLayer(marker);
         this.activeKartMarkers[k.id] = marker;
       }
     });
@@ -235,12 +237,10 @@ class KartTrackingController {
   focusKart(kart) {
     this.selectedKartId = kart.id;
     if (window.CampusMap && window.CampusMap.map) {
-      window.CampusMap.map.flyTo([kart.lat, kart.lng], 17.5, {
-        animate: true,
-        duration: 1.2
-      });
+      window.CampusMap.map.flyTo({ center: [kart.lng, kart.lat], zoom: 17.5, duration: 1200 });
       if (this.activeKartMarkers[kart.id]) {
-        this.activeKartMarkers[kart.id].openPopup();
+        const popup = this.activeKartMarkers[kart.id].getPopup();
+        if (popup && !popup.isOpen()) this.activeKartMarkers[kart.id].togglePopup();
       }
     }
   }

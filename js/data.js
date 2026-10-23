@@ -3150,7 +3150,7 @@ var CAMPUS_PERSONS = window.CAMPUS_PERSONS = [
     uid: "11518",
     designation: "Associate Professor",
     responsibility: "COD",
-    role: " ",
+    role: "COD",
     department_or_subject: null,
     block: "38",
     room: "507",

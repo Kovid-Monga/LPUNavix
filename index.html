@@ -376,6 +376,8 @@
               <span class="location-dot-icon dot-origin" title="Starting Location"></span>
               <input id="direction-origin-input" class="input-location-field" type="search" name="campus_route_origin" placeholder="Starting point (e.g. Your location)" value="Your location" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" data-lpignore="true" data-form-type="other" />
             </div>
+            <!-- Intermediate Stops Container -->
+            <div id="direction-panel-stops-container" class="direction-panel-stops-container"></div>
             <div class="input-location-row">
               <span class="location-dot-icon dot-dest" title="Destination Location"></span>
               <input id="direction-dest-input" class="input-location-field" type="search" name="campus_route_dest" placeholder="Choose destination (e.g. Block 25, UniMall)" value="" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" data-lpignore="true" data-form-type="other" />
@@ -447,81 +449,144 @@
       </div>
 
       <!-- ======================================================================
-         PANEL 5: Location Detail Card / Sheet
+         PANEL 5: Modern Location Detail Slide (Two-State Minimized & Expanded)
          ====================================================================== -->
-      <div id="details-panel" class="side-panel-drawer">
-        <div class="panel-header">
-          <div class="panel-title-wrapper">
-            <div class="panel-header-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <div id="details-panel" class="side-panel-drawer location-detail-slide" data-state="minimized">
+        <!-- Drag Handle for Mobile Slide -->
+        <div class="loc-slide-drag-handle" id="loc-slide-drag-handle">
+          <span class="loc-drag-bar"></span>
+        </div>
+
+        <!-- 1. Minimized State View (First Half of User Image) -->
+        <div class="loc-slide-minimized-card" id="loc-slide-minimized-card">
+          <div class="loc-min-header-row">
+            <div class="loc-pin-icon-box">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                 <circle cx="12" cy="10" r="3"></circle>
               </svg>
             </div>
-            <div>
-              <div class="panel-title-text">Location Details</div>
-              <div class="panel-subtitle-text">Campus Information</div>
+            <div class="loc-min-title-group" id="loc-min-click-expand">
+              <h3 class="loc-min-title" id="loc-min-title">Block 27 (CSE)</h3>
+              <div class="loc-min-subtitle" id="loc-min-subtitle">Campus Information</div>
             </div>
-          </div>
-          <button class="panel-close-btn" title="Close Details">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
-        </div>
-
-        <div class="panel-content">
-          <!-- Banner Photo -->
-          <div class="location-hero-banner">
-            <img id="detail-hero-img" class="location-hero-img" src="" alt="Location Banner" />
-            <div class="location-hero-overlay">
-              <h3 id="detail-title" class="loc-title">Placement Cell (TPC)</h3>
-              <span id="detail-floor" class="loc-floor-badge">Block 32, 2nd, 3rd &amp; 4th Floor</span>
-            </div>
+            <button class="loc-min-expand-btn" id="loc-min-expand-btn" title="Expand Details" type="button" aria-label="Expand Details">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="18 15 12 9 6 15"></polyline>
+              </svg>
+            </button>
           </div>
 
-          <p id="detail-desc" class="loc-desc">
-            Training &amp; Placement Cell (TPC) handling campus placements, internships, industry connect programs, and MNC recruitment drives across the 2nd, 3rd, and 4th floors of Block 32.
-          </p>
+          <!-- Facilities / Summary Row -->
+          <div class="loc-min-facilities-summary" id="loc-min-facilities-summary">
+            Classrooms • Computer Labs • Faculty Cabins
+          </div>
 
-          <!-- Quick Action Buttons -->
-          <div class="loc-actions-row">
-            <button id="detail-get-directions-btn" class="btn-primary">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <!-- Action Buttons Row (Directions & Share) -->
+          <div class="loc-min-actions-row">
+            <button class="loc-min-btn-directions" id="loc-min-directions-btn" type="button">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
                 <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
               </svg>
-              Directions
+              <span>Directions</span>
             </button>
-            <button class="btn-secondary" title="Save Place">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
-              </svg>
-              Save
-            </button>
-            <button class="btn-secondary" title="Share Location">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <button class="loc-min-btn-share" id="loc-min-share-btn" type="button">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="18" cy="5" r="3"></circle>
                 <circle cx="6" cy="12" r="3"></circle>
                 <circle cx="18" cy="19" r="3"></circle>
                 <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
                 <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
               </svg>
-              Share
+              <span>Share</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. Expanded State View (Second Half of User Image) -->
+        <div class="loc-slide-expanded-card" id="loc-slide-expanded-card">
+          <!-- Expanded Header Row with Close Button -->
+          <div class="loc-exp-header-row">
+            <div class="loc-pin-icon-box">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+            </div>
+            <div class="loc-exp-title-group">
+              <h2 class="loc-exp-title">Location Details</h2>
+              <div class="loc-exp-subtitle">Campus Information</div>
+            </div>
+            <button class="loc-exp-close-btn panel-close-btn" id="loc-exp-close-btn" title="Close Details" type="button" aria-label="Close Details">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
             </button>
           </div>
 
-          <!-- Meta Information -->
+          <!-- Hero Image Banner with Dark Gradient and Text Overlay -->
+          <div class="location-hero-banner" id="loc-hero-banner">
+            <img id="detail-hero-img" class="location-hero-img" src="" alt="Location Banner" />
+            <div class="location-hero-overlay">
+              <h3 id="detail-title" class="loc-title">Block 27 (CSE)</h3>
+              <span id="detail-floor" class="loc-floor-badge">Multi-storey Block • Part of School of Computer Science &amp; Engineering (CSE)</span>
+            </div>
+          </div>
+
+          <!-- KEY FACILITIES / DETAILS: -->
+          <div class="loc-facilities-section">
+            <div class="loc-facilities-label">KEY FACILITIES / DETAILS:</div>
+            <div class="loc-facilities-chips" id="detail-facilities-chips">
+              <span class="loc-facility-chip">Classrooms</span>
+              <span class="loc-facility-chip">Computer Labs</span>
+              <span class="loc-facility-chip">Faculty Cabins</span>
+            </div>
+          </div>
+
+          <!-- 3-Button Action Row: Directions, Share, Add to Route -->
+          <div class="loc-exp-actions-row">
+            <button id="detail-get-directions-btn" class="loc-exp-btn-directions" type="button">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+              </svg>
+              <span>Directions</span>
+            </button>
+            <button id="detail-share-btn" class="loc-exp-btn-secondary" type="button">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="18" cy="5" r="3"></circle>
+                <circle cx="6" cy="12" r="3"></circle>
+                <circle cx="18" cy="19" r="3"></circle>
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+              </svg>
+              <span>Share</span>
+            </button>
+            <button id="detail-add-route-btn" class="loc-exp-btn-secondary loc-btn-add-route" type="button">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="10" cy="7" r="3"></circle>
+                <path d="M4 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"></path>
+                <line x1="19" y1="8" x2="19" y2="14"></line>
+                <line x1="16" y1="11" x2="22" y2="11"></line>
+              </svg>
+              <span>Add to Route</span>
+            </button>
+          </div>
+
+          <!-- Meta Information (Opening Hours & Contact) -->
           <div class="loc-details-meta">
             <div class="meta-row">
               <span class="meta-label">Opening Hours</span>
-              <span id="detail-hours" class="meta-value">09:00 AM - 05:30 PM</span>
+              <span id="detail-hours" class="meta-value">8:00 AM – 5:30 PM</span>
             </div>
             <div class="meta-row">
               <span class="meta-label">Contact</span>
-              <span id="detail-phone" class="meta-value">01824-500031</span>
+              <span id="detail-phone" class="meta-value">N/A</span>
             </div>
           </div>
+
+          <!-- Personnel Info or Extra details (dynamically shown if available) -->
+          <div id="detail-personnel-block" class="loc-personnel-block" style="display: none;"></div>
         </div>
       </div>
 
@@ -1199,6 +1264,90 @@
           <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
         </svg>
       </button>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+     🌐 Share Location Modal (Multi-Channel Sharing & Copy Link)
+     ======================================================================== -->
+  <div id="share-modal-overlay" class="share-modal-overlay" style="display: none;">
+    <div class="share-modal-backdrop" id="share-modal-backdrop"></div>
+    <div class="share-modal-card">
+      <div class="share-modal-header">
+        <div class="share-modal-title">Share Location</div>
+        <button class="share-modal-close-btn" id="share-modal-close-btn" type="button" title="Close Share Dialog">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="share-modal-body">
+        <div class="share-loc-preview">
+          <div class="share-loc-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+              <circle cx="12" cy="10" r="3"></circle>
+            </svg>
+          </div>
+          <div class="share-loc-details">
+            <div class="share-loc-name" id="share-modal-loc-name">Block 27 (CSE)</div>
+            <div class="share-loc-sub">Lovely Professional University Campus</div>
+          </div>
+        </div>
+
+        <div class="share-link-row">
+          <input type="text" id="share-modal-link-input" class="share-link-input" readonly spellcheck="false" />
+          <button type="button" id="share-modal-copy-btn" class="share-copy-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            <span id="share-copy-text">Copy</span>
+          </button>
+        </div>
+
+        <div class="share-options-label">Share to</div>
+        <div class="share-options-grid">
+          <button class="share-opt-btn" id="share-opt-whatsapp" type="button">
+            <div class="share-opt-icon whatsapp-bg">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M17.472 14.382c-.301-.15-1.78-.879-2.056-.98-.276-.1-.477-.15-.678.15-.2.3-.778.98-.953 1.18-.175.2-.351.226-.652.075-.301-.15-1.272-.469-2.423-1.496-.896-.799-1.5-1.787-1.676-2.088-.175-.301-.019-.464.132-.614.136-.135.301-.351.451-.527.151-.175.201-.3.301-.5.101-.2.05-.376-.025-.526-.075-.15-.678-1.634-.929-2.239-.245-.589-.494-.509-.678-.518-.175-.009-.376-.01-.577-.01-.2 0-.527.075-.803.376s-1.054 1.03-1.054 2.511c0 1.482 1.079 2.912 1.23 3.113.15.201 2.124 3.243 5.145 4.548.719.311 1.28.497 1.718.636.722.23 1.378.198 1.898.12.579-.087 1.78-.727 2.03-1.429.25-.702.25-1.304.175-1.429-.075-.125-.276-.2-.577-.35zM12.04 2C6.51 2 2.03 6.48 2.03 12.01c0 1.97.57 3.81 1.57 5.37L2 22l4.78-1.53c1.5 1.02 3.3 1.58 5.26 1.58 5.53 0 10.01-4.48 10.01-10.01C22.05 6.48 17.57 2 12.04 2z"/>
+              </svg>
+            </div>
+            <span>WhatsApp</span>
+          </button>
+
+          <button class="share-opt-btn" id="share-opt-telegram" type="button">
+            <div class="share-opt-icon telegram-bg">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 0 0-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.75-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/>
+              </svg>
+            </div>
+            <span>Telegram</span>
+          </button>
+
+          <button class="share-opt-btn" id="share-opt-twitter" type="button">
+            <div class="share-opt-icon twitter-bg">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+              </svg>
+            </div>
+            <span>X / Twitter</span>
+          </button>
+
+          <button class="share-opt-btn" id="share-opt-email" type="button">
+            <div class="share-opt-icon email-bg">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
+              </svg>
+            </div>
+            <span>Email</span>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 

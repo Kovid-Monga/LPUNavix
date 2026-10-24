@@ -1072,11 +1072,15 @@ class DirectionsController {
               this.showDirections(this.currentOrigin, this.currentDestination);
             }
           }
-          if (type.startsWith("top-stop")) {
+          if (type.startsWith("top-stop") || type.startsWith("panel-stop")) {
             const idxMatch = type.match(/\d+$/);
             const idx = idxMatch ? parseInt(idxMatch[0], 10) : 0;
             this.currentStops[idx] = item.name;
             inputEl.value = item.name;
+            const topInput = document.getElementById(`gmaps-topbar-stop-input-${idx}`);
+            const panInput = document.getElementById(`direction-panel-stop-input-${idx}`);
+            if (topInput) topInput.value = item.name;
+            if (panInput) panInput.value = item.name;
             if (this.currentDestination) {
               this.showDirections(this.currentOrigin, this.currentDestination);
             }
@@ -1156,7 +1160,7 @@ class DirectionsController {
         this.currentDestination = inputEl.value;
         this.updateDestinationState(inputEl.value);
       }
-      if (type.startsWith("top-stop")) {
+      if (type.startsWith("top-stop") || type.startsWith("panel-stop")) {
         const idxMatch = type.match(/\d+$/);
         const idx = idxMatch ? parseInt(idxMatch[0], 10) : 0;
         this.currentStops[idx] = inputEl.value;
@@ -1197,7 +1201,7 @@ class DirectionsController {
             this.showDirections(this.currentOrigin, this.currentDestination);
           }
         }
-        if (type.startsWith("top-stop")) {
+        if (type.startsWith("top-stop") || type.startsWith("panel-stop")) {
           const idxMatch = type.match(/\d+$/);
           const idx = idxMatch ? parseInt(idxMatch[0], 10) : 0;
           this.currentStops[idx] = inputEl.value;
@@ -1229,64 +1233,109 @@ class DirectionsController {
   }
 
   renderStopInputs() {
-    const container = document.getElementById("gmaps-topbar-stops-container");
-    if (!container) return;
-    container.innerHTML = "";
+    // 1. Google Maps Topbar Stops Container
+    const topbarContainer = document.getElementById("gmaps-topbar-stops-container");
+    if (topbarContainer) {
+      topbarContainer.innerHTML = "";
+      this.currentStops.forEach((stopVal, index) => {
+        const stopNum = index + 1;
+        const itemEl = document.createElement("div");
+        itemEl.className = "gmaps-stop-item";
+        itemEl.dataset.index = index;
+        itemEl.innerHTML = `
+          <div class="gmaps-topbar-connector">
+            <div class="gmaps-connector-dots">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </div>
+          <div class="gmaps-topbar-row gmaps-topbar-stop-row">
+            <div class="gmaps-topbar-indicator">
+              <div class="gmaps-dot-stop">${stopNum}</div>
+            </div>
+            <div class="gmaps-topbar-input-wrap">
+              <input id="gmaps-topbar-stop-input-${index}" class="gmaps-topbar-input gmaps-stop-input" type="search" value="${stopVal || ""}" placeholder="Add stop ${stopNum}..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-form-type="other" />
+              <div id="gmaps-topbar-stop-dropdown-${index}" class="gmaps-autocomplete-dropdown"></div>
+            </div>
+            <button class="gmaps-topbar-icon-btn gmaps-stop-remove-btn" data-index="${index}" title="Remove stop ${stopNum}" type="button">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+        `;
 
-    this.currentStops.forEach((stopVal, index) => {
-      const stopNum = index + 1;
-      const itemEl = document.createElement("div");
-      itemEl.className = "gmaps-stop-item";
-      itemEl.dataset.index = index;
-      itemEl.innerHTML = `
-        <div class="gmaps-topbar-connector">
-          <div class="gmaps-connector-dots">
-            <span></span>
-            <span></span>
-            <span></span>
+        const removeBtn = itemEl.querySelector(".gmaps-stop-remove-btn");
+        if (removeBtn) {
+          removeBtn.addEventListener("click", (e) => {
+            if (e) {
+              e.preventDefault();
+              e.stopPropagation();
+            }
+            this.currentStops.splice(index, 1);
+            this.renderStopInputs();
+            if (this.currentDestination) {
+              this.showDirections(this.currentOrigin, this.currentDestination);
+            }
+          });
+        }
+
+        const inputEl = itemEl.querySelector(".gmaps-stop-input");
+        if (inputEl) {
+          this.attachAutocomplete(inputEl, `top-stop-${index}`);
+        }
+
+        topbarContainer.appendChild(itemEl);
+      });
+    }
+
+    // 2. Directions Panel Drawer Stops Container
+    const drawerContainer = document.getElementById("direction-panel-stops-container");
+    if (drawerContainer) {
+      drawerContainer.innerHTML = "";
+      this.currentStops.forEach((stopVal, index) => {
+        const stopNum = index + 1;
+        const itemEl = document.createElement("div");
+        itemEl.className = "direction-panel-stop-row";
+        itemEl.dataset.index = index;
+        itemEl.innerHTML = `
+          <span class="direction-panel-stop-dot" title="Stop ${stopNum}">${stopNum}</span>
+          <div class="direction-panel-stop-input-wrap">
+            <input id="direction-panel-stop-input-${index}" class="input-location-field direction-panel-stop-input" type="search" value="${stopVal || ""}" placeholder="Stop ${stopNum} (e.g. Block 27)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-form-type="other" />
           </div>
-        </div>
-        <div class="gmaps-topbar-row gmaps-topbar-stop-row">
-          <div class="gmaps-topbar-indicator">
-            <div class="gmaps-dot-stop">${stopNum}</div>
-          </div>
-          <div class="gmaps-topbar-input-wrap">
-            <input id="gmaps-topbar-stop-input-${index}" class="gmaps-topbar-input gmaps-stop-input" type="search" value="${stopVal || ""}" placeholder="Add stop ${stopNum}..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-form-type="other" />
-            <div id="gmaps-topbar-stop-dropdown-${index}" class="gmaps-autocomplete-dropdown"></div>
-          </div>
-          <button class="gmaps-topbar-icon-btn gmaps-stop-remove-btn" data-index="${index}" title="Remove stop ${stopNum}" type="button">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <button class="direction-panel-stop-remove-btn" data-index="${index}" title="Remove stop ${stopNum}" type="button">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
           </button>
-        </div>
-      `;
+        `;
 
-      // Wire remove button
-      const removeBtn = itemEl.querySelector(".gmaps-stop-remove-btn");
-      if (removeBtn) {
-        removeBtn.addEventListener("click", (e) => {
-          if (e) {
-            e.preventDefault();
-            e.stopPropagation();
-          }
-          this.currentStops.splice(index, 1);
-          this.renderStopInputs();
-          if (this.currentDestination) {
-            this.showDirections(this.currentOrigin, this.currentDestination);
-          }
-        });
-      }
+        const removeBtn = itemEl.querySelector(".direction-panel-stop-remove-btn");
+        if (removeBtn) {
+          removeBtn.addEventListener("click", (e) => {
+            if (e) {
+              e.preventDefault();
+              e.stopPropagation();
+            }
+            this.currentStops.splice(index, 1);
+            this.renderStopInputs();
+            if (this.currentDestination) {
+              this.showDirections(this.currentOrigin, this.currentDestination);
+            }
+          });
+        }
 
-      // Wire input autocomplete
-      const inputEl = itemEl.querySelector(".gmaps-stop-input");
-      if (inputEl) {
-        this.attachAutocomplete(inputEl, `top-stop-${index}`);
-      }
+        const inputEl = itemEl.querySelector(".direction-panel-stop-input");
+        if (inputEl) {
+          this.attachAutocomplete(inputEl, `panel-stop-${index}`);
+        }
 
-      container.appendChild(itemEl);
-    });
+        drawerContainer.appendChild(itemEl);
+      });
+    }
   }
 
   /* ==========================================================================
@@ -1526,6 +1575,69 @@ class DirectionsController {
         console.log("[LPUNavix] Route options / filter clicked");
       });
     }
+  }
+
+  /* ==========================================================================
+     📍 Open Directions with Stop (Add to Route)
+     Opens the directions topbar with Origin, intermediate stop(s), and blank destination
+     ========================================================================== */
+  openDirectionsWithStop(origin = "Your location", stopName = "", dest = "") {
+    clearTimeout(this.debounceTimer);
+    this.currentOrigin = origin || "Your location";
+    this.currentDestination = dest || "";
+    this.currentStops = stopName ? [stopName] : [];
+
+    // 1. Close location slide if open
+    if (window.UIController && typeof window.UIController.closeLocationDetails === "function") {
+      window.UIController.closeLocationDetails();
+    }
+
+    // 2. Remove gmaps-route-active so the directions drawer panel is fully visible
+    document.body.classList.remove("gmaps-route-active");
+    const topbar = document.getElementById("gmaps-route-topbar");
+    if (topbar) {
+      topbar.style.display = "none";
+    }
+    this.hideRoutePreview();
+
+    // 3. Clear active route on map if any
+    if (window.CampusMap) {
+      window.CampusMap.clearRoute();
+    }
+
+    // 4. Update input values in drawer and topbar
+    const originInput = document.getElementById("direction-origin-input");
+    const destInput = document.getElementById("direction-dest-input");
+    const topOriginInput = document.getElementById("gmaps-topbar-origin-input");
+    const topDestInput = document.getElementById("gmaps-topbar-dest-input");
+
+    if (originInput) originInput.value = this.currentOrigin;
+    if (destInput) destInput.value = this.currentDestination;
+    if (topOriginInput) topOriginInput.value = this.currentOrigin;
+    if (topDestInput) topDestInput.value = this.currentDestination;
+
+    // 5. Render stops in both drawer and topbar containers
+    this.renderStopInputs();
+
+    // 6. Open Directions panel page drawer
+    if (window.UIController) {
+      window.UIController.openLeftPanel("directions-panel");
+      document.querySelectorAll(".mobile-nav-item, .nav-item-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.view === "directions");
+      });
+      window.UIController.setNavState("directions", {
+        origin: this.currentOrigin,
+        stops: this.currentStops,
+        dest: ""
+      });
+    }
+
+    // 7. Auto-focus the destination input in the directions drawer
+    setTimeout(() => {
+      if (destInput) {
+        destInput.focus();
+      }
+    }, 150);
   }
 
   /* ==========================================================================

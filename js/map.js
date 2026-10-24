@@ -178,6 +178,24 @@ class CampusMapController {
       if (dial) dial.style.transform = `rotate(${-this.map.getBearing()}deg)`;
     });
 
+    this.map.on("click", (e) => {
+      // Ignore if a marker or cluster was just clicked
+      if (this._justClickedMarker || (Date.now() - (this._lastMarkerClickTime || 0) < 400)) {
+        return;
+      }
+      if (e && e.originalEvent && e.originalEvent.target && typeof e.originalEvent.target.closest === "function") {
+        if (e.originalEvent.target.closest(".custom-campus-pin, .custom-campus-cluster, .campus-pin-wrapper, .maplibregl-marker")) {
+          return;
+        }
+      }
+      if (this.selectedLocationId) {
+        this.clearRevealedLocations();
+        if (window.UIController && typeof window.UIController.closeLocationDetails === "function") {
+          window.UIController.closeLocationDetails();
+        }
+      }
+    });
+
     const refreshMapSize = () => {
       if (this.map) requestAnimationFrame(() => this.map.resize());
     };
@@ -1308,7 +1326,14 @@ class CampusMapController {
 
         const clusterMarker = this.addHtmlMarker(item.latLng, clusterHtml, "campus-pin-wrapper", 1000);
         clusterMarker.getElement().addEventListener("click", (e) => {
-          e.stopPropagation();
+          if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+          this._justClickedMarker = true;
+          this._lastMarkerClickTime = Date.now();
+          setTimeout(() => { this._justClickedMarker = false; }, 400);
+
           if (item.bounds) {
             this.map.fitBounds(this.expandBounds(item.bounds, 0.22), { maxZoom: 17.5, duration: 850, padding: 60 });
           } else if (item.latLng) {
@@ -1340,7 +1365,14 @@ class CampusMapController {
 
         const marker = this.addHtmlMarker([loc.lat, loc.lng], customHtml, "campus-pin-wrapper", isSelected || isRevealed ? 1000 : 0);
         marker.getElement().addEventListener("click", (e) => {
-          e.stopPropagation();
+          if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+          this._justClickedMarker = true;
+          this._lastMarkerClickTime = Date.now();
+          setTimeout(() => { this._justClickedMarker = false; }, 400);
+
           this.selectedLocationId = loc.id;
           this.renderLocationMarkers(this.currentFilterCategory || "all");
           if (window.UIController) {

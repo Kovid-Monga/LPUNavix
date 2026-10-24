@@ -35,5 +35,33 @@ document.addEventListener("DOMContentLoaded", () => {
     window.KartTracker.init();
   }
 
+  // 6. Handle Shared Location Deep Links (?loc=... or #loc=...)
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    let targetLocId = urlParams.get("loc") || urlParams.get("location") || urlParams.get("place");
+    if (!targetLocId && window.location.hash) {
+      const hashMatch = window.location.hash.match(/[#&]loc=([^&]+)/);
+      if (hashMatch) targetLocId = decodeURIComponent(hashMatch[1]);
+    }
+
+    if (targetLocId) {
+      const cleanTarget = String(targetLocId).trim().toLowerCase();
+      const allLocs = (typeof getAllCampusLocations === "function") ? getAllCampusLocations() : (window.CAMPUS_LOCATIONS || []);
+      const matched = allLocs.find(l => 
+        (l.id && l.id.toLowerCase() === cleanTarget) ||
+        (l.name && l.name.toLowerCase() === cleanTarget) ||
+        (l.location_notation && l.location_notation.toLowerCase() === cleanTarget)
+      );
+
+      if (matched && window.UIController) {
+        setTimeout(() => {
+          window.UIController.showLocationDetails(matched, false, "minimized");
+        }, 350);
+      }
+    }
+  } catch (err) {
+    console.warn("[LPUNavix] Error parsing deep link loc param:", err);
+  }
+
   console.log("✨ LPU Map Frontend Initialized Successfully!");
 });

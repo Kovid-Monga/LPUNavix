@@ -733,14 +733,35 @@ class UIController {
   }
 
   /* ==========================================================================
-     Location Details Modal (Panel 5)
+     Location Details Slide (Two-State Minimized & Expanded)
      ========================================================================== */
-  showLocationDetails(loc, skipHistory = false) {
+  showLocationDetails(loc, skipHistory = false, initialMode = "minimized") {
+    if (!loc) return;
+    this.currentLocationData = loc;
     const detailsPanel = document.getElementById("details-panel");
     if (!detailsPanel) return;
 
+    // --- 1. Minimized View Population ---
+    const minTitle = document.getElementById("loc-min-title");
+    if (minTitle) minTitle.textContent = loc.name;
+
+    const minSub = document.getElementById("loc-min-subtitle");
+    if (minSub) minSub.textContent = "Campus Information";
+
+    const minFacilities = document.getElementById("loc-min-facilities-summary");
+    if (minFacilities) {
+      if (Array.isArray(loc.facilities) && loc.facilities.length > 0) {
+        minFacilities.textContent = loc.facilities.slice(0, 3).join(" • ");
+      } else {
+        minFacilities.textContent = loc.desc || "Classrooms • Computer Labs • Faculty Cabins";
+      }
+    }
+
+    // --- 2. Expanded View Population ---
     const heroImg = document.getElementById("detail-hero-img");
-    if (heroImg) heroImg.src = loc.image || "https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?w=600&auto=format&fit=crop&q=80";
+    if (heroImg) {
+      heroImg.src = loc.image || "https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?w=600&auto=format&fit=crop&q=80";
+    }
 
     const titleEl = document.getElementById("detail-title");
     if (titleEl) titleEl.textContent = loc.name;
@@ -748,66 +769,465 @@ class UIController {
     const floorEl = document.getElementById("detail-floor");
     if (floorEl) {
       const parentBadge = loc.groupName ? ` • Part of ${loc.groupName}` : "";
-      floorEl.textContent = `${loc.floor || ""}${parentBadge}`;
+      floorEl.textContent = `${loc.floor || "Multi-storey Block"}${parentBadge}`;
     }
 
-    // Facilities badge list
-    let facilitiesHtml = "";
-    if (Array.isArray(loc.facilities) && loc.facilities.length > 0) {
-      facilitiesHtml = `
-        <div style="margin-top:8px;">
-          <div style="font-weight:700;font-size:11px;color:var(--text-muted);margin-bottom:4px;">KEY FACILITIES / DETAILS:</div>
-          <div style="display:flex;flex-wrap:wrap;gap:4px;">
-            ${loc.facilities.map(f => `<span style="padding:2px 8px;border-radius:12px;background:var(--bg-pill);font-size:11px;font-weight:600;color:var(--text-secondary);">${f}</span>`).join("")}
+    // Facilities Chips
+    const chipsContainer = document.getElementById("detail-facilities-chips");
+    if (chipsContainer) {
+      const facs = (Array.isArray(loc.facilities) && loc.facilities.length > 0)
+        ? loc.facilities
+        : ["Classrooms", "Computer Labs", "Faculty Cabins"];
+      chipsContainer.innerHTML = facs.map(f => `<span class="loc-facility-chip">${f}</span>`).join("");
+    }
+
+    // Personnel info block if available
+    const personnelBlock = document.getElementById("detail-personnel-block");
+    if (personnelBlock) {
+      if (loc.uid) {
+        personnelBlock.innerHTML = `
+          <div style="margin-top:12px;padding:12px;background:var(--bg-pill,#f1f5f9);border-radius:12px;display:flex;flex-direction:column;gap:6px;font-size:12px;">
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);font-weight:600;">UID:</span><span style="font-weight:700;color:var(--text-primary);">${loc.uid}</span></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);font-weight:600;">Designation:</span><span style="font-weight:700;color:var(--text-primary);">${loc.designation || "Faculty"}</span></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);font-weight:600;">Role:</span><span style="font-weight:700;color:var(--color-primary);">${loc.role || loc.responsibility || "Faculty"}</span></div>
+            ${loc.department_or_subject ? `<div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);font-weight:600;">Department:</span><span style="font-weight:700;color:var(--text-primary);">${loc.department_or_subject}</span></div>` : ""}
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);font-weight:600;">Block:</span><span style="font-weight:700;color:var(--text-primary);">Block ${loc.block}</span></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);font-weight:600;">Room:</span><span style="font-weight:700;color:var(--text-primary);">${loc.room}</span></div>
+            ${loc.seating ? `<div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);font-weight:600;">Cabin:</span><span style="font-weight:700;color:var(--text-primary);">Cabin ${loc.seating}</span></div>` : ""}
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);font-weight:600;">Location Code:</span><span style="font-weight:700;color:var(--text-primary);">${loc.location_notation || `${loc.block}-${loc.room}`}</span></div>
           </div>
-        </div>
-      `;
-    }
-
-    // Personnel structured info if available
-    let personnelHtml = "";
-    if (loc.uid) {
-      personnelHtml = `
-        <div style="margin-top:10px;padding:12px;background:var(--bg-pill);border-radius:var(--radius-md);display:flex;flex-direction:column;gap:6px;font-size:12px;">
-          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);font-weight:600;">UID:</span><span style="font-weight:700;color:var(--text-primary);">${loc.uid}</span></div>
-          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);font-weight:600;">Designation:</span><span style="font-weight:700;color:var(--text-primary);">${loc.designation || "Faculty"}</span></div>
-          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);font-weight:600;">Role:</span><span style="font-weight:700;color:var(--color-primary);">${loc.role || loc.responsibility || "Faculty"}</span></div>
-          ${loc.department_or_subject ? `<div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);font-weight:600;">Department:</span><span style="font-weight:700;color:var(--text-primary);">${loc.department_or_subject}</span></div>` : ""}
-          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);font-weight:600;">Block:</span><span style="font-weight:700;color:var(--text-primary);">Block ${loc.block}</span></div>
-          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);font-weight:600;">Room:</span><span style="font-weight:700;color:var(--text-primary);">${loc.room}</span></div>
-          ${loc.seating ? `<div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);font-weight:600;">Cabin / Seating:</span><span style="font-weight:700;color:var(--text-primary);">Cabin ${loc.seating}</span></div>` : ""}
-          ${loc.office ? `<div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);font-weight:600;">Office:</span><span style="font-weight:700;color:var(--text-primary);">${loc.office}</span></div>` : ""}
-          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);font-weight:600;">Location Code:</span><span style="font-weight:700;color:var(--text-primary);">${loc.location_notation || `${loc.block}-${loc.room}`}</span></div>
-        </div>
-      `;
+        `;
+        personnelBlock.style.display = "block";
+      } else {
+        personnelBlock.innerHTML = "";
+        personnelBlock.style.display = "none";
+      }
     }
 
     const descEl = document.getElementById("detail-desc");
-    if (descEl) descEl.innerHTML = `${loc.desc || ""}${personnelHtml}${facilitiesHtml}`;
+    if (descEl) descEl.textContent = loc.desc || "";
 
     const hoursEl = document.getElementById("detail-hours");
-    if (hoursEl) hoursEl.textContent = loc.hours || "Open Daily";
+    if (hoursEl) hoursEl.textContent = loc.hours || "8:00 AM – 5:30 PM";
 
     const phoneEl = document.getElementById("detail-phone");
     if (phoneEl) phoneEl.textContent = loc.phone || "N/A";
 
-    const getDirectionsBtn = document.getElementById("detail-get-directions-btn");
-    if (getDirectionsBtn) {
-      getDirectionsBtn.onclick = () => {
-        const originVal = document.getElementById("direction-origin-input")?.value || "Your Current Location";
-        this.switchView("directions", originVal, loc.name);
-      };
+    // --- 3. Wire Interactive Action Buttons ---
+    const handleDirections = (e) => {
+      if (e) e.preventDefault();
+      this.closeLocationDetails();
+      if (window.Directions && typeof window.Directions.showDirections === "function") {
+        window.Directions.showDirections("Your location", loc.name);
+      } else {
+        this.switchView("directions", "Your location", loc.name);
+      }
+    };
+
+    const handleShare = (e) => {
+      if (e) e.preventDefault();
+      this.openShareModal(loc);
+    };
+
+    const handleAddToRoute = (e) => {
+      if (e) e.preventDefault();
+      if (window.Directions && typeof window.Directions.openDirectionsWithStop === "function") {
+        window.Directions.openDirectionsWithStop("Your location", loc.name, "");
+      }
+    };
+
+    // Directions buttons (both minimized and expanded)
+    const minDirBtn = document.getElementById("loc-min-directions-btn");
+    const expDirBtn = document.getElementById("detail-get-directions-btn");
+    if (minDirBtn) minDirBtn.onclick = handleDirections;
+    if (expDirBtn) expDirBtn.onclick = handleDirections;
+
+    // Share buttons (both minimized and expanded)
+    const minShareBtn = document.getElementById("loc-min-share-btn");
+    const expShareBtn = document.getElementById("detail-share-btn");
+    if (minShareBtn) minShareBtn.onclick = handleShare;
+    if (expShareBtn) expShareBtn.onclick = handleShare;
+
+    // Add to Route button (expanded card)
+    const addToRouteBtn = document.getElementById("detail-add-route-btn");
+    if (addToRouteBtn) addToRouteBtn.onclick = handleAddToRoute;
+
+    // Expand button (minimized card)
+    const expandBtn = document.getElementById("loc-min-expand-btn");
+    const clickExpand = document.getElementById("loc-min-click-expand");
+    if (expandBtn) expandBtn.onclick = () => this.expandLocationDetails();
+    if (clickExpand) clickExpand.onclick = () => this.expandLocationDetails();
+
+    // Close button (expanded card)
+    const closeBtn = document.getElementById("loc-exp-close-btn");
+    if (closeBtn) closeBtn.onclick = () => this.closeLocationDetails();
+
+    // Attach gestures to drag handle
+    this.setupSlideGestures(detailsPanel);
+
+    // --- 4. Apply Initial State ---
+    detailsPanel.style.opacity = "1";
+    detailsPanel.style.pointerEvents = "auto";
+    detailsPanel.classList.add("active");
+    this.currentActivePanel = "details-panel";
+
+    if (initialMode === "expanded") {
+      this.expandLocationDetails();
+    } else {
+      this.minimizeLocationDetails();
     }
 
+    // Set navigation history state
     if (!skipHistory) {
       this.setNavState("details", { loc: loc, locId: loc.id });
     }
 
-    this.openLeftPanel("details-panel", { loc }, true);
-
-    if (!skipHistory && window.CampusMap && loc.lat && loc.lng) {
-      window.CampusMap.flyToLocation(loc.lat, loc.lng, 17.5);
+    // Highlight and center on Map
+    if (window.CampusMap) {
+      window.CampusMap.selectedLocationId = loc.id;
+      if (typeof window.CampusMap.renderLocationMarkers === "function") {
+        window.CampusMap.renderLocationMarkers(window.CampusMap.currentFilterCategory || "all");
+      }
+      if (loc.lat && loc.lng && typeof window.CampusMap.flyToLocation === "function") {
+        window.CampusMap.flyToLocation(loc.lat, loc.lng, 17.5);
+      }
     }
+  }
+
+  getSlideCollapsedOffset(panel) {
+    if (!panel) panel = document.getElementById("details-panel");
+    if (!panel) return 360;
+    const h = panel.offsetHeight || Math.round(window.innerHeight * 0.82);
+    // Minimized visible height is ~175px (handle ~24px + minimized card ~150px)
+    return Math.max(160, h - 175);
+  }
+
+  minimizeLocationDetails() {
+    const detailsPanel = document.getElementById("details-panel");
+    if (!detailsPanel) return;
+    const minCard = document.getElementById("loc-slide-minimized-card");
+    const expCard = document.getElementById("loc-slide-expanded-card");
+
+    detailsPanel.classList.remove("expanded");
+    detailsPanel.classList.add("minimized");
+    detailsPanel.setAttribute("data-state", "minimized");
+    detailsPanel.style.opacity = "1";
+    detailsPanel.style.pointerEvents = "auto";
+
+    if (window.innerWidth <= 768) {
+      const offset = this.getSlideCollapsedOffset(detailsPanel);
+      detailsPanel.style.transition = "transform 0.38s cubic-bezier(0.22, 1, 0.36, 1)";
+      detailsPanel.style.transform = `translateY(${offset}px)`;
+      if (minCard) {
+        minCard.style.transition = "opacity 0.25s ease, transform 0.25s ease";
+        minCard.style.opacity = "1";
+        minCard.style.transform = "translateY(0)";
+        minCard.style.pointerEvents = "auto";
+        minCard.style.display = "block";
+      }
+      if (expCard) {
+        expCard.style.transition = "opacity 0.25s ease, transform 0.25s ease";
+        expCard.style.opacity = "0";
+        expCard.style.transform = "translateY(14px)";
+        expCard.style.pointerEvents = "none";
+      }
+    } else {
+      detailsPanel.style.transform = "translateY(0)";
+      if (minCard) {
+        minCard.style.display = "block";
+        minCard.style.opacity = "1";
+        minCard.style.pointerEvents = "auto";
+      }
+      if (expCard) {
+        expCard.style.display = "none";
+        expCard.style.opacity = "0";
+        expCard.style.pointerEvents = "none";
+      }
+    }
+  }
+
+  expandLocationDetails() {
+    const detailsPanel = document.getElementById("details-panel");
+    if (!detailsPanel) return;
+    const minCard = document.getElementById("loc-slide-minimized-card");
+    const expCard = document.getElementById("loc-slide-expanded-card");
+
+    detailsPanel.classList.remove("minimized");
+    detailsPanel.classList.add("expanded");
+    detailsPanel.setAttribute("data-state", "expanded");
+    detailsPanel.style.opacity = "1";
+    detailsPanel.style.pointerEvents = "auto";
+
+    if (window.innerWidth <= 768) {
+      detailsPanel.style.transition = "transform 0.38s cubic-bezier(0.22, 1, 0.36, 1)";
+      detailsPanel.style.transform = "translateY(0px)";
+      if (minCard) {
+        minCard.style.transition = "opacity 0.25s ease, transform 0.25s ease";
+        minCard.style.opacity = "0";
+        minCard.style.transform = "translateY(-14px)";
+        minCard.style.pointerEvents = "none";
+      }
+      if (expCard) {
+        expCard.style.transition = "opacity 0.28s ease, transform 0.28s ease";
+        expCard.style.opacity = "1";
+        expCard.style.transform = "translateY(0)";
+        expCard.style.pointerEvents = "auto";
+        expCard.style.display = "block";
+      }
+    } else {
+      detailsPanel.style.transform = "translateY(0)";
+      if (minCard) {
+        minCard.style.display = "none";
+        minCard.style.opacity = "0";
+        minCard.style.pointerEvents = "none";
+      }
+      if (expCard) {
+        expCard.style.display = "block";
+        expCard.style.opacity = "1";
+        expCard.style.pointerEvents = "auto";
+      }
+    }
+  }
+
+  closeLocationDetails() {
+    const detailsPanel = document.getElementById("details-panel");
+    if (detailsPanel) {
+      detailsPanel.style.transition = "transform 0.32s cubic-bezier(0.32, 0, 0.67, 0)";
+      if (window.innerWidth <= 768) {
+        detailsPanel.style.transform = "translateY(105%)";
+      } else {
+        detailsPanel.style.transform = "translateY(30px)";
+        detailsPanel.style.opacity = "0";
+      }
+
+      setTimeout(() => {
+        detailsPanel.classList.remove("active", "minimized", "expanded");
+        detailsPanel.removeAttribute("data-state");
+        detailsPanel.style.transform = "";
+        detailsPanel.style.transition = "";
+        detailsPanel.style.opacity = "";
+      }, 320);
+    }
+    if (window.CampusMap && typeof window.CampusMap.clearRevealedLocations === "function") {
+      window.CampusMap.clearRevealedLocations();
+    }
+    this.currentActivePanel = null;
+  }
+
+  setupSlideGestures(panel) {
+    if (!panel || panel._gesturesBound) return;
+    panel._gesturesBound = true;
+
+    const handle = document.getElementById("loc-slide-drag-handle");
+    const minCard = document.getElementById("loc-slide-minimized-card");
+    const expCard = document.getElementById("loc-slide-expanded-card");
+
+    // Click on drag handle toggles expanded / minimized
+    if (handle) {
+      handle.addEventListener("click", () => {
+        if (panel._dragDistance && Math.abs(panel._dragDistance) > 10) return;
+        const isExp = panel.classList.contains("expanded") || panel.getAttribute("data-state") === "expanded";
+        if (isExp) {
+          this.minimizeLocationDetails();
+        } else {
+          this.expandLocationDetails();
+        }
+      });
+    }
+
+    let startY = 0;
+    let currentY = 0;
+    let isDragging = false;
+    let touchStartTime = 0;
+    let startTranslateY = 0;
+    let collapsedOffset = 360;
+
+    const onTouchStart = (e) => {
+      if (window.innerWidth > 768) return;
+      if (!e.touches || !e.touches[0]) return;
+
+      const target = e.target;
+      if (target.closest("button") || target.closest("a") || target.closest(".share-option-btn") || target.closest(".loc-facility-chip")) {
+        return;
+      }
+
+      const isExp = panel.classList.contains("expanded") || panel.getAttribute("data-state") === "expanded";
+
+      if (isExp && expCard && expCard.contains(target)) {
+        if (expCard.scrollTop > 2 && !target.closest(".loc-exp-header-row") && !target.closest("#loc-hero-banner")) {
+          return;
+        }
+      }
+
+      startY = e.touches[0].clientY;
+      currentY = startY;
+      touchStartTime = Date.now();
+      panel._dragDistance = 0;
+      collapsedOffset = this.getSlideCollapsedOffset(panel);
+      startTranslateY = isExp ? 0 : collapsedOffset;
+
+      isDragging = true;
+    };
+
+    const onTouchMove = (e) => {
+      if (!isDragging || !e.touches || !e.touches[0]) return;
+      currentY = e.touches[0].clientY;
+      const deltaY = currentY - startY;
+      panel._dragDistance = deltaY;
+
+      const isExp = panel.classList.contains("expanded") || panel.getAttribute("data-state") === "expanded";
+
+      if (isExp && expCard && deltaY < 0 && !e.target.closest("#loc-slide-drag-handle")) {
+        return;
+      }
+
+      let newTranslateY = startTranslateY + deltaY;
+
+      if (newTranslateY < 0) {
+        newTranslateY = deltaY * 0.28;
+      }
+
+      panel.style.transition = "none";
+      panel.style.transform = `translateY(${Math.round(newTranslateY)}px)`;
+
+      const progress = Math.min(1, Math.max(0, 1 - (newTranslateY / collapsedOffset)));
+      if (minCard) {
+        minCard.style.transition = "none";
+        minCard.style.opacity = Math.max(0, 1 - progress * 2.2);
+        minCard.style.transform = `translateY(${progress * -14}px)`;
+        minCard.style.pointerEvents = progress > 0.5 ? "none" : "auto";
+      }
+      if (expCard) {
+        expCard.style.transition = "none";
+        expCard.style.opacity = Math.min(1, Math.max(0, (progress - 0.2) * 1.25));
+        expCard.style.transform = `translateY(${(1 - progress) * 16}px)`;
+        expCard.style.pointerEvents = progress > 0.5 ? "auto" : "none";
+      }
+
+      if (Math.abs(deltaY) > 8 && e.cancelable) {
+        e.preventDefault();
+      }
+    };
+
+    const onTouchEnd = () => {
+      if (!isDragging) return;
+      isDragging = false;
+
+      const deltaY = currentY - startY;
+      const timeElapsed = Math.max(1, Date.now() - touchStartTime);
+      const velocityY = deltaY / timeElapsed;
+
+      const isExp = panel.classList.contains("expanded") || panel.getAttribute("data-state") === "expanded";
+
+      if (!isExp) {
+        if (deltaY < -35 || velocityY < -0.3) {
+          this.expandLocationDetails();
+        } else if (deltaY > 80 || velocityY > 0.4) {
+          this.closeLocationDetails();
+        } else {
+          this.minimizeLocationDetails();
+        }
+      } else {
+        if (deltaY > 60 || velocityY > 0.3) {
+          if (deltaY > collapsedOffset * 0.85) {
+            this.closeLocationDetails();
+          } else {
+            this.minimizeLocationDetails();
+          }
+        } else {
+          this.expandLocationDetails();
+        }
+      }
+    };
+
+    panel.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
+    window.addEventListener("touchend", onTouchEnd, { passive: true });
+    window.addEventListener("touchcancel", onTouchEnd, { passive: true });
+  }
+
+  openShareModal(loc) {
+    if (!loc) loc = this.currentLocationData;
+    if (!loc) return;
+    const overlay = document.getElementById("share-modal-overlay");
+    if (!overlay) return;
+
+    const shareId = loc.id || loc.name;
+    const baseUrl = window.location.origin + window.location.pathname;
+    const shareUrl = `${baseUrl}?loc=${encodeURIComponent(shareId)}`;
+    const shareText = `Explore ${loc.name} on LPUNavix - Interactive Campus Navigation:`;
+
+    const nameEl = document.getElementById("share-modal-loc-name");
+    if (nameEl) nameEl.textContent = loc.name;
+
+    const linkInput = document.getElementById("share-modal-link-input");
+    if (linkInput) linkInput.value = shareUrl;
+
+    const copyBtn = document.getElementById("share-modal-copy-btn");
+    const copyText = document.getElementById("share-copy-text");
+    if (copyBtn && copyText) {
+      copyText.textContent = "Copy";
+      copyBtn.onclick = () => {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(shareUrl).then(() => {
+            copyText.textContent = "Copied! ✓";
+            setTimeout(() => { copyText.textContent = "Copy"; }, 2500);
+          }).catch(() => {
+            linkInput.select();
+            document.execCommand("copy");
+            copyText.textContent = "Copied! ✓";
+            setTimeout(() => { copyText.textContent = "Copy"; }, 2500);
+          });
+        } else {
+          linkInput.select();
+          document.execCommand("copy");
+          copyText.textContent = "Copied! ✓";
+          setTimeout(() => { copyText.textContent = "Copy"; }, 2500);
+        }
+      };
+    }
+
+    const waBtn = document.getElementById("share-opt-whatsapp");
+    if (waBtn) {
+      waBtn.onclick = () => {
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`, '_blank');
+      };
+    }
+
+    const tgBtn = document.getElementById("share-opt-telegram");
+    if (tgBtn) {
+      tgBtn.onclick = () => {
+        window.open(`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`, '_blank');
+      };
+    }
+
+    const twBtn = document.getElementById("share-opt-twitter");
+    if (twBtn) {
+      twBtn.onclick = () => {
+        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`, '_blank');
+      };
+    }
+
+    const mailBtn = document.getElementById("share-opt-email");
+    if (mailBtn) {
+      mailBtn.onclick = () => {
+        window.location.href = `mailto:?subject=${encodeURIComponent(loc.name + ' - LPUNavix')}&body=${encodeURIComponent(shareText + '\n\n' + shareUrl)}`;
+      };
+    }
+
+    // Close buttons & backdrop click
+    const closeBtn = document.getElementById("share-modal-close-btn");
+    if (closeBtn) closeBtn.onclick = () => this.closeShareModal();
+
+    const backdrop = document.getElementById("share-modal-backdrop");
+    if (backdrop) backdrop.onclick = () => this.closeShareModal();
+
+    overlay.style.display = "flex";
+  }
+
+  closeShareModal() {
+    const overlay = document.getElementById("share-modal-overlay");
+    if (overlay) overlay.style.display = "none";
   }
 
   triggerShowOnMap(locationId, targetTitle = null) {

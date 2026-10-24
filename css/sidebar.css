@@ -111,8 +111,14 @@
 /* Active Nav State */
 .nav-item-btn.active {
   background-color: var(--color-primary);
-  color: #ffffff;
+  color: var(--text-inverse, #ffffff);
   box-shadow: 0 4px 14px var(--color-primary-glow);
+}
+
+[data-theme="dark"] .nav-item-btn.active {
+  background-color: #22396f;
+  color: #fcf1d0;
+  box-shadow: 0 4px 14px rgba(34, 57, 111, 0.6);
 }
 
 .nav-item-btn.active svg {

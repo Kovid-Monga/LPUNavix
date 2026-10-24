@@ -609,65 +609,65 @@
   /* Mobile controls follow the selected theme. */
   [data-theme="dark"] .mobile-action-btn,
   [data-theme="dark"] .map-ctrl-btn {
-    background: rgba(17, 24, 39, 0.96);
-    border-color: rgba(148, 163, 184, 0.22);
-    color: #f8fafc;
+    background: rgba(13, 28, 66, 0.96);
+    border-color: #22396f;
+    color: #fcf1d0;
   }
 
   [data-theme="dark"] .mobile-action-btn:active,
   [data-theme="dark"] .map-ctrl-btn:hover,
   [data-theme="dark"] .map-ctrl-btn:active {
-    background: #1e293b;
-    color: #60a5fa;
+    background: #22396f;
+    color: #fcf1d0;
   }
 
   [data-theme="dark"] .search-input-wrapper {
-    background: rgba(17, 24, 39, 0.96);
-    border-color: rgba(148, 163, 184, 0.24);
+    background: rgba(13, 28, 66, 0.96);
+    border-color: #22396f;
   }
 
   [data-theme="dark"] .search-input,
   [data-theme="dark"] .search-icon,
   [data-theme="dark"] .search-filter-btn {
-    color: #f8fafc;
+    color: #fcf1d0;
   }
 
   [data-theme="dark"] .search-input::placeholder {
-    color: #94a3b8;
+    color: rgba(252, 241, 208, 0.55);
   }
 
   [data-theme="dark"] .chip-btn:not(.active) {
-    background: rgba(30, 41, 59, 0.96);
-    border-color: rgba(148, 163, 184, 0.22);
-    color: #f8fafc;
+    background: rgba(13, 28, 66, 0.96);
+    border-color: #22396f;
+    color: #fcf1d0;
   }
 
   [data-theme="dark"] .chip-btn:not(.active) .chip-icon {
-    color: #cbd5e1;
+    color: rgba(252, 241, 208, 0.75);
   }
 
   [data-theme="dark"] .map-layer-toggle-card,
   [data-theme="dark"] .mobile-bottom-nav {
-    background: rgba(17, 24, 39, 0.96);
-    border-color: rgba(148, 163, 184, 0.22);
+    background: rgba(13, 28, 66, 0.96);
+    border-color: #22396f;
   }
 
   [data-theme="dark"] .layer-card-header,
   [data-theme="dark"] .layer-title-text,
   [data-theme="dark"] .layer-chk-label,
   [data-theme="dark"] .mobile-nav-item {
-    color: #f8fafc;
+    color: #fcf1d0;
   }
 
   [data-theme="dark"] .layer-toggle-items {
-    border-top-color: rgba(148, 163, 184, 0.22);
+    border-top-color: #22396f;
   }
 
   [data-theme="dark"] .ctrl-assistant-btn {
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #6366f1 100%) !important;
-    border-color: rgba(255, 255, 255, 0.35) !important;
-    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.45) !important;
-    color: #ffffff !important;
+    background: #22396f !important;
+    border-color: #fcf1d0 !important;
+    box-shadow: 0 4px 20px rgba(34, 57, 111, 0.5) !important;
+    color: #fcf1d0 !important;
   }
 
   /* Active Indicator Dot under icon/label */
@@ -724,6 +724,12 @@
     -webkit-backdrop-filter: blur(20px);
   }
 
+  [data-theme="dark"] .side-panel-drawer {
+    background: rgba(13, 28, 66, 0.98);
+    border-color: #22396f;
+    color: #fcf1d0;
+  }
+
   .side-panel-drawer.active {
     transform: translateY(0);
     pointer-events: auto;
@@ -736,6 +742,10 @@
     border-radius: 4px;
     background-color: #cbd5e1;
     margin: 8px auto 2px auto;
+  }
+
+  [data-theme="dark"] .mobile-sheet-drag-handle {
+    background-color: #22396f;
   }
 
   .panel-header {
@@ -862,14 +872,27 @@
   }
 
   #search-filter-panel .btn-primary {
-    background: #2563eb;
-    color: #fff;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    background: var(--color-primary);
+    color: var(--text-inverse);
+    box-shadow: 0 4px 12px var(--color-primary-glow);
   }
 
   #search-filter-panel .btn-secondary {
-    background: #f1f5f9;
-    color: #1e293b;
+    background: var(--bg-pill);
+    color: var(--text-primary);
+    border: 1px solid var(--border-light);
+  }
+
+  [data-theme="dark"] #search-filter-panel .btn-primary {
+    background: #22396f;
+    color: #fcf1d0;
+    border: 1px solid #fcf1d0;
+  }
+
+  [data-theme="dark"] #search-filter-panel .btn-secondary {
+    background: #0d1c42;
+    color: #fcf1d0;
+    border-color: #22396f;
   }
 
 
@@ -894,6 +917,12 @@
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
     z-index: 1028;
     animation: slideUpEta 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  [data-theme="dark"] .mobile-nav-eta-bar {
+    background-color: rgba(13, 28, 66, 0.96);
+    border-color: #22396f;
+    color: #fcf1d0;
   }
 
   .mobile-nav-eta-bar.active {

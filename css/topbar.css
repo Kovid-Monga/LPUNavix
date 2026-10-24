@@ -318,9 +318,16 @@
 
 .chip-btn.active {
   background-color: var(--color-primary);
-  color: #ffffff;
+  color: var(--text-inverse, #ffffff);
   border-color: var(--color-primary);
   box-shadow: 0 4px 12px var(--color-primary-glow);
+}
+
+[data-theme="dark"] .chip-btn.active {
+  background-color: #22396f;
+  color: #fcf1d0;
+  border-color: #fcf1d0;
+  box-shadow: 0 4px 12px rgba(34, 57, 111, 0.5);
 }
 
 /* Floating Weather Widget (Bottom Left or Top) */

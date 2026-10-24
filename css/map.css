@@ -585,6 +585,28 @@
   color: #94a3b8;
 }
 
+/* Dark Theme Adjustments for Pins */
+[data-theme="dark"] .custom-campus-pin {
+  background: #0d1c42;
+  border-color: #22396f;
+  box-shadow: 0 2px 10px rgba(1, 7, 54, 0.5);
+}
+
+[data-theme="dark"] .custom-campus-pin .pin-label {
+  color: #fcf1d0;
+}
+
+[data-theme="dark"] .custom-campus-pin.selected,
+[data-theme="dark"] .custom-campus-pin.revealed {
+  background: #0d1c42;
+  border-color: #fcf1d0;
+}
+
+[data-theme="dark"] .custom-campus-pin.selected .pin-label,
+[data-theme="dark"] .custom-campus-pin.revealed .pin-label {
+  color: #fcf1d0;
+}
+
 /* Icon-Only Pin (Collision Avoidance Mode / Dense cluster mode) */
 .custom-campus-pin.pin-icon-only {
   background: transparent !important;
@@ -1270,88 +1292,12 @@
 /* ============================================================================
    Floating Route ETA Badge (Dotted Preview Mode)
    ============================================================================ */
-.route-eta-pill-badge-wrap {
-  width: 0 !important;
-  height: 0 !important;
-  position: relative !important;
-  background: transparent !important;
-  border: none !important;
-  overflow: visible !important;
-  pointer-events: auto !important;
-}
-
+.route-eta-pill-badge-wrap,
 .map-route-floating-badge {
-  position: absolute;
-  left: 0;
-  top: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 5px 12px;
-  background: rgba(15, 23, 42, 0.94);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1.5px solid rgba(255, 255, 255, 0.25);
-  border-radius: 9999px;
-  color: #ffffff;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  white-space: nowrap;
-  user-select: none;
-  cursor: pointer;
-  transform: translate(-50%, -50%);
-  animation: badgePop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-  transition: transform 0.18s ease, background 0.18s ease;
-}
-
-.map-route-floating-badge:hover {
-  transform: translate(-50%, -50%) scale(1.05);
-  background: rgba(15, 23, 42, 1.0);
-}
-
-@keyframes badgePop {
-  from {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.85);
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-  }
-}
-
-.map-route-floating-badge .floating-badge-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  opacity: 0.75;
-  transition: opacity 0.15s ease;
-}
-
-.map-route-floating-badge .floating-badge-item.active-item {
-  opacity: 1;
-  font-weight: 800;
-  color: #38bdf8;
-}
-
-.map-route-floating-badge .badge-icon {
-  font-size: 13px;
-}
-
-.map-route-floating-badge .badge-time {
-  font-size: 11.5px;
-  font-weight: 700;
-}
-
-.map-route-floating-badge .badge-dist {
-  font-size: 10px;
-  font-weight: 600;
-  opacity: 0.8;
-}
-
-.map-route-floating-badge .badge-divider {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.3);
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
 /* ============================================================================

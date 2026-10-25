@@ -38,6 +38,9 @@ from api.rag import (
     init_rag,
     router as rag_router,
     shutdown_rag,
+    embed_texts,
+    embed_query,
+    generate_reply,
 )
 
 

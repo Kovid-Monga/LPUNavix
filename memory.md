@@ -235,7 +235,8 @@ The backend is built with **FastAPI** (`api/main.py`). It serves both the API en
 // - fashion-design-dept: School of Fashion Design
 // - library: Central Library
 // - auditorium: Auditoriums
-// - residential-area: Residential Area (BH-1, BH-2, BH-3, BH-5, BH-6, BS-11, BS-12, BS-13, Apartment AB, Apartment CD)
+// - residential-area: Boys Residential Area (BH-1, BH-2, BH-3, BH-5, BH-6, BS-11, BS-12, BS-13, Apartment AB, Apartment CD)
+// - girls-residential-area: Girls Residential Area (GH-1, GH-2, GH-3, GH-4, GS-11, GS-12)
 ```
 
 ---
@@ -319,7 +320,7 @@ The backend is built with **FastAPI** (`api/main.py`). It serves both the API en
   groupName: "School of Computing and Artificial Intelligence",
   category: "offices",
   type: "Head of School (HOS) Office",
-  lat: 31.252858651898666,
+  lat: 31.25263,
   lng: 75.70330718355343,
   visibleFromZoom: 19,
   floor: "Block 27, Room 201, HOS Office",

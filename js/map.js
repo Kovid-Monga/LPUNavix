@@ -965,7 +965,7 @@ class CampusMapController {
     if (text.includes("bus") || text.includes("transport") || text.includes("transit") || text.includes("auto stand") || text.includes("kart")) return "transport";
     if (text.includes("food") || text.includes("cafe") || text.includes("canteen") || text.includes("mess") || text.includes("dining") || text.includes("kiosk") || text.includes("bakery") || text.includes("rolls") || text.includes("burger")) return "food";
     if (text.includes("gym") || text.includes("sports") || text.includes("stadium") || text.includes("ground") || text.includes("court") || text.includes("fitness") || text.includes("pool")) return "sports";
-    if (text.includes("hostel") || text.includes("residential") || text.includes("bh-") || text.includes("bh ") || text.includes("bs-") || text.includes("bs ") || text.includes("apartment") || text.includes("studio") || text.includes("boys hostel") || text.includes("girls hostel") || category === "hostels") return "hostels";
+    if (text.includes("hostel") || text.includes("residential") || text.includes("bh-") || text.includes("bh ") || text.includes("bs-") || text.includes("bs ") || text.includes("gh-") || text.includes("gh ") || text.includes("gs-") || text.includes("gs ") || text.includes("apartment") || text.includes("studio") || text.includes("boys hostel") || text.includes("girls hostel") || text.includes("girls studio") || category === "hostels") return "hostels";
     if (text.includes("atm") || text.includes("bank") || text.includes("finance") || text.includes("post office")) return "finance";
     if (text.includes("mall") || text.includes("unimall") || text.includes("shop") || text.includes("mart") || text.includes("store") || text.includes("salon")) return "shop";
     if (text.includes("cse") || text.includes("computer science") || text.includes("coding") || text.includes("software") || text.includes("tech")) return "tech";
@@ -1178,9 +1178,9 @@ class CampusMapController {
         loc.id === "shanti-devi-mittal-auditorium";
     };
 
-    // Residential Zone cluster members (BH Hostels, BS Studios, Apartments)
+    // Residential Zone cluster members (BH Hostels, BS Studios, Apartments, GH Hostels, GS Studios)
     const isResidentialMember = (loc) => {
-      return loc.groupId === "residential-area";
+      return loc.groupId === "residential-area" || loc.groupId === "girls-residential-area" || loc.category === "hostels";
     };
 
     const cseGroupLocs = filtered.filter(l => isCentralZoneMember(l));
@@ -1223,7 +1223,7 @@ class CampusMapController {
               fullTitle: "School of CSE (Blocks 25 to 28)",
               count: northBlocks.length,
               category: "academics",
-              latLng: [31.25286, 75.70310],
+              latLng: [31.25263, 75.70310],
               bounds: nBounds,
               memberLocs: northBlocks,
               priority: 45
@@ -1299,19 +1299,40 @@ class CampusMapController {
       });
 
       if (unrevealedRes.length > 0) {
-        const resBounds = this.getBoundsForLatLngs(unrevealedRes.map(l => [l.lat, l.lng]));
-        itemsToRender.push({
-          isCluster: true,
-          groupId: "residential-area",
-          title: "Residential Area",
-          fullTitle: "Campus Residential Area (Hostels, Studios & Apartments)",
-          count: unrevealedRes.length,
-          category: "hostels",
-          latLng: [31.249742, 75.703481],
-          bounds: resBounds,
-          memberLocs: unrevealedRes,
-          priority: 45
-        });
+        const girlsRes = unrevealedRes.filter(l => l.groupId === "girls-residential-area" || l.id.startsWith("gh-") || l.id.startsWith("gs-"));
+        const boysRes = unrevealedRes.filter(l => !girlsRes.includes(l));
+
+        if (boysRes.length > 0) {
+          const resBounds = this.getBoundsForLatLngs(boysRes.map(l => [l.lat, l.lng]));
+          itemsToRender.push({
+            isCluster: true,
+            groupId: "residential-area",
+            title: "Boys Hostels & Studios",
+            fullTitle: "Campus Residential Area (Boys Hostels, Studios & Apartments)",
+            count: boysRes.length,
+            category: "hostels",
+            latLng: [31.249742, 75.703481],
+            bounds: resBounds,
+            memberLocs: boysRes,
+            priority: 45
+          });
+        }
+
+        if (girlsRes.length > 0) {
+          const gBounds = this.getBoundsForLatLngs(girlsRes.map(l => [l.lat, l.lng]));
+          itemsToRender.push({
+            isCluster: true,
+            groupId: "girls-residential-area",
+            title: "Girls Hostels & Studios",
+            fullTitle: "Girls Residential Area (GH Hostels & GS Studios)",
+            count: girlsRes.length,
+            category: "hostels",
+            latLng: [31.2568, 75.7049],
+            bounds: gBounds,
+            memberLocs: girlsRes,
+            priority: 45
+          });
+        }
       }
     } else {
       // Close zoom (zoom >= 17.0) or filterCategory === "hostels": show individual hostel markers!
@@ -1338,7 +1359,14 @@ class CampusMapController {
 
       // Major landmarks have higher priority
       let priority = 20;
-      if (loc.id === "uni-health-center" || loc.id === "sh-baldevraj-mittal-auditorium") {
+      if (
+        loc.id === "uni-health-center" ||
+        loc.id === "sh-baldevraj-mittal-auditorium" ||
+        loc.id === "unipolis" ||
+        loc.id === "unimall" ||
+        loc.id === "sports-complex" ||
+        loc.id === "block-29"
+      ) {
         priority = 60;
       } else if (loc.id.startsWith("main-gate")) {
         priority = 50;

@@ -356,3 +356,34 @@ def test_faculty_cabin_conversational_context(chat_client):
     data2 = resp2.json()
     assert data2["locationId"] == data1["locationId"]
     assert "Richa Sharma" in data2["title"] or "Richa Sharma" in data2["reply"]
+
+
+def test_girls_hostels_and_studios_retrieval(chat_client):
+    """Verify that GH1-4 and GS11-12 can be retrieved and located on map."""
+    cases = [
+        ("Where is GH 3?", "gh-3", "Girls Hostel 3"),
+        ("Where is gh1?", "gh-1", "Girls Hostel 1"),
+        ("Tell me about gh2", "gh-2", "Girls Hostel 2"),
+        ("Locate GH 4", "gh-4", "Girls Hostel 4"),
+        ("Where is GS 11?", "gs-11", "Girls Studio 11"),
+        ("Where is GS 12?", "gs-12", "Girls Studio 12"),
+    ]
+    for prompt, expected_id, expected_name in cases:
+        resp = chat_client.post("/api/chat", json={"message": prompt})
+        assert resp.status_code == 200, f"Failed for {prompt}"
+        data = resp.json()
+        assert data["locationId"] == expected_id, f"Expected {expected_id} for '{prompt}', got {data['locationId']}"
+        assert expected_name in data["title"]
+
+
+def test_gh_and_gs_acronym_definitions():
+    """Verify chatbot fallback and grounding define GH as Girls Hostel and GS as Girls Studios."""
+    from api.gemini_client import _format_grounded_fallback
+
+    gh_reply = _format_grounded_fallback("what is gh", [], "none")
+    assert "Girls Hostel" in gh_reply
+    assert "GH-1" in gh_reply
+
+    gs_reply = _format_grounded_fallback("what is gs", [], "none")
+    assert "Girls Studios" in gs_reply
+    assert "GS-11" in gs_reply

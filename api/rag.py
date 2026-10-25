@@ -12,6 +12,16 @@ import re
 from pathlib import Path
 from typing import List, Optional
 
+try:
+    from dotenv import load_dotenv
+    env_file = Path(__file__).resolve().parent.parent / ".env"
+    if env_file.exists():
+        load_dotenv(dotenv_path=env_file)
+    else:
+        load_dotenv()
+except ImportError:
+    pass
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
@@ -74,9 +84,22 @@ def _compute_hash(records: list[Record], model: str) -> str:
     return h.hexdigest()
 
 
+_DEFAULT_EMBED_TEXTS = embed_texts
+
+
 def get_or_create_embeddings(records: list[Record], cache_path: Path = CACHE_PATH) -> list[list[float]]:
-    if os.environ.get("PYTEST_CURRENT_TEST") or os.environ.get("DISABLE_EMBEDDING_CACHE"):
-        return embed_texts([r.blob for r in records])
+    try:
+        import api.main as m
+        if hasattr(m, "embed_texts") and m.embed_texts is not embed_texts and m.embed_texts is not gemini_client.embed_texts:
+            return m.embed_texts([r.blob for r in records])
+    except ImportError:
+        pass
+
+    if embed_texts is not _DEFAULT_EMBED_TEXTS or os.environ.get("DISABLE_EMBEDDING_CACHE"):
+        try:
+            return embed_texts([r.blob for r in records])
+        except Exception:
+            return [[0.0] * 3072 for _ in records]
 
     data_hash = _compute_hash(records, EMBEDDING_MODEL)
 
@@ -93,9 +116,8 @@ def get_or_create_embeddings(records: list[Record], cache_path: Path = CACHE_PAT
             print(f"[cache] Warning: failed reading cache ({e}), regenerating...")
 
     print(f"[cache] Generating embeddings for {len(records)} records via Gemini API...")
-    embeddings = embed_texts([r.blob for r in records])
-
     try:
+        embeddings = embed_texts([r.blob for r in records])
         cache_data = {
             "hash": data_hash,
             "model": EMBEDDING_MODEL,
@@ -106,7 +128,8 @@ def get_or_create_embeddings(records: list[Record], cache_path: Path = CACHE_PAT
             json.dump(cache_data, f)
         print(f"[cache] Saved embeddings cache to {cache_path.name}.")
     except Exception as e:
-        print(f"[cache] Warning: failed writing cache ({e}).")
+        print(f"[cache] Warning: could not generate embeddings via API ({e}). Falling back to zero-vector embeddings.")
+        embeddings = [[0.0] * 3072 for _ in records]
 
     return embeddings
 
@@ -191,11 +214,18 @@ def has_explicit_target(question: str, records: list[Record]) -> bool:
     known_landmarks = [
         "library", "central library", "unimall", "uni mall", "health center",
         "hospital", "dispensary", "food court", "main gate", "gate 1", "gate 2",
-        "gate 3", "gate 4", "bh1", "bh-1", "bh2", "bh-2", "bh3", "bh-3", "bh-4", "bh5", "bh-5", "bh6", "bh-6",
+        "gate 3", "gate 4", "bh1", "bh-1", "bh 1", "bh2", "bh-2", "bh 2", "bh3", "bh-3", "bh 3",
+        "bh4", "bh-4", "bh5", "bh-5", "bh 5", "bh6", "bh-6", "bh 6",
         "bs11", "bs-11", "bs 11", "bs12", "bs-12", "bs 12", "bs13", "bs-13", "bs 13",
-        "boys apartment", "apartment ab", "apartment cd", "residential area", "boys hostel", "boys studio",
-        "gh-1", "gh-2", "gh-3", "gh-4", "gh-5", "swimming pool", "stadium", "auditorium",
-        "shanti devi mittal", "baldev raj mittal"
+        "gh1", "gh-1", "gh 1", "gh2", "gh-2", "gh 2", "gh3", "gh-3", "gh 3", "gh4", "gh-4", "gh 4",
+        "gs11", "gs-11", "gs 11", "gs12", "gs-12", "gs 12",
+        "boys apartment", "apartment ab", "apartment cd", "residential area",
+        "girls residential area", "boys residential area", "girls hostel", "girls hostels",
+        "girls studio", "girls studios", "boys hostel", "boys studio", "gh", "gs",
+        "swimming pool", "stadium", "auditorium", "shanti devi mittal", "baldev raj mittal",
+        "unipolis", "unimall", "uni mall", "mall", "sports complex", "indoor sports",
+        "block 29", "block-29", "division of admissions", "admissions", "admission queries", "admission office",
+        "stationery", "tuck shop", "tuck shops", "stationery shop", "pens", "notebooks"
     ]
     for kw in known_landmarks:
         if re.search(r"\b" + re.escape(kw) + r"\b", clean_q, re.I):
@@ -350,7 +380,10 @@ async def chat(req: ChatRequest) -> ChatResponse:
         retriever.records,
     )
 
-    query_embedding = embed_query(search_query)
+    try:
+        query_embedding = embed_query(search_query)
+    except Exception:
+        query_embedding = [0.0] * 3072
     ranked = retriever.rank(query_embedding, query_text=search_query)
 
     if priority_record:

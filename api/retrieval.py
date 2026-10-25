@@ -171,6 +171,116 @@ def find_structured_matches(query: str, records: list[Record]) -> list[Record]:
         if matches:
             return matches
 
+    # 5.6 Stationery Tuck Shop queries
+    # e.g. "Where can I buy stationery?", "Where are the tuck shops?", "Is there a stationery shop in Block 26?",
+    # "Where can I buy pens, notebooks, or other stationery?", "Which blocks have stationery shops in their basements?"
+    is_stationery_query = bool(
+        re.search(
+            r"\b(stationery|stationary|tuck\s*shop|tuck\s*shops|tuckshop|tuckshops|pens?|notebooks?|photocopy|xerox)\b",
+            clean_q,
+        )
+    )
+    if is_stationery_query:
+        block_tuck_m = re.search(r"\b(?:block|b)[\s-]*(\d{1,2})\b", clean_q)
+        if block_tuck_m:
+            b_num = block_tuck_m.group(1).lstrip("0")
+            target_tuck_id = f"tuck-shop-block-{b_num}"
+            found_specific = False
+            for r in records:
+                if r.id == target_tuck_id:
+                    add(r)
+                    found_specific = True
+            if found_specific:
+                for r in records:
+                    if r.id == f"block-{b_num}":
+                        add(r)
+                return matches
+            else:
+                # If queried about a block without a tuck shop (e.g. Block 25), return all 4 tuck shops so assistant can explain where they are
+                for tuck_id in ["tuck-shop-block-26", "tuck-shop-block-27", "tuck-shop-block-28", "tuck-shop-block-36"]:
+                    for r in records:
+                        if r.id == tuck_id:
+                            add(r)
+                if matches:
+                    return matches
+        else:
+            # General stationery query -> return all four known basement locations
+            for tuck_id in ["tuck-shop-block-26", "tuck-shop-block-27", "tuck-shop-block-28", "tuck-shop-block-36"]:
+                for r in records:
+                    if r.id == tuck_id:
+                        add(r)
+            if matches:
+                return matches
+
+    # 5.7 Division of Admissions & Block 29 queries
+    # e.g. "Where is the Division of Admissions?", "Where should I go for admission-related queries?", "Which block handles admissions?"
+    is_admission_query = bool(
+        re.search(
+            r"\b(admission|admissions|division\s+of\s+admissions|admission\s+queries|admission\s+office|admission\s+counseling)\b",
+            clean_q,
+        )
+    )
+    if is_admission_query:
+        for r in records:
+            if r.id == "block-29":
+                add(r)
+        if matches:
+            return matches
+
+    # 5.8 Unipolis & Major Event Venue / Initial Reporting queries
+    # e.g. "Where is Unipolis?", "Where are major university events held?", "Where should students report initially?"
+    is_unipolis_query = bool(
+        re.search(
+            r"\b(unipolis|major\s+university\s+events|university\s+events\s+held|events\s+held|initial\s+student\s+reporting|report\s+initially|initial\s+reporting|student\s+reporting|mega\s+auditorium|event\s+arena)\b",
+            clean_q,
+        )
+    )
+    if is_unipolis_query:
+        for r in records:
+            if r.id == "unipolis":
+                add(r)
+        for r in records:
+            if r.id == "auditorium":
+                add(r)
+        if matches:
+            return matches
+
+    # 5.9 UniMall queries
+    # e.g. "Where is UniMall?", "Where can I find the mall on campus?", "Where is the mall?"
+    is_mall_query = bool(
+        re.search(
+            r"\b(unimall|uni\s*mall|mall\s+on\s+campus|find\s+the\s+mall|campus\s+mall|shopping\s+mall)\b",
+            clean_q,
+        )
+    )
+    if is_mall_query or (re.search(r"\bmall\b", clean_q) and not re.search(r"\bmall\w+", clean_q)):
+        for r in records:
+            if r.id == "unimall":
+                add(r)
+        for r in records:
+            if r.id == "mall":
+                add(r)
+        if matches:
+            return matches
+
+    # 5.10 Sports Complex & Indoor Sports queries
+    # e.g. "Where is the Sports Complex?", "Where can I play indoor sports?"
+    is_sports_query = bool(
+        re.search(
+            r"\b(sports\s+complex|indoor\s+sports|play\s+indoor\s+sports|indoor\s+games|sports\s+facility)\b",
+            clean_q,
+        )
+    )
+    if is_sports_query:
+        for r in records:
+            if r.id == "sports-complex":
+                add(r)
+        for r in records:
+            if r.id == "sports":
+                add(r)
+        if matches:
+            return matches
+
     # 6. Block queries (e.g. "Who sits in Block 27", "Where is Block 28", "Block 34")
     if block_m:
         b_val = block_m.group(1)
@@ -299,16 +409,45 @@ def find_structured_matches(query: str, records: list[Record]) -> list[Record]:
                 if r.id == "auditorium":
                     add(r)
             for r in records:
+                if r.id == "unipolis":
+                    add(r)
+            for r in records:
                 if r.id == "sh-baldevraj-mittal-auditorium":
                     add(r)
         if matches:
             return matches
 
     # 12. Hostels / Studios / Apartments / Residential Area queries
-    # e.g. "bh1", "bh-1", "bh 1", "boys hostel 1", "hostel 1", "bh2", "bh3", "bh5", "bh6"
+    # e.g. "gh1", "gh-1", "gh 1", "girls hostel 1", "gh2", "gh 3", "gh4"
+    # "gs 11", "gs11", "gs-11", "girls studio 11", "girls studios 11", "gs 12", "gs12"
+    # "bh1", "bh-1", "bh 1", "boys hostel 1", "hostel 1", "bh2", "bh3", "bh5", "bh6"
     # "bs 11", "bs11", "bs-11", "boys studio 11", "bs 12", "bs 13"
     # "boys apartment ab", "apartment ab", "boys apartment cd", "apartment cd"
-    # "residential area", "hostels on campus", "boys hostels"
+    # "residential area", "girls hostels", "girls studios", "boys hostels"
+
+    # Girls Hostels (GH-1 to GH-4)
+    gh_m = re.search(r"\b(?:gh|girls\s+hostel)[\s-]*([1-4])\b", clean_q)
+    if gh_m:
+        h_num = gh_m.group(1)
+        target_id = f"gh-{h_num}"
+        for r in records:
+            if r.id == target_id:
+                add(r)
+        if matches:
+            return matches
+
+    # Girls Studios (GS-11 and GS-12)
+    gs_m = re.search(r"\b(?:gs|girls\s+studio|girls\s+studios)[\s-]*(1[1-2])\b", clean_q)
+    if gs_m:
+        s_num = gs_m.group(1)
+        target_id = f"gs-{s_num}"
+        for r in records:
+            if r.id == target_id:
+                add(r)
+        if matches:
+            return matches
+
+    # Boys Hostels (BH-1 to BH-6)
     bh_m = re.search(r"\b(?:bh|boys\s+hostel|hostel)[\s-]*([1-6])\b", clean_q)
     if bh_m:
         h_num = bh_m.group(1)
@@ -319,6 +458,7 @@ def find_structured_matches(query: str, records: list[Record]) -> list[Record]:
         if matches:
             return matches
 
+    # Boys Studios (BS-11 to BS-13)
     bs_m = re.search(r"\b(?:bs|boys\s+studio|studio)[\s-]*(1[1-3])\b", clean_q)
     if bs_m:
         s_num = bs_m.group(1)
@@ -343,22 +483,50 @@ def find_structured_matches(query: str, records: list[Record]) -> list[Record]:
         if matches:
             return matches
 
-    if any(kw in clean_q for kw in ["residential area", "residential", "boys hostel", "boys hostels", "boys studio", "boys apartment"]):
+    # Girls hostels queries (general)
+    if re.search(r"\b(?:girls\s+hostel|girls\s+hostels|gh)\b", clean_q):
         for r in records:
-            if r.id == "residential-area":
-                add(r)
-        for r in records:
-            if r.category == "hostels" and r.id != "residential-area":
+            if r.id in ("gh-1", "gh-2", "gh-3", "gh-4"):
                 add(r)
         if matches:
             return matches
 
-    if any(kw in clean_q for kw in ["hostels", "hostel", "where to stay", "student housing"]):
+    # Girls studios queries (general)
+    if re.search(r"\b(?:girls\s+studio|girls\s+studios|gs)\b", clean_q):
+        for r in records:
+            if r.id in ("gs-11", "gs-12"):
+                add(r)
+        if matches:
+            return matches
+
+    if re.search(r"\b(?:girls\s+residential\s+area|girls\s+residential)\b", clean_q):
+        for r in records:
+            if r.id == "girls-residential-area":
+                add(r)
+        for r in records:
+            if r.id in ("gh-1", "gh-2", "gh-3", "gh-4", "gs-11", "gs-12"):
+                add(r)
+        if matches:
+            return matches
+
+    # Boys hostels & studios queries (general)
+    if re.search(r"\b(?:boys\s+residential\s+area|boys\s+hostel|boys\s+hostels|boys\s+studio|boys\s+studios|boys\s+apartment|boys\s+apartments)\b", clean_q):
         for r in records:
             if r.id == "residential-area":
                 add(r)
         for r in records:
-            if r.category == "hostels" and r.id != "residential-area":
+            if r.id in ("bh-1", "bh-2", "bh-3", "bh-5", "bh-6", "bs-11", "bs-12", "bs-13", "boys-apartment-ab", "boys-apartment-cd"):
+                add(r)
+        if matches:
+            return matches
+
+    # General campus accommodation queries
+    if re.search(r"\b(?:residential\s+area|residential|hostels|hostel|where\s+to\s+stay|student\s+housing)\b", clean_q):
+        for r in records:
+            if r.id in ("girls-residential-area", "residential-area"):
+                add(r)
+        for r in records:
+            if r.category == "hostels" and r.id not in ("residential-area", "girls-residential-area"):
                 add(r)
         if matches:
             return matches
@@ -392,7 +560,10 @@ class Retriever:
             q_norm = 1e-8
         q = q / q_norm
 
-        scores = self._normed @ q  # cosine similarity for every record
+        if len(q) != self._normed.shape[1]:
+            scores = np.zeros(len(self.records), dtype=np.float32)
+        else:
+            scores = self._normed @ q  # cosine similarity for every record
         order = np.argsort(-scores)
 
         results: list[tuple[Record, float]] = []

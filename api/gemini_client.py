@@ -8,6 +8,18 @@ Never hardcode a key here.
 """
 
 import os
+from pathlib import Path
+import time
+
+try:
+    from dotenv import load_dotenv
+    env_file = Path(__file__).resolve().parent.parent / ".env"
+    if env_file.exists():
+        load_dotenv(dotenv_path=env_file)
+    else:
+        load_dotenv()
+except ImportError:
+    pass
 
 from google import genai
 from google.genai import types
@@ -33,15 +45,31 @@ def get_client() -> genai.Client:
 
 
 def embed_texts(texts: list[str]) -> list[list[float]]:
-    """Embed a batch of texts (used once at startup for all records)."""
+    """Embed a batch of texts (chunked into batches <= 90 to respect Gemini API limits)."""
     if not texts:
         return []
     client = get_client()
-    response = client.models.embed_content(
-        model=EMBEDDING_MODEL,
-        contents=texts,
-    )
-    return [e.values for e in response.embeddings]
+    batch_size = 90
+    all_embeddings = []
+    for i in range(0, len(texts), batch_size):
+        chunk = texts[i : i + batch_size]
+        for attempt in range(6):
+            try:
+                response = client.models.embed_content(
+                    model=EMBEDDING_MODEL,
+                    contents=chunk,
+                )
+                all_embeddings.extend([e.values for e in response.embeddings])
+                break
+            except Exception as e:
+                err_msg = str(e)
+                if ("429" in err_msg or "RESOURCE_EXHAUSTED" in err_msg) and attempt < 5:
+                    sleep_time = 15 * (attempt + 1)
+                    print(f"[embed_texts] Rate limited (429). Retrying in {sleep_time}s (attempt {attempt + 1}/5)...")
+                    time.sleep(sleep_time)
+                    continue
+                raise
+    return all_embeddings
 
 
 def embed_query(text: str) -> list[float]:
@@ -105,6 +133,43 @@ Shanti Devi Mittal Auditorium & Auditoriums:
   • Highlight that it is a premier venue for convocations, cultural fests, national conferences, academic symposiums, and university events.
   • (If asked generally about auditoriums on campus, you can also mention Sh. Baldevraj Mittal Auditorium located near the main entrance/Block 1).
 
+Unipolis — Auditorium Group:
+- When asked about Unipolis, major university events venue, or where students report initially:
+  • Unipolis is a massive central indoor mega-auditorium and event arena with a seating capacity of over 10,000 people.
+  • It serves as a major venue for university events, celebrity visits, cultural festivals, and initial student reporting.
+  • Coordinates: 31.255085, 75.704811. Category / Group: Auditorium (Auditoriums group).
+
+UniMall — Mall Group:
+- When asked about UniMall, mall on campus, or campus shopping:
+  • UniMall is the main campus shopping mall (Category / Group: Mall).
+  • Features retail stores, food court/outlets, lifestyle brands, electronics, and daily convenience services for students and staff.
+  • Coordinates: 31.255736, 75.705318.
+
+Sports Complex — Indoor Sports:
+- When asked about the Sports Complex or where to play indoor sports:
+  • The Sports Complex is a campus facility for indoor sports (Category / Group: sports / Sports Complex).
+  • Features indoor sports arenas including badminton courts, basketball courts, gymnasium, swimming pool, table tennis, and squash courts.
+  • Coordinates: 31.250862, 75.701458.
+
+Block 29 — Division of Admissions:
+- When asked about Block 29, the Division of Admissions, or where to go for admission queries / counseling:
+  • The Division of Admissions is located in Block 29 and handles admission-related queries, counseling, and document verification.
+  • Coordinates: 31.252685, 75.704725. Category: Academic & Administrative Block.
+
+Stationery Tuck Shops (Basements of Blocks 26, 27, 28, and 36):
+- When asked about stationery, tuck shops, pens, notebooks, or academic supplies:
+  • Stationery tuck shops are located in the **basements of Blocks 26, 27, 28, and 36**.
+  • Purpose: Students can purchase necessary stationery items such as pens, notebooks, and academic supplies.
+  • For general queries (e.g. "Where can I buy stationery?", "Where are the tuck shops?", "Where can I buy pens, notebooks, or other stationery?", "Which blocks have stationery shops in their basements?"), list all four known locations:
+    - Block 26 — Basement: Stationery tuck shop
+    - Block 27 — Basement: Stationery tuck shop
+    - Block 28 — Basement: Stationery tuck shop
+    - Block 36 — Basement: Stationery tuck shop
+  • For a block-specific query (e.g. "Is there a stationery shop in Block 26?"):
+    - If the block is 26, 27, 28, or 36, specify that block's basement stationery tuck shop location.
+    - If another block is asked, clearly clarify that stationery tuck shops are located in the basements of Blocks 26, 27, 28, and 36.
+  • STRICT RULE: Do not invent opening hours, prices, shop names, or precise basement entrance coordinates.
+
 Block Connections:
 - When asked how campus blocks are connected (e.g. Block 25, 26, 27):
   • Use the provided Connection records to state how they connect (e.g. continuous indoor corridors, shared floors, bridges).
@@ -112,11 +177,14 @@ Block Connections:
 
 Hostels, Studios, Apartments & Residential Area:
 - When asked about hostels, studios, apartments, or the campus residential area:
+  • GH = Girls Hostel (GH-1, GH-2, GH-3, GH-4).
+  • GS = Girls Studio / Girls Studios (GS-11, GS-12).
   • BH = Boys Hostel (BH-1, BH-2, BH-3, BH-5, BH-6).
   • BS = Boys Studio (BS-11, BS-12, BS-13).
   • Apartments include Boys Apartment AB and Boys Apartment CD.
-  • All belong to the campus Residential Area.
-  • Highlight facilities such as hostel rooms/studio suites, mess/dining halls, study areas, Wi-Fi, and 24x7 security.
+  • GH stands for Girls Hostel, and GS stands for Girls Studios.
+  • All belong to the campus residential accommodation zones.
+  • Highlight facilities such as hostel rooms/studio suites, mess/dining halls, study rooms, Wi-Fi, laundry, and 24x7 security.
 
 Multiple Matches:
 - If multiple people or locations match (e.g. "Who is the HOS?"), keep each card super compact (2-3 lines max each):
@@ -132,17 +200,103 @@ Unavailable / No Match:
 
 def _format_grounded_fallback(question: str, context_records: list[dict], match_quality: str) -> str:
     """Generate a clean, concise, friendly, context-based grounded reply with emojis when external LLM calls are unavailable."""
+    q_lower = question.lower().strip()
+
+    # Direct responses for acronym / definition questions
+    if any(p in q_lower for p in ["what is gh", "gh meaning", "gh stands for", "full form of gh"]):
+        return (
+            "Hey there! 😊 **GH** stands for **Girls Hostel** at LPU! 🏢🌸\n\n"
+            "Campus Girls Hostels include **GH-1**, **GH-2**, **GH-3**, and **GH-4**, offering comfortable rooms, mess/dining halls, study rooms, Wi-Fi, and 24x7 security.\n\n"
+            "Want to see their location on the map? Tap below! 🗺️✨"
+        )
+    if any(p in q_lower for p in ["what is gs", "gs meaning", "gs stands for", "full form of gs"]):
+        return (
+            "Hey there! 😊 **GS** stands for **Girls Studios** at LPU! 🏢✨\n\n"
+            "Campus Girls Studios include **GS-11** and **GS-12**, providing studio apartment living with Wi-Fi, pantry amenities, study lounges, and 24x7 security.\n\n"
+            "Want to see their location on the map? Tap below! 🗺️✨"
+        )
+    if any(p in q_lower for p in ["what is bh", "bh meaning", "bh stands for", "full form of bh"]):
+        return (
+            "Hey there! 😊 **BH** stands for **Boys Hostel** at LPU! 🏢\n\n"
+            "Campus Boys Hostels include **BH-1**, **BH-2**, **BH-3**, **BH-5**, and **BH-6**, with mess dining, study rooms, gym facilities, and 24x7 security.\n\n"
+            "Want to see their location on the map? Tap below! 🗺️✨"
+        )
+    if any(p in q_lower for p in ["what is bs", "bs meaning", "bs stands for", "full form of bs"]):
+        return (
+            "Hey there! 😊 **BS** stands for **Boys Studio** at LPU! 🏢\n\n"
+            "Campus Boys Studios include **BS-11**, **BS-12**, and **BS-13**, offering studio accommodations with Wi-Fi, pantry, and 24x7 security.\n\n"
+            "Want to see their location on the map? Tap below! 🗺️✨"
+        )
+
+    # Stationery tuck shop queries
+    if any(w in q_lower for w in ["stationery", "stationary", "tuck shop", "tuck shops", "tuckshop", "pens", "notebooks", "notebook", "photocopy"]):
+        import re
+        b_m = re.search(r"\b(?:block|b)[\s-]*(\d{1,2})\b", q_lower)
+        if b_m:
+            b_num = b_m.group(1).lstrip("0")
+            if b_num in ["26", "27", "28", "36"]:
+                return (
+                    f"Yes! 😊 There is a stationery tuck shop located in the **Basement of Block {b_num}**! ✏️📓\n\n"
+                    f"Students can purchase necessary stationery items such as pens, notebooks, and academic supplies here.\n\n"
+                    f"Want to see it on the map? Tap below! 🗺️✨"
+                )
+            else:
+                return (
+                    f"Stationery tuck shops are located in the **basements** of Blocks **26, 27, 28, and 36** (not Block {b_num}). ✏️📓\n\n"
+                    f"Students can visit any of those four basement shops to purchase necessary stationery items such as pens and notebooks.\n\n"
+                    f"Want to view them on the map? Tap below! 🗺️✨"
+                )
+        return (
+            "Hey there! 😊 Stationery tuck shops are located in the **basements** of the following four blocks:\n\n"
+            "• **Block 26** — Basement: Stationery tuck shop\n"
+            "• **Block 27** — Basement: Stationery tuck shop\n"
+            "• **Block 28** — Basement: Stationery tuck shop\n"
+            "• **Block 36** — Basement: Stationery tuck shop\n\n"
+            "Students can purchase necessary stationery items such as pens, notebooks, and academic supplies here! ✏️📓\n\n"
+            "Want to see their locations on the map? Tap below! 🗺️✨"
+        )
+
+    # Unipolis queries
+    if any(w in q_lower for w in ["unipolis", "university events held", "events held", "report initially", "student reporting", "initial reporting"]):
+        return (
+            "Hey there! 😊 **Unipolis** is a massive central indoor mega-auditorium and event arena with a seating capacity of over 10,000 people! 🏛️✨\n\n"
+            "It serves as a major venue for university events, celebrity visits, cultural festivals, and initial student reporting. 📍 Ground Floor & Arena\n\n"
+            "Want to see it on the map? Tap below! 🗺️✨"
+        )
+
+    # UniMall queries
+    if any(w in q_lower for w in ["unimall", "uni mall", "mall on campus", "find the mall", "where is the mall", "campus mall"]):
+        return (
+            "Hey there! 😊 **UniMall** is the central shopping mall on campus! 🛍️🏢\n\n"
+            "It features retail stores, a food court, lifestyle brands, electronics, and daily conveniences for students and staff.\n\n"
+            "Want to see UniMall on the map? Tap below! 🗺️✨"
+        )
+
+    # Sports Complex queries
+    if any(w in q_lower for w in ["sports complex", "indoor sports", "play indoor sports", "sports facility"]):
+        return (
+            "Hey there! 😊 The **Sports Complex** is a campus facility for indoor sports! 🏀🏸\n\n"
+            "It features badminton courts, basketball courts, gymnasium, swimming pool, table tennis, and squash courts for fitness and university athletics.\n\n"
+            "Want to see the Sports Complex on the map? Tap below! 🗺️✨"
+        )
+
+    # Division of Admissions / Block 29 queries
+    if any(w in q_lower for w in ["division of admissions", "admission-related", "admission queries", "admission office", "handles admissions", "where is block 29", "block 29"]):
+        return (
+            "Hey there! 😊 The **Division of Admissions** is located in **Block 29**! 🏢🎓\n\n"
+            "It handles admission-related queries, counseling, and document verification.\n\n"
+            "Want to see Block 29 on the map? Tap below! 🗺️✨"
+        )
+
     if match_quality == "none" or not context_records:
         return (
             "Hmm, I couldn't find a matching record for that! 🤔✨\n\n"
             "Try checking the name, block number, or department. I can help you find campus buildings, hostels, food spots, offices, and departments! 🏢📍"
         )
 
-    q_lower = question.lower()
-
     if match_quality == "weak":
         intro = "I couldn't find an exact match, but here's the closest campus spot! 🔍\n\n"
-    elif any(w in q_lower for w in ["hostel", "hostels", "bh", "bs", "apartment", "residential", "stay", "room"]):
+    elif any(w in q_lower for w in ["hostel", "hostels", "gh", "gs", "bh", "bs", "apartment", "studio", "studios", "residential", "stay", "room"]):
         intro = "Looking for campus accommodation? 🏠 Here are the hostel details:\n\n"
     elif any(w in q_lower for w in ["project", "talk to", "contact", "guide", "who can", "whom"]):
         intro = "Working on a project? That's awesome! 🚀 Here is who can guide you:\n\n"

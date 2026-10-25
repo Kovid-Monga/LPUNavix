@@ -141,9 +141,11 @@
           "event venue",
           "auditorium hall",
           "events",
-          "convocation"
+          "convocation",
+          "unipolis"
         ],
         "blocks": [
+          "unipolis",
           "shanti-devi-mittal-auditorium",
           "sh-baldevraj-mittal-auditorium"
         ],
@@ -151,7 +153,7 @@
           31.252057776287273,
           75.70411166230906
         ],
-        "desc": "Auditoriums and event halls on the LPU campus.",
+        "desc": "Auditoriums, Unipolis mega-auditorium, and event halls on the LPU campus.",
         "image": ""
       },
       "id": "auditorium"
@@ -186,7 +188,15 @@
           "student housing",
           "hostel area",
           "accommodations",
-          "student residence"
+          "student residence",
+          "bh1",
+          "bh2",
+          "bh3",
+          "bh5",
+          "bh6",
+          "bs11",
+          "bs12",
+          "bs13"
         ],
         "blocks": [
           "bh-1",
@@ -484,7 +494,7 @@
         "type": "Point",
         "coordinates": [
           75.70247885462516,
-          31.25285938442377
+          31.25263
         ]
       },
       "properties": {
@@ -494,7 +504,7 @@
         "groupName": "School of Computer Science & Engineering (CSE)",
         "category": "academics",
         "type": "Academic Block",
-        "lat": 31.25285938442377,
+        "lat": 31.25263,
         "lng": 75.70247885462516,
         "floor": "Multi-storey Block",
         "facilities": [
@@ -522,7 +532,7 @@
         "type": "Point",
         "coordinates": [
           75.70289512306216,
-          31.252861883513926
+          31.25263
         ]
       },
       "properties": {
@@ -532,22 +542,27 @@
         "groupName": "School of Computer Science & Engineering (CSE)",
         "category": "academics",
         "type": "Academic Block",
-        "lat": 31.252861883513926,
+        "lat": 31.25263,
         "lng": 75.70289512306216,
         "floor": "Multi-storey Block",
         "facilities": [
           "Classrooms",
           "Computer Labs",
-          "Faculty Cabins"
+          "Faculty Cabins",
+          "Stationery Tuck Shop (Basement)"
         ],
         "tags": [
           "block 26",
           "cse",
           "computer science",
           "b26",
-          "academic block"
+          "academic block",
+          "stationery",
+          "tuck shop",
+          "stationery shop",
+          "basement tuck shop"
         ],
-        "desc": "Block 26 - Department of Computer Science & Engineering.",
+        "desc": "Block 26 - Department of Computer Science & Engineering. Features a stationery tuck shop in the basement for student supplies.",
         "hours": "8:00 AM - 5:30 PM",
         "phone": "",
         "image": ""
@@ -560,7 +575,7 @@
         "type": "Point",
         "coordinates": [
           75.70330718355343,
-          31.252858651898666
+          31.25263
         ]
       },
       "properties": {
@@ -570,24 +585,30 @@
         "groupName": "School of Computer Science & Engineering (CSE)",
         "category": "academics",
         "type": "Academic Block",
-        "lat": 31.252858651898666,
+        "lat": 31.25263,
         "lng": 75.70330718355343,
         "floor": "Multi-storey Block",
         "facilities": [
           "Classrooms",
           "Computer Labs",
-          "Faculty Cabins"
+          "Faculty Cabins",
+          "Stationery Tuck Shop (Basement)"
         ],
         "tags": [
           "block 27",
           "cse",
           "computer science",
           "b27",
-          "academic block"
+          "academic block",
+          "stationery",
+          "tuck shop",
+          "stationery shop",
+          "basement tuck shop"
         ],
         "hours": "8:00 AM - 5:30 PM",
         "phone": "",
-        "image": ""
+        "image": "",
+        "desc": " Features a stationery tuck shop in the basement for student supplies."
       },
       "id": "block-27"
     },
@@ -597,7 +618,7 @@
         "type": "Point",
         "coordinates": [
           75.70373386456326,
-          31.25284540741938
+          31.25263
         ]
       },
       "properties": {
@@ -607,22 +628,27 @@
         "groupName": "School of Computer Science & Engineering (CSE)",
         "category": "academics",
         "type": "Academic Block",
-        "lat": 31.25284540741938,
+        "lat": 31.25263,
         "lng": 75.70373386456326,
         "floor": "Multi-storey Block",
         "facilities": [
           "Classrooms",
           "Computer Labs",
-          "Faculty Cabins"
+          "Faculty Cabins",
+          "Stationery Tuck Shop (Basement)"
         ],
         "tags": [
           "block 28",
           "cse",
           "computer science",
           "b28",
-          "academic block"
+          "academic block",
+          "stationery",
+          "tuck shop",
+          "stationery shop",
+          "basement tuck shop"
         ],
-        "desc": "Block 28 - Department of Computer Science & Engineering.",
+        "desc": "Block 28 - Department of Computer Science & Engineering. Features a stationery tuck shop in the basement for student supplies.",
         "hours": "8:00 AM - 5:30 PM",
         "phone": "",
         "image": ""
@@ -789,16 +815,21 @@
         "facilities": [
           "Classrooms",
           "Computer Labs",
-          "Faculty Cabins"
+          "Faculty Cabins",
+          "Stationery Tuck Shop (Basement)"
         ],
         "tags": [
           "block 36",
           "cse",
           "computer science",
           "b36",
-          "academic block"
+          "academic block",
+          "stationery",
+          "tuck shop",
+          "stationery shop",
+          "basement tuck shop"
         ],
-        "desc": "Block 36 - Department of Computer Science & Engineering.",
+        "desc": "Block 36 - Department of Computer Science & Engineering. Features a stationery tuck shop in the basement for student supplies.",
         "hours": "8:00 AM - 5:30 PM",
         "phone": "",
         "image": ""
@@ -1716,7 +1747,7 @@
         "type": "Point",
         "coordinates": [
           75.70330718355343,
-          31.252858651898666
+          31.25263
         ]
       },
       "properties": {
@@ -1739,7 +1770,7 @@
         "groupName": "School of Computing and Artificial Intelligence",
         "category": "offices",
         "type": "Head of School (HOS) Office",
-        "lat": 31.252858651898666,
+        "lat": 31.25263,
         "lng": 75.70330718355343,
         "visibleFromZoom": 19,
         "floor": "Block 27, Room 201, HOS Office",
@@ -1782,7 +1813,7 @@
         "type": "Point",
         "coordinates": [
           75.70330718355343,
-          31.252858651898666
+          31.25263
         ]
       },
       "properties": {
@@ -1805,7 +1836,7 @@
         "groupName": "School of Computing and Artificial Intelligence",
         "category": "offices",
         "type": "Coordinator of Department (COD) Office",
-        "lat": 31.252858651898666,
+        "lat": 31.25263,
         "lng": 75.70330718355343,
         "visibleFromZoom": 19,
         "floor": "Block 27, Room 203, Cabin C3",
@@ -1851,7 +1882,7 @@
         "type": "Point",
         "coordinates": [
           75.70373386456326,
-          31.25284540741938
+          31.25263
         ]
       },
       "properties": {
@@ -1874,7 +1905,7 @@
         "groupName": "School of Computing and Artificial Intelligence",
         "category": "offices",
         "type": "Coordinator of Department (COD) Office",
-        "lat": 31.25284540741938,
+        "lat": 31.25263,
         "lng": 75.70373386456326,
         "visibleFromZoom": 19,
         "floor": "Block 28, Room 206, Cabin C1",
@@ -1920,7 +1951,7 @@
         "type": "Point",
         "coordinates": [
           75.70373386456326,
-          31.25284540741938
+          31.25263
         ]
       },
       "properties": {
@@ -1943,7 +1974,7 @@
         "groupName": "School of Computing and Artificial Intelligence",
         "category": "offices",
         "type": "Coordinator of Department (COD) Office",
-        "lat": 31.25284540741938,
+        "lat": 31.25263,
         "lng": 75.70373386456326,
         "visibleFromZoom": 19,
         "floor": "Block 28, Room 206, Cabin C3",
@@ -1989,7 +2020,7 @@
         "type": "Point",
         "coordinates": [
           75.70330718355343,
-          31.252858651898666
+          31.25263
         ]
       },
       "properties": {
@@ -2012,7 +2043,7 @@
         "groupName": "School of Computing and Artificial Intelligence",
         "category": "offices",
         "type": "Coordinator of Department (COD) Office",
-        "lat": 31.252858651898666,
+        "lat": 31.25263,
         "lng": 75.70330718355343,
         "visibleFromZoom": 19,
         "floor": "Block 27, Room 205, Cabin C1",
@@ -2058,7 +2089,7 @@
         "type": "Point",
         "coordinates": [
           75.70330718355343,
-          31.252858651898666
+          31.25263
         ]
       },
       "properties": {
@@ -2081,7 +2112,7 @@
         "groupName": "School of Computing and Artificial Intelligence",
         "category": "offices",
         "type": "Administrator Office",
-        "lat": 31.252858651898666,
+        "lat": 31.25263,
         "lng": 75.70330718355343,
         "visibleFromZoom": 19,
         "floor": "Block 27, Room 206, Administrator Office",
@@ -2124,7 +2155,7 @@
         "type": "Point",
         "coordinates": [
           75.70330718355343,
-          31.252858651898666
+          31.25263
         ]
       },
       "properties": {
@@ -2147,7 +2178,7 @@
         "groupName": "School of Computing and Artificial Intelligence",
         "category": "offices",
         "type": "Coordinator of Department (COD) Office",
-        "lat": 31.252858651898666,
+        "lat": 31.25263,
         "lng": 75.70330718355343,
         "visibleFromZoom": 19,
         "floor": "Block 27, Room 207, Cabin C1",
@@ -2192,7 +2223,7 @@
         "type": "Point",
         "coordinates": [
           75.70330718355343,
-          31.252858651898666
+          31.25263
         ]
       },
       "properties": {
@@ -2215,7 +2246,7 @@
         "groupName": "School of Computing and Artificial Intelligence",
         "category": "offices",
         "type": "Coordinator of Department (COD) Office",
-        "lat": 31.252858651898666,
+        "lat": 31.25263,
         "lng": 75.70330718355343,
         "visibleFromZoom": 19,
         "floor": "Block 27, Room 209, Cabin C1",
@@ -2260,7 +2291,7 @@
         "type": "Point",
         "coordinates": [
           75.70330718355343,
-          31.252858651898666
+          31.25263
         ]
       },
       "properties": {
@@ -2283,7 +2314,7 @@
         "groupName": "School of Computing and Artificial Intelligence",
         "category": "offices",
         "type": "Coordinator of Department (COD) Office",
-        "lat": 31.252858651898666,
+        "lat": 31.25263,
         "lng": 75.70330718355343,
         "visibleFromZoom": 19,
         "floor": "Block 27, Room 102, Cabin C1",
@@ -2328,7 +2359,7 @@
         "type": "Point",
         "coordinates": [
           75.70330718355343,
-          31.252858651898666
+          31.25263
         ]
       },
       "properties": {
@@ -2351,7 +2382,7 @@
         "groupName": "School of Computing and Artificial Intelligence",
         "category": "offices",
         "type": "Coordinator of Department (COD) Office",
-        "lat": 31.252858651898666,
+        "lat": 31.25263,
         "lng": 75.70330718355343,
         "visibleFromZoom": 19,
         "floor": "Block 27, Room 102, Cabin C3",
@@ -2396,7 +2427,7 @@
         "type": "Point",
         "coordinates": [
           75.70373386456326,
-          31.25284540741938
+          31.25263
         ]
       },
       "properties": {
@@ -2419,7 +2450,7 @@
         "groupName": "School of Computing and Artificial Intelligence",
         "category": "offices",
         "type": "Coordinator of School (COS) Office",
-        "lat": 31.25284540741938,
+        "lat": 31.25263,
         "lng": 75.70373386456326,
         "visibleFromZoom": 19,
         "floor": "Block 28, Room 201A, COS Office",
@@ -2462,7 +2493,7 @@
         "type": "Point",
         "coordinates": [
           75.70373386456326,
-          31.25284540741938
+          31.25263
         ]
       },
       "properties": {
@@ -2485,7 +2516,7 @@
         "groupName": "School of Computing and Artificial Intelligence",
         "category": "offices",
         "type": "Coordinator of Department (COD) Office",
-        "lat": 31.25284540741938,
+        "lat": 31.25263,
         "lng": 75.70373386456326,
         "visibleFromZoom": 19,
         "floor": "Block 28, Room 202, Cabin C2",
@@ -2530,7 +2561,7 @@
         "type": "Point",
         "coordinates": [
           75.70373386456326,
-          31.25284540741938
+          31.25263
         ]
       },
       "properties": {
@@ -2553,7 +2584,7 @@
         "groupName": "School of Computing and Artificial Intelligence",
         "category": "offices",
         "type": "Coordinator of Department (COD) Office",
-        "lat": 31.25284540741938,
+        "lat": 31.25263,
         "lng": 75.70373386456326,
         "visibleFromZoom": 19,
         "floor": "Block 28, Room 202, Cabin C3",
@@ -2597,7 +2628,7 @@
         "type": "Point",
         "coordinates": [
           75.70373386456326,
-          31.25284540741938
+          31.25263
         ]
       },
       "properties": {
@@ -2620,7 +2651,7 @@
         "groupName": "School of Computing and Artificial Intelligence",
         "category": "offices",
         "type": "Coordinator of Department (COD) Office",
-        "lat": 31.25284540741938,
+        "lat": 31.25263,
         "lng": 75.70373386456326,
         "visibleFromZoom": 19,
         "floor": "Block 28, Room 203, Cabin C1",
@@ -3868,7 +3899,7 @@
         "type": "Point",
         "coordinates": [
           75.70289512306216,
-          31.252861883513926
+          31.25263
         ]
       },
       "properties": {
@@ -3891,7 +3922,7 @@
         "groupName": "School of AI and Emerging Technologies",
         "category": "offices",
         "type": "Head of School (HOS) Office",
-        "lat": 31.252861883513926,
+        "lat": 31.25263,
         "lng": 75.70289512306216,
         "visibleFromZoom": 19,
         "floor": "Block 26, Room 201A, HOS Office",
@@ -3934,7 +3965,7 @@
         "type": "Point",
         "coordinates": [
           75.70289512306216,
-          31.252861883513926
+          31.25263
         ]
       },
       "properties": {
@@ -3957,7 +3988,7 @@
         "groupName": "School of AI and Emerging Technologies",
         "category": "offices",
         "type": "Coordinator of School (COS) Office",
-        "lat": 31.252861883513926,
+        "lat": 31.25263,
         "lng": 75.70289512306216,
         "visibleFromZoom": 19,
         "floor": "Block 26, Room 207, COS Office",
@@ -4000,7 +4031,7 @@
         "type": "Point",
         "coordinates": [
           75.70289512306216,
-          31.252861883513926
+          31.25263
         ]
       },
       "properties": {
@@ -4023,7 +4054,7 @@
         "groupName": "School of AI and Emerging Technologies",
         "category": "offices",
         "type": "Administrator Office",
-        "lat": 31.252861883513926,
+        "lat": 31.25263,
         "lng": 75.70289512306216,
         "visibleFromZoom": 19,
         "floor": "Block 26, Room 204B, Administrator Office",
@@ -4067,7 +4098,7 @@
         "type": "Point",
         "coordinates": [
           75.70247885462516,
-          31.25285938442377
+          31.25263
         ]
       },
       "properties": {
@@ -4090,7 +4121,7 @@
         "groupName": "School of AI and Emerging Technologies",
         "category": "offices",
         "type": "Coordinator of Department (COD) Office",
-        "lat": 31.25285938442377,
+        "lat": 31.25263,
         "lng": 75.70247885462516,
         "visibleFromZoom": 19,
         "floor": "Block 25, Room 301, Cabin C2",
@@ -4135,7 +4166,7 @@
         "type": "Point",
         "coordinates": [
           75.70247885462516,
-          31.25285938442377
+          31.25263
         ]
       },
       "properties": {
@@ -4158,7 +4189,7 @@
         "groupName": "School of AI and Emerging Technologies",
         "category": "offices",
         "type": "Coordinator of Department (COD) Office",
-        "lat": 31.25285938442377,
+        "lat": 31.25263,
         "lng": 75.70247885462516,
         "visibleFromZoom": 19,
         "floor": "Block 25, Room 301, Cabin C3",
@@ -4203,7 +4234,7 @@
         "type": "Point",
         "coordinates": [
           75.70289512306216,
-          31.252861883513926
+          31.25263
         ]
       },
       "properties": {
@@ -4226,7 +4257,7 @@
         "groupName": "School of AI and Emerging Technologies",
         "category": "offices",
         "type": "Coordinator of Department (COD) Office",
-        "lat": 31.252861883513926,
+        "lat": 31.25263,
         "lng": 75.70289512306216,
         "visibleFromZoom": 19,
         "floor": "Block 26, Room 202, Cabin C1",
@@ -4271,7 +4302,7 @@
         "type": "Point",
         "coordinates": [
           75.70289512306216,
-          31.252861883513926
+          31.25263
         ]
       },
       "properties": {
@@ -4294,7 +4325,7 @@
         "groupName": "School of AI and Emerging Technologies",
         "category": "offices",
         "type": "Coordinator of Department (COD) Office",
-        "lat": 31.252861883513926,
+        "lat": 31.25263,
         "lng": 75.70289512306216,
         "visibleFromZoom": 19,
         "floor": "Block 26, Room 202, Cabin C3",
@@ -4338,7 +4369,7 @@
         "type": "Point",
         "coordinates": [
           75.70289512306216,
-          31.252861883513926
+          31.25263
         ]
       },
       "properties": {
@@ -4361,7 +4392,7 @@
         "groupName": "School of AI and Emerging Technologies",
         "category": "offices",
         "type": "Coordinator of Department (COD) Office",
-        "lat": 31.252861883513926,
+        "lat": 31.25263,
         "lng": 75.70289512306216,
         "visibleFromZoom": 19,
         "floor": "Block 26, Room 203, Cabin C1",
@@ -4406,7 +4437,7 @@
         "type": "Point",
         "coordinates": [
           75.70330718355343,
-          31.252858651898666
+          31.25263
         ]
       },
       "properties": {
@@ -4429,7 +4460,7 @@
         "groupName": "School of AI and Emerging Technologies",
         "category": "offices",
         "type": "Coordinator of Department (COD) Office",
-        "lat": 31.252858651898666,
+        "lat": 31.25263,
         "lng": 75.70330718355343,
         "visibleFromZoom": 19,
         "floor": "Block 27, Room 203, Cabin C3",
@@ -4474,7 +4505,7 @@
         "type": "Point",
         "coordinates": [
           75.70289512306216,
-          31.252861883513926
+          31.25263
         ]
       },
       "properties": {
@@ -4497,7 +4528,7 @@
         "groupName": "School of AI and Emerging Technologies",
         "category": "offices",
         "type": "Coordinator of Department (COD) Office",
-        "lat": 31.252861883513926,
+        "lat": 31.25263,
         "lng": 75.70289512306216,
         "visibleFromZoom": 19,
         "floor": "Block 26, Room 205, Cabin C1",
@@ -4609,7 +4640,7 @@
         "type": "Point",
         "coordinates": [
           75.70289512306216,
-          31.252861883513926
+          31.25263
         ]
       },
       "properties": {
@@ -4632,7 +4663,7 @@
         "groupName": "School of AI and Emerging Technologies",
         "category": "offices",
         "type": "Coordinator of Department (COD) Office",
-        "lat": 31.252861883513926,
+        "lat": 31.25263,
         "lng": 75.70289512306216,
         "visibleFromZoom": 19,
         "floor": "Block 26, Room 203, Cabin C4",
@@ -4678,7 +4709,7 @@
         "type": "Point",
         "coordinates": [
           75.70289512306216,
-          31.252861883513926
+          31.25263
         ]
       },
       "properties": {
@@ -4701,7 +4732,7 @@
         "groupName": "School of AI and Emerging Technologies",
         "category": "offices",
         "type": "Admin Officer Office",
-        "lat": 31.252861883513926,
+        "lat": 31.25263,
         "lng": 75.70289512306216,
         "visibleFromZoom": 19,
         "floor": "Block 26, Room 204, Admin Office",
@@ -4885,6 +4916,780 @@
         "how": "Connected via direct continuous indoor corridors from 3rd to 8th floor. You can walk between them inside without stepping outside."
       },
       "id": "conn-33-34"
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.7049,
+          31.2568
+        ]
+      },
+      "properties": {
+        "id": "girls-residential-area",
+        "name": "Girls Residential Area",
+        "category": "hostels",
+        "type": "Residential Zone",
+        "tags": [
+          "girls residential area",
+          "girls residential",
+          "girls hostel",
+          "girls hostels",
+          "girls studio",
+          "girls studios",
+          "gh",
+          "gs",
+          "gh1",
+          "gh2",
+          "gh3",
+          "gh4",
+          "gs11",
+          "gs12",
+          "gh-1",
+          "gh-2",
+          "gh-3",
+          "gh-4",
+          "gs-11",
+          "gs-12",
+          "student housing",
+          "hostel area",
+          "accommodations",
+          "student residence"
+        ],
+        "blocks": [
+          "gh-1",
+          "gh-2",
+          "gh-3",
+          "gh-4",
+          "gs-11",
+          "gs-12"
+        ],
+        "centerCoords": [
+          31.2568,
+          75.7049
+        ],
+        "desc": "Campus Girls Residential Area clustering Girls Hostels (GH-1, GH-2, GH-3, GH-4) and Girls Studios (GS-11, GS-12).",
+        "image": ""
+      },
+      "id": "girls-residential-area"
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.70563840198457,
+          31.25691626741265
+        ]
+      },
+      "properties": {
+        "id": "gh-1",
+        "name": "Girls Hostel 1 (GH-1)",
+        "groupId": "girls-residential-area",
+        "groupName": "Girls Residential Area",
+        "category": "hostels",
+        "type": "Girls Hostel",
+        "lat": 31.25691626741265,
+        "lng": 75.70563840198457,
+        "floor": "Multi-storey Hostel Building",
+        "facilities": [
+          "Hostel Rooms",
+          "Mess / Dining Hall",
+          "Study Room",
+          "Common Room",
+          "Laundry Services",
+          "24x7 Security"
+        ],
+        "tags": [
+          "gh1",
+          "gh-1",
+          "gh 1",
+          "girls hostel 1",
+          "hostel 1",
+          "girls hostel",
+          "gh",
+          "hostel",
+          "residential",
+          "hostels"
+        ],
+        "desc": "Girls Hostel 1 (GH-1) on the LPU campus.",
+        "hours": "24 Hours (Gate Timings Apply)",
+        "phone": "",
+        "image": ""
+      },
+      "id": "gh-1"
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.70470463433142,
+          31.256708189583193
+        ]
+      },
+      "properties": {
+        "id": "gh-2",
+        "name": "Girls Hostel 2 (GH-2)",
+        "groupId": "girls-residential-area",
+        "groupName": "Girls Residential Area",
+        "category": "hostels",
+        "type": "Girls Hostel",
+        "lat": 31.256708189583193,
+        "lng": 75.70470463433142,
+        "floor": "Multi-storey Hostel Building",
+        "facilities": [
+          "Hostel Rooms",
+          "Mess / Dining Hall",
+          "Study Room",
+          "Gym",
+          "Common Room",
+          "24x7 Security"
+        ],
+        "tags": [
+          "gh2",
+          "gh-2",
+          "gh 2",
+          "girls hostel 2",
+          "hostel 2",
+          "girls hostel",
+          "gh",
+          "hostel",
+          "residential",
+          "hostels"
+        ],
+        "desc": "Girls Hostel 2 (GH-2) on the LPU campus.",
+        "hours": "24 Hours (Gate Timings Apply)",
+        "phone": "",
+        "image": ""
+      },
+      "id": "gh-2"
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.70442849402339,
+          31.25627581636581
+        ]
+      },
+      "properties": {
+        "id": "gh-3",
+        "name": "Girls Hostel 3 (GH-3)",
+        "groupId": "girls-residential-area",
+        "groupName": "Girls Residential Area",
+        "category": "hostels",
+        "type": "Girls Hostel",
+        "lat": 31.25627581636581,
+        "lng": 75.70442849402339,
+        "floor": "Multi-storey Hostel Building",
+        "facilities": [
+          "Hostel Rooms",
+          "Mess / Dining Hall",
+          "Indoor Games",
+          "Study Room",
+          "24x7 Security"
+        ],
+        "tags": [
+          "gh3",
+          "gh-3",
+          "gh 3",
+          "girls hostel 3",
+          "hostel 3",
+          "girls hostel",
+          "gh",
+          "hostel",
+          "residential",
+          "hostels"
+        ],
+        "desc": "Girls Hostel 3 (GH-3) on the LPU campus.",
+        "hours": "24 Hours (Gate Timings Apply)",
+        "phone": "",
+        "image": ""
+      },
+      "id": "gh-3"
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.70573409304164,
+          31.25652361973345
+        ]
+      },
+      "properties": {
+        "id": "gh-4",
+        "name": "Girls Hostel 4 (GH-4)",
+        "groupId": "girls-residential-area",
+        "groupName": "Girls Residential Area",
+        "category": "hostels",
+        "type": "Girls Hostel",
+        "lat": 31.25652361973345,
+        "lng": 75.70573409304164,
+        "floor": "Multi-storey Hostel Building",
+        "facilities": [
+          "Hostel Rooms",
+          "Mess / Dining Hall",
+          "Reading Room",
+          "Recreation Area",
+          "24x7 Security"
+        ],
+        "tags": [
+          "gh4",
+          "gh-4",
+          "gh 4",
+          "girls hostel 4",
+          "hostel 4",
+          "girls hostel",
+          "gh",
+          "hostel",
+          "residential",
+          "hostels"
+        ],
+        "desc": "Girls Hostel 4 (GH-4) on the LPU campus.",
+        "hours": "24 Hours (Gate Timings Apply)",
+        "phone": "",
+        "image": ""
+      },
+      "id": "gh-4"
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.70515188630021,
+          31.25795996920372
+        ]
+      },
+      "properties": {
+        "id": "gs-11",
+        "name": "Girls Studio 11 (GS-11)",
+        "groupId": "girls-residential-area",
+        "groupName": "Girls Residential Area",
+        "category": "hostels",
+        "type": "Girls Studio",
+        "lat": 31.25795996920372,
+        "lng": 75.70515188630021,
+        "floor": "Studio Apartments Building",
+        "facilities": [
+          "Studio Rooms",
+          "Wi-Fi",
+          "Pantry / Kitchenette",
+          "Study Lounge",
+          "24x7 Security"
+        ],
+        "tags": [
+          "gs 11",
+          "gs11",
+          "gs-11",
+          "girls studio 11",
+          "girls studios 11",
+          "studio 11",
+          "girls studio",
+          "girls studios",
+          "gs",
+          "studio",
+          "apartment",
+          "residential",
+          "hostels"
+        ],
+        "desc": "Girls Studio 11 (GS-11) offering studio accommodations on the LPU campus.",
+        "hours": "24 Hours (Gate Timings Apply)",
+        "phone": "",
+        "image": ""
+      },
+      "id": "gs-11"
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.70411254502686,
+          31.257955105314878
+        ]
+      },
+      "properties": {
+        "id": "gs-12",
+        "name": "Girls Studio 12 (GS-12)",
+        "groupId": "girls-residential-area",
+        "groupName": "Girls Residential Area",
+        "category": "hostels",
+        "type": "Girls Studio",
+        "lat": 31.257955105314878,
+        "lng": 75.70411254502686,
+        "floor": "Studio Apartments Building",
+        "facilities": [
+          "Studio Rooms",
+          "Wi-Fi",
+          "Pantry / Kitchenette",
+          "Study Lounge",
+          "24x7 Security"
+        ],
+        "tags": [
+          "gs 12",
+          "gs12",
+          "gs-12",
+          "girls studio 12",
+          "girls studios 12",
+          "studio 12",
+          "girls studio",
+          "girls studios",
+          "gs",
+          "studio",
+          "apartment",
+          "residential",
+          "hostels"
+        ],
+        "desc": "Girls Studio 12 (GS-12) offering studio accommodations on the LPU campus.",
+        "hours": "24 Hours (Gate Timings Apply)",
+        "phone": "",
+        "image": ""
+      },
+      "id": "gs-12"
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.70481111154697,
+          31.25508484640442
+        ]
+      },
+      "properties": {
+        "id": "unipolis",
+        "name": "Unipolis",
+        "groupId": "auditorium",
+        "groupName": "Auditoriums",
+        "category": "others",
+        "type": "Auditorium",
+        "lat": 31.25508484640442,
+        "lng": 75.70481111154697,
+        "floor": "Ground Floor & Arena",
+        "facilities": [
+          "10000+ Seating Arena",
+          "Stage",
+          "Acoustics",
+          "Green Rooms",
+          "Central Event Venue",
+          "Student Reporting Area"
+        ],
+        "tags": [
+          "unipolis",
+          "auditorium",
+          "mega-auditorium",
+          "event arena",
+          "arena",
+          "cultural festivals",
+          "events",
+          "celebrity visits",
+          "initial student reporting",
+          "student reporting"
+        ],
+        "desc": "Unipolis is a massive central indoor mega-auditorium and event arena with a seating capacity of over 10,000 people. It serves as a major venue for university events, celebrity visits, cultural festivals, and initial student reporting.",
+        "hours": "Open for Events and University Functions",
+        "phone": "",
+        "image": ""
+      },
+      "id": "unipolis"
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.70531804905326,
+          31.255736035957618
+        ]
+      },
+      "properties": {
+        "id": "unimall",
+        "name": "UniMall",
+        "groupId": "mall",
+        "groupName": "UniMall & Campus Shopping",
+        "category": "food",
+        "type": "Mall",
+        "lat": 31.255736035957618,
+        "lng": 75.70531804905326,
+        "floor": "Multi-Storey Shopping Mall",
+        "facilities": [
+          "Retail Shops",
+          "Food Court",
+          "Lifestyle Stores",
+          "Electronics",
+          "Convenience Services"
+        ],
+        "tags": [
+          "unimall",
+          "uni mall",
+          "mall",
+          "shopping mall",
+          "campus mall",
+          "shopping",
+          "stores",
+          "food",
+          "lifestyle"
+        ],
+        "desc": "UniMall is the main campus shopping mall featuring retail stores, food outlets, lifestyle brands, and daily conveniences for students and staff.",
+        "hours": "09:00 AM - 10:00 PM",
+        "phone": "",
+        "image": ""
+      },
+      "id": "unimall"
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.7014581867459,
+          31.250861939005805
+        ]
+      },
+      "properties": {
+        "id": "sports-complex",
+        "name": "Sports Complex",
+        "groupId": "sports",
+        "groupName": "Sports Complex & Facilities",
+        "category": "sports",
+        "type": "Sports Complex",
+        "lat": 31.250861939005805,
+        "lng": 75.7014581867459,
+        "floor": "Multi-level Indoor Sports Arena",
+        "facilities": [
+          "Indoor Sports Arena",
+          "Badminton Courts",
+          "Basketball Courts",
+          "Gymnasium",
+          "Swimming Pool",
+          "Table Tennis",
+          "Squash Courts",
+          "Shooting Range"
+        ],
+        "tags": [
+          "sports complex",
+          "sports",
+          "indoor sports",
+          "gym",
+          "badminton",
+          "basketball",
+          "swimming",
+          "table tennis",
+          "squash",
+          "athletics",
+          "fitness"
+        ],
+        "desc": "The Sports Complex is a campus facility for indoor sports, fitness, swimming, and competitive university athletics.",
+        "hours": "06:00 AM - 09:00 PM",
+        "phone": "",
+        "image": ""
+      },
+      "id": "sports-complex"
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.70472455225995,
+          31.25268461614659
+        ]
+      },
+      "properties": {
+        "id": "block-29",
+        "name": "Block 29",
+        "groupId": "admin-block",
+        "groupName": "Administrative & Academic Blocks",
+        "category": "academics",
+        "type": "Academic & Administrative Block",
+        "lat": 31.25268461614659,
+        "lng": 75.70472455225995,
+        "floor": "Multi-Storey Academic Block",
+        "facilities": [
+          "Division of Admissions",
+          "Admission Counseling",
+          "Document Verification",
+          "Fee Counters",
+          "Academic Offices",
+          "Classrooms"
+        ],
+        "tags": [
+          "block 29",
+          "block-29",
+          "block29",
+          "division of admissions",
+          "admissions",
+          "admission office",
+          "admission queries",
+          "administrative block",
+          "academic block"
+        ],
+        "desc": "Block 29 houses the Division of Admissions which handles admission-related queries, counseling, and document verification, along with academic and administrative departments.",
+        "hours": "09:00 AM - 05:00 PM",
+        "phone": "",
+        "image": ""
+      },
+      "id": "block-29"
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.70531804905326,
+          31.255736035957618
+        ]
+      },
+      "properties": {
+        "id": "mall",
+        "name": "UniMall & Campus Shopping",
+        "category": "food",
+        "type": "Mall",
+        "tags": [
+          "mall",
+          "unimall",
+          "shopping",
+          "stores",
+          "food court",
+          "retail"
+        ],
+        "blocks": [
+          "unimall"
+        ],
+        "centerCoords": [
+          31.255736035957618,
+          75.70531804905326
+        ],
+        "desc": "UniMall is the central shopping, retail, and food destination on the LPU campus.",
+        "image": ""
+      },
+      "id": "mall"
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.7014581867459,
+          31.250861939005805
+        ]
+      },
+      "properties": {
+        "id": "sports",
+        "name": "Sports Complex & Facilities",
+        "category": "sports",
+        "type": "Sports Complex",
+        "tags": [
+          "sports",
+          "sports complex",
+          "indoor sports",
+          "stadium",
+          "gym",
+          "badminton",
+          "swimming",
+          "basketball",
+          "athletics"
+        ],
+        "blocks": [
+          "sports-complex"
+        ],
+        "centerCoords": [
+          31.250861939005805,
+          75.7014581867459
+        ],
+        "desc": "LPU Sports Complex and indoor/outdoor athletic facilities for campus sports.",
+        "image": ""
+      },
+      "id": "sports"
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.70375836965415,
+          31.253683832811372
+        ]
+      },
+      "properties": {
+        "id": "tuck-shop-block-26",
+        "name": "Stationery Tuck Shop - Block 26",
+        "blockId": "block-26",
+        "floor": "Basement",
+        "lat": 31.253683832811372,
+        "lng": 75.70375836965415,
+        "category": "services",
+        "type": "Stationery Tuck Shop",
+        "facilities": [
+          "Stationery Items",
+          "Pens",
+          "Notebooks",
+          "Photocopy / Printing",
+          "Academic Supplies"
+        ],
+        "tags": [
+          "stationery",
+          "tuck shop",
+          "stationery shop",
+          "stationery tuck shop",
+          "block 26 tuck shop",
+          "block 26 stationery",
+          "pens",
+          "notebooks",
+          "photocopy",
+          "xerox",
+          "basement stationery",
+          "supplies"
+        ],
+        "desc": "Stationery tuck shop located in the basement of Block 26 where students can purchase necessary stationery items such as pens, notebooks, and academic supplies.",
+        "hours": "Open during university academic hours",
+        "phone": "",
+        "image": ""
+      },
+      "id": "tuck-shop-block-26"
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.70347895034685,
+          31.253026330364964
+        ]
+      },
+      "properties": {
+        "id": "tuck-shop-block-27",
+        "name": "Stationery Tuck Shop - Block 27",
+        "blockId": "block-27",
+        "floor": "Basement",
+        "lat": 31.253026330364964,
+        "lng": 75.70347895034685,
+        "category": "services",
+        "type": "Stationery Tuck Shop",
+        "facilities": [
+          "Stationery Items",
+          "Pens",
+          "Notebooks",
+          "Photocopy / Printing",
+          "Academic Supplies"
+        ],
+        "tags": [
+          "stationery",
+          "tuck shop",
+          "stationery shop",
+          "stationery tuck shop",
+          "block 27 tuck shop",
+          "block 27 stationery",
+          "pens",
+          "notebooks",
+          "photocopy",
+          "xerox",
+          "basement stationery",
+          "supplies"
+        ],
+        "desc": "Stationery tuck shop located in the basement of Block 27 where students can purchase necessary stationery items such as pens, notebooks, and academic supplies.",
+        "hours": "Open during university academic hours",
+        "phone": "",
+        "image": ""
+      },
+      "id": "tuck-shop-block-27"
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.70321287618991,
+          31.25232616238685
+        ]
+      },
+      "properties": {
+        "id": "tuck-shop-block-28",
+        "name": "Stationery Tuck Shop - Block 28",
+        "blockId": "block-28",
+        "floor": "Basement",
+        "lat": 31.25232616238685,
+        "lng": 75.70321287618991,
+        "category": "services",
+        "type": "Stationery Tuck Shop",
+        "facilities": [
+          "Stationery Items",
+          "Pens",
+          "Notebooks",
+          "Photocopy / Printing",
+          "Academic Supplies"
+        ],
+        "tags": [
+          "stationery",
+          "tuck shop",
+          "stationery shop",
+          "stationery tuck shop",
+          "block 28 tuck shop",
+          "block 28 stationery",
+          "pens",
+          "notebooks",
+          "photocopy",
+          "xerox",
+          "basement stationery",
+          "supplies"
+        ],
+        "desc": "Stationery tuck shop located in the basement of Block 28 where students can purchase necessary stationery items such as pens, notebooks, and academic supplies.",
+        "hours": "Open during university academic hours",
+        "phone": "",
+        "image": ""
+      },
+      "id": "tuck-shop-block-28"
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.705574,
+          31.253507
+        ]
+      },
+      "properties": {
+        "id": "tuck-shop-block-36",
+        "name": "Stationery Tuck Shop - Block 36",
+        "blockId": "block-36",
+        "floor": "Basement",
+        "lat": 31.253507,
+        "lng": 75.705574,
+        "category": "services",
+        "type": "Stationery Tuck Shop",
+        "facilities": [
+          "Stationery Items",
+          "Pens",
+          "Notebooks",
+          "Photocopy / Printing",
+          "Academic Supplies"
+        ],
+        "tags": [
+          "stationery",
+          "tuck shop",
+          "stationery shop",
+          "stationery tuck shop",
+          "block 36 tuck shop",
+          "block 36 stationery",
+          "pens",
+          "notebooks",
+          "photocopy",
+          "xerox",
+          "basement stationery",
+          "supplies"
+        ],
+        "desc": "Stationery tuck shop located in the basement of Block 36 where students can purchase necessary stationery items such as pens, notebooks, and academic supplies.",
+        "hours": "Open during university academic hours",
+        "phone": "",
+        "image": ""
+      },
+      "id": "tuck-shop-block-36"
     }
   ]
 }

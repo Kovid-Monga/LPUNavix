@@ -39,7 +39,16 @@ class KartTrackingController {
   init() {
     this.refreshKarts();
     if (!this.pollInterval) {
-      this.pollInterval = setInterval(() => this.refreshKarts(), 3000);
+      this.pollInterval = setInterval(() => {
+        if (typeof document !== "undefined" && document.hidden) return;
+        this.refreshKarts();
+      }, 3500);
+
+      if (typeof document !== "undefined") {
+        document.addEventListener("visibilitychange", () => {
+          if (!document.hidden) this.refreshKarts();
+        });
+      }
     }
   }
 

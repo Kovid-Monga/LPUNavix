@@ -235,7 +235,7 @@ class CampusMapController {
   async loadGeoJsonAssets() {
     const load = async (file, fallback = { type: "FeatureCollection", features: [] }) => {
       try {
-        const response = await fetch(`geoJson/${file}`, { cache: "no-store" });
+        const response = await fetch(`geoJson/${file}`, { cache: "no-cache" });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return await response.json();
       } catch (error) {

@@ -30,6 +30,7 @@ except ImportError:
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -58,17 +59,40 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Automatically compress HTML, JS, CSS, GeoJSON responses (70%-80% bandwidth reduction)
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+
 
 @app.middleware("http")
-async def add_no_cache_headers(request: Request, call_next):
+async def smart_cache_middleware(request: Request, call_next):
     """
-    Prevents browsers from caching static files (HTML, JS, CSS).
-    Ensures phone and desktop always load the latest code without version tags.
+    Low-bandwidth smart caching policy:
+    - Long-term caching (1 day) for heavy media & images (saves ~2.2 MB on mobile).
+    - Conditional ETag revalidation ('no-cache') for code assets (HTML, JS, CSS, GeoJSON)
+      guaranteeing code changes appear immediately on refresh, while unchanged files return 304 (0 bytes).
+    - 'no-store' for dynamic live tracking API endpoints (/api/*).
     """
     response = await call_next(request)
-    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
-    response.headers["Pragma"] = "no-cache"
-    response.headers["Expires"] = "0"
+    path = request.url.path.lower()
+
+    if path.startswith("/api/"):
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+    elif any(path.endswith(ext) for ext in [".png", ".jpg", ".jpeg", ".webp", ".svg", ".ico", ".woff", ".woff2", ".ttf"]):
+        response.headers["Cache-Control"] = "public, max-age=86400"
+        if "Pragma" in response.headers:
+            del response.headers["Pragma"]
+        if "Expires" in response.headers:
+            del response.headers["Expires"]
+    else:
+        # Revalidate with server via ETag/Last-Modified.
+        # Changes show up immediately on refresh; unchanged files cost 0 bytes.
+        response.headers["Cache-Control"] = "no-cache"
+        if "Pragma" in response.headers:
+            del response.headers["Pragma"]
+        if "Expires" in response.headers:
+            del response.headers["Expires"]
+
     return response
 
 

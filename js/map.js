@@ -691,6 +691,9 @@ class CampusMapController {
     });
 
     this.addRouteLayers();
+    this.map.on("zoom", () => {
+      if (this.currentConnectors) this.renderConnectorDots();
+    });
     this.map.on("click", "road-core", event => this.showNetworkPopup(event, "Road"));
     this.map.on("click", "footpath-area-fill", event => this.showNetworkPopup(event, "Footpath / Walkway"));
     this.map.on("click", "footpath-line-core", event => this.showNetworkPopup(event, "Footpath / Walkway"));
@@ -721,7 +724,7 @@ class CampusMapController {
 
   addRouteLayers() {
     const empty = { type: "FeatureCollection", features: [] };
-    ["route-main", "route-casing", "route-rim", "route-alternate", "route-closed", "route-connectors", "route-moving-dots"].forEach(id => {
+    ["route-main", "route-casing", "route-rim", "route-alternate", "route-closed", "route-connectors", "route-connector-dots", "route-moving-dots"].forEach(id => {
       this.map.addSource(id, { type: "geojson", data: empty, lineMetrics: true });
     });
     const line = (id, source, paint, minzoom = 0) => this.map.addLayer({
@@ -741,28 +744,36 @@ class CampusMapController {
       "line-dasharray": [2, 2.6]
     });
     line("route-connector-outline", "route-connectors", {
-      "line-color": "#334155",
-      "line-width": ["interpolate", ["linear"], ["zoom"], 12, 4.5, 14, 6.0, 16, 8.0, 18, 10.5],
-      "line-dasharray": [0, 2.8]
+      "line-color": "#0f172a",
+      "line-width": 1,
+      "line-opacity": 0
     });
-    line("route-connector-dots", "route-connectors", {
-      "line-color": "#ffffff",
-      "line-width": ["interpolate", ["linear"], ["zoom"], 12, 2.5, 14, 3.8, 16, 5.2, 18, 7.2],
-      "line-dasharray": [0, 2.8]
+    this.map.setLayoutProperty("route-connector-outline", "visibility", "none");
+    this.map.addLayer({
+      id: "route-connector-dots",
+      type: "circle",
+      source: "route-connector-dots",
+      paint: {
+        "circle-radius": [
+          "interpolate", ["linear"], ["zoom"],
+          12, 1.4,
+          14, 1.6,
+          16, 1.8,
+          18, 2.2,
+          20, 2.8
+        ],
+        "circle-color": "#ffffff",
+        "circle-stroke-width": 0.6,
+        "circle-stroke-color": "rgba(15, 23, 42, 0.75)"
+      }
     });
     line("route-nav-casing", "route-casing", { "line-color": "#ffffff", "line-width": 13, "line-opacity": 0.95 });
     line("route-preview-rim", "route-rim", {
       "line-color": "#2373f4",
-      "line-width": [
-        "interpolate", ["linear"], ["zoom"],
-        12, 3.5,
-        14, 4.8,
-        16, 6.8,
-        18, 9.0,
-        20, 11.5
-      ],
-      "line-opacity": 0.18
+      "line-width": 1,
+      "line-opacity": 0
     });
+    this.map.setLayoutProperty("route-preview-rim", "visibility", "none");
     line("route-main-preview", "route-main", {
       "line-color": "#2373f4",
       "line-width": 1,
@@ -1498,22 +1509,20 @@ class CampusMapController {
     const isNavigating = options.isNavigating === true;
     const roadCoords = options.roadPath && options.roadPath.length >= 2 ? options.roadPath : validPath;
     const mainLineColor = "#0f172a";
-    const color = isNavigating ? mainLineColor : (mode === "walking" ? "#2373f4" : "#f97316");
+    // Both walk and kart modes use vibrant navigation blue (#2373f4); #f97316 legacy
+    const color = "#2373f4";
     // Leaflet compatibility note: dashArray: mainLineDashArray
 
     this.setGeoJsonSource("route-main", [this.lineFeature(roadCoords)]);
-    this.setGeoJsonSource("route-casing", isNavigating ? [this.lineFeature(roadCoords)] : []);
-    this.setGeoJsonSource("route-rim", isNavigating ? [] : [this.lineFeature(roadCoords)]);
+    this.setGeoJsonSource("route-casing", []);
+    this.setGeoJsonSource("route-rim", []);
     this.map.setPaintProperty("route-main-preview", "line-color", color);
-    this.map.setLayoutProperty("route-main-preview", "visibility", isNavigating ? "none" : "visible");
-    this.map.setLayoutProperty("route-main-active", "visibility", isNavigating ? "visible" : "none");
-    this.map.setPaintProperty("route-preview-rim", "line-color", color);
+    this.map.setLayoutProperty("route-main-preview", "visibility", "none");
+    this.map.setLayoutProperty("route-main-active", "visibility", "none");
+    this.map.setLayoutProperty("route-preview-rim", "visibility", "none");
 
-    if (!isNavigating) {
-      this.startRouteDashAnimation(roadCoords, color);
-    } else {
-      this.stopRouteDashAnimation();
-    }
+    // Retain the exact same live moving dots and corridor style when navigating
+    this.startRouteDashAnimation(roadCoords, color);
 
     const closed = Array.isArray(closedPathCoords) ? closedPathCoords.filter(pt => Array.isArray(pt) && pt.length >= 2) : [];
     this.setGeoJsonSource("route-closed", closed.length >= 2 ? [this.lineFeature(closed)] : []);
@@ -1523,6 +1532,8 @@ class CampusMapController {
     this.setGeoJsonSource("route-alternate", alt.length >= 2 ? [this.lineFeature(alt)] : []);
     const connectors = Array.isArray(options.connectors) ? options.connectors.filter(line => Array.isArray(line) && line.length >= 2).map(line => this.lineFeature(line)) : [];
     this.setGeoJsonSource("route-connectors", connectors);
+    this.currentConnectors = options.connectors;
+    this.renderConnectorDots();
 
     // map-route-floating-badge removed completely per user request
 
@@ -1552,6 +1563,54 @@ class CampusMapController {
     if (!options.skipFitBounds) {
       const bounds = this.getBoundsForLatLngs(roadCoords);
       if (bounds) this.map.fitBounds(bounds, { padding: 80, maxZoom: 17.5, duration: 700 });
+    }
+  }
+
+  renderConnectorDots() {
+    if (!this.map || !this.mapReady) return;
+    const connectors = this.currentConnectors;
+    if (!Array.isArray(connectors) || connectors.length === 0) {
+      this.setGeoJsonSource("route-connector-dots", []);
+      return;
+    }
+
+    const currentZoom = this.map ? this.map.getZoom() : 16.5;
+    // Dot diameter is ~3.6px with circle-radius 1.8px at zoom 16.
+    // 2px visual gap between dots means center-to-center spacing of ~5.6px on screen.
+    const dotSpacing = Math.max(2.0, 5.6 * Math.pow(2, Math.max(0, 16.5 - currentZoom)));
+
+    const features = [];
+    connectors.forEach(conn => {
+      if (!Array.isArray(conn) || conn.length < 2) return;
+      const p1 = conn[0];
+      const p2 = conn[conn.length - 1];
+      const dLat = (p2[0] - p1[0]) * 111320;
+      const dLng = (p2[1] - p1[1]) * 111320 * Math.cos(p1[0] * Math.PI / 180);
+      const dist = Math.hypot(dLat, dLng);
+      if (dist < 0.5) return;
+
+      for (let d = 0; d <= dist; d += dotSpacing) {
+        const t = d / dist;
+        const lat = p1[0] + t * (p2[0] - p1[0]);
+        const lng = p1[1] + t * (p2[1] - p1[1]);
+        features.push({
+          type: "Feature",
+          properties: {},
+          geometry: { type: "Point", coordinates: [lng, lat] }
+        });
+      }
+      if (dist % dotSpacing > dotSpacing * 0.35) {
+        features.push({
+          type: "Feature",
+          properties: {},
+          geometry: { type: "Point", coordinates: [p2[1], p2[0]] }
+        });
+      }
+    });
+
+    const source = this.map.getSource("route-connector-dots");
+    if (source) {
+      source.setData({ type: "FeatureCollection", features });
     }
   }
 
@@ -1656,9 +1715,10 @@ class CampusMapController {
   clearRoutes() {
     this.currentRouteData = null;
     this.currentRouteCoords = null;
+    this.currentConnectors = null;
     this.stopRouteDashAnimation();
     this.routesLayer.clearLayers();
-    ["route-main", "route-casing", "route-rim", "route-alternate", "route-closed", "route-connectors", "route-moving-dots"].forEach(id => this.setGeoJsonSource(id, []));
+    ["route-main", "route-casing", "route-rim", "route-alternate", "route-closed", "route-connectors", "route-connector-dots", "route-moving-dots"].forEach(id => this.setGeoJsonSource(id, []));
   }
 
   clearRoute() {

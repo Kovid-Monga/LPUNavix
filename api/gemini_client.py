@@ -153,8 +153,18 @@ Sports Complex — Indoor Sports:
 
 Block 29 — Division of Admissions:
 - When asked about Block 29, the Division of Admissions, or where to go for admission queries / counseling:
-  • The Division of Admissions is located in Block 29 and handles admission-related queries, counseling, and document verification.
-  • Coordinates: 31.252685, 75.704725. Category: Academic & Administrative Block.
+  • The Division of Admissions is located in Block 29 (Admission Block) and handles admission-related queries, counseling, and document verification.
+  • Coordinates: 31.252722, 75.704132. Category: Academic & Administrative Block.
+
+Mittal School of Business (MSB):
+- When asked about Mittal School of Business, MSB, or the business / management school:
+  • Mittal School of Business (MSB) houses management, MBA, BBA, commerce, and economics programs.
+  • Coordinates: 31.254525, 75.705613. Category: Academic Block.
+
+Division of Student Relationship (DSR) / Division of Student Welfare (DSW):
+- When asked about DSR, DSW, Division of Student Relationship, Division of Student Welfare, or where to go for academic problems, hostel issues, student complaints, or welfare:
+  • Students can reach out to DSR / DSW for ANY problem regarding academics, student grievances, hostels, or general campus welfare.
+  • Coordinates: 31.255099, 75.706053. Category: Student Welfare & Support Office.
 
 Stationery Tuck Shops (Basements of Blocks 26, 27, 28, and 36):
 - When asked about stationery, tuck shops, pens, notebooks, or academic supplies:
@@ -283,9 +293,25 @@ def _format_grounded_fallback(question: str, context_records: list[dict], match_
     # Division of Admissions / Block 29 queries
     if any(w in q_lower for w in ["division of admissions", "admission-related", "admission queries", "admission office", "handles admissions", "where is block 29", "block 29"]):
         return (
-            "Hey there! 😊 The **Division of Admissions** is located in **Block 29**! 🏢🎓\n\n"
+            "Hey there! 😊 The **Division of Admissions** is located in **Block 29 (Admission Block)**! 🏢🎓\n\n"
             "It handles admission-related queries, counseling, and document verification.\n\n"
             "Want to see Block 29 on the map? Tap below! 🗺️✨"
+        )
+
+    # Mittal School of Business queries
+    if any(w in q_lower for w in ["mittal school of business", "school of business", "business school", "msb"]):
+        return (
+            "Hey there! 😊 **Mittal School of Business (MSB)** is located at coordinates **31.254525, 75.705613**! 🏢💼\n\n"
+            "It is a premier business and management school offering MBA, BBA, Commerce, and Economics programs.\n\n"
+            "Want to see Mittal School of Business on the map? Tap below! 🗺️✨"
+        )
+
+    # Division of Student Relationship (DSR) / Division of Student Welfare (DSW) queries
+    if any(w in q_lower for w in ["dsr", "dsw", "division of student relationship", "division of student welfare", "student relationship", "student welfare", "academic problem", "hostel problem", "student problem"]):
+        return (
+            "Hey there! 😊 For any academic issues, hostel issues, or student problems, you can reach out to the **Division of Student Relationship (DSR) / Division of Student Welfare (DSW)**! 🏢🤝\n\n"
+            "📍 Location coordinates: **31.255099, 75.706053**\n\n"
+            "They handle student welfare, counseling, grievance redressal, and problem resolution across academics and campus life. Want to locate DSR on the map? Tap below! 🗺️✨"
         )
 
     if match_quality == "none" or not context_records:

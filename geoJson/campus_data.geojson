@@ -82,8 +82,8 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          75.70338942501698,
-          31.252203630459952
+          75.70373201751212,
+          31.251858851005732
         ]
       },
       "properties": {
@@ -108,8 +108,8 @@
           "block-37"
         ],
         "centerCoords": [
-          31.252203630459952,
-          75.70338942501698
+          31.251858851005732,
+          75.70373201751212
         ],
         "desc": "Central Library located in the pathway. The library is till 5th floor and from 6th floor it is Block 37.",
         "image": ""
@@ -841,8 +841,8 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          75.70338942501698,
-          31.252203630459952
+          75.70373201751212,
+          31.251858851005732
         ]
       },
       "properties": {
@@ -852,8 +852,8 @@
         "groupName": "Central Library",
         "category": "academics",
         "type": "Central Library",
-        "lat": 31.252203630459952,
-        "lng": 75.70338942501698,
+        "lat": 31.251858851005732,
+        "lng": 75.70373201751212,
         "floor": "Ground to 5th Floor (From 6th floor onwards it is Block 37)",
         "facilities": [
           "Central Library (Ground to 5th Floor)",
@@ -924,7 +924,7 @@
           "pathway",
           "library"
         ],
-        "desc": "Block 37 - Department of Computer Science & Engineering. Located from the 6th floor onwards above the Central Library in the pathway (Ground to 5th floor is Central Library).",
+        "desc": "Block 37 - Department of Computer Science & Engineering. Located from the 6th floor onwards above the Central Library (Ground to 5th floor is Central Library).",
         "hours": "8:00 AM - 5:30 PM",
         "phone": "",
         "image": ""
@@ -5396,19 +5396,19 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          75.70472455225995,
-          31.25268461614659
+          75.70413172657196,
+          31.2527216721804
         ]
       },
       "properties": {
         "id": "block-29",
-        "name": "Block 29",
+        "name": "Block 29 (Admission Block)",
         "groupId": "admin-block",
         "groupName": "Administrative & Academic Blocks",
         "category": "academics",
         "type": "Academic & Administrative Block",
-        "lat": 31.25268461614659,
-        "lng": 75.70472455225995,
+        "lat": 31.2527216721804,
+        "lng": 75.70413172657196,
         "floor": "Multi-Storey Academic Block",
         "facilities": [
           "Division of Admissions",
@@ -5422,6 +5422,7 @@
           "block 29",
           "block-29",
           "block29",
+          "admission block",
           "division of admissions",
           "admissions",
           "admission office",
@@ -5429,7 +5430,7 @@
           "administrative block",
           "academic block"
         ],
-        "desc": "Block 29 houses the Division of Admissions which handles admission-related queries, counseling, and document verification, along with academic and administrative departments.",
+        "desc": "Block 29 (Admission Block) houses the Division of Admissions which handles admission-related queries, counseling, and document verification, along with academic and administrative departments.",
         "hours": "09:00 AM - 05:00 PM",
         "phone": "",
         "image": ""
@@ -5512,25 +5513,27 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          75.70375836965415,
-          31.253683832811372
+          75.70289512306216,
+          31.25248
         ]
       },
       "properties": {
         "id": "tuck-shop-block-26",
-        "name": "Stationery Tuck Shop - Block 26",
+        "name": "Block 26 — Basement: Stationery Tuck Shop",
         "blockId": "block-26",
         "floor": "Basement",
-        "lat": 31.253683832811372,
-        "lng": 75.70375836965415,
-        "category": "services",
+        "lat": 31.25248,
+        "lng": 75.70289512306216,
+        "category": "others",
         "type": "Stationery Tuck Shop",
+        "visibleFromZoom": 17,
         "facilities": [
           "Stationery Items",
-          "Pens",
-          "Notebooks",
+          "Pens & Notebooks",
           "Photocopy / Printing",
-          "Academic Supplies"
+          "Xerox & Binding",
+          "Academic Supplies",
+          "Snacks & Drinks"
         ],
         "tags": [
           "stationery",
@@ -5539,12 +5542,17 @@
           "stationery tuck shop",
           "block 26 tuck shop",
           "block 26 stationery",
+          "block 26",
+          "b26",
           "pens",
           "notebooks",
           "photocopy",
           "xerox",
+          "print",
+          "printing",
           "basement stationery",
-          "supplies"
+          "supplies",
+          "snacks"
         ],
         "desc": "Stationery tuck shop located in the basement of Block 26 where students can purchase necessary stationery items such as pens, notebooks, and academic supplies.",
         "hours": "Open during university academic hours",
@@ -5558,25 +5566,27 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          75.70347895034685,
-          31.253026330364964
+          75.70330718355343,
+          31.25248
         ]
       },
       "properties": {
         "id": "tuck-shop-block-27",
-        "name": "Stationery Tuck Shop - Block 27",
+        "name": "Block 27 — Basement: Stationery Tuck Shop",
         "blockId": "block-27",
         "floor": "Basement",
-        "lat": 31.253026330364964,
-        "lng": 75.70347895034685,
-        "category": "services",
+        "lat": 31.25248,
+        "lng": 75.70330718355343,
+        "category": "others",
         "type": "Stationery Tuck Shop",
+        "visibleFromZoom": 17,
         "facilities": [
           "Stationery Items",
-          "Pens",
-          "Notebooks",
+          "Pens & Notebooks",
           "Photocopy / Printing",
-          "Academic Supplies"
+          "Xerox & Binding",
+          "Academic Supplies",
+          "Snacks & Drinks"
         ],
         "tags": [
           "stationery",
@@ -5585,12 +5595,17 @@
           "stationery tuck shop",
           "block 27 tuck shop",
           "block 27 stationery",
+          "block 27",
+          "b27",
           "pens",
           "notebooks",
           "photocopy",
           "xerox",
+          "print",
+          "printing",
           "basement stationery",
-          "supplies"
+          "supplies",
+          "snacks"
         ],
         "desc": "Stationery tuck shop located in the basement of Block 27 where students can purchase necessary stationery items such as pens, notebooks, and academic supplies.",
         "hours": "Open during university academic hours",
@@ -5604,25 +5619,27 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          75.70321287618991,
-          31.25232616238685
+          75.70373386456326,
+          31.25248
         ]
       },
       "properties": {
         "id": "tuck-shop-block-28",
-        "name": "Stationery Tuck Shop - Block 28",
+        "name": "Block 28 — Basement: Stationery Tuck Shop",
         "blockId": "block-28",
         "floor": "Basement",
-        "lat": 31.25232616238685,
-        "lng": 75.70321287618991,
-        "category": "services",
+        "lat": 31.25248,
+        "lng": 75.70373386456326,
+        "category": "others",
         "type": "Stationery Tuck Shop",
+        "visibleFromZoom": 17,
         "facilities": [
           "Stationery Items",
-          "Pens",
-          "Notebooks",
+          "Pens & Notebooks",
           "Photocopy / Printing",
-          "Academic Supplies"
+          "Xerox & Binding",
+          "Academic Supplies",
+          "Snacks & Drinks"
         ],
         "tags": [
           "stationery",
@@ -5631,12 +5648,17 @@
           "stationery tuck shop",
           "block 28 tuck shop",
           "block 28 stationery",
+          "block 28",
+          "b28",
           "pens",
           "notebooks",
           "photocopy",
           "xerox",
+          "print",
+          "printing",
           "basement stationery",
-          "supplies"
+          "supplies",
+          "snacks"
         ],
         "desc": "Stationery tuck shop located in the basement of Block 28 where students can purchase necessary stationery items such as pens, notebooks, and academic supplies.",
         "hours": "Open during university academic hours",
@@ -5650,25 +5672,27 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          75.705574,
-          31.253507
+          75.70412763243169,
+          31.25150
         ]
       },
       "properties": {
         "id": "tuck-shop-block-36",
-        "name": "Stationery Tuck Shop - Block 36",
+        "name": "Block 36 — Basement: Stationery Tuck Shop",
         "blockId": "block-36",
         "floor": "Basement",
-        "lat": 31.253507,
-        "lng": 75.705574,
-        "category": "services",
+        "lat": 31.25150,
+        "lng": 75.70412763243169,
+        "category": "others",
         "type": "Stationery Tuck Shop",
+        "visibleFromZoom": 17,
         "facilities": [
           "Stationery Items",
-          "Pens",
-          "Notebooks",
+          "Pens & Notebooks",
           "Photocopy / Printing",
-          "Academic Supplies"
+          "Xerox & Binding",
+          "Academic Supplies",
+          "Snacks & Drinks"
         ],
         "tags": [
           "stationery",
@@ -5677,12 +5701,17 @@
           "stationery tuck shop",
           "block 36 tuck shop",
           "block 36 stationery",
+          "block 36",
+          "b36",
           "pens",
           "notebooks",
           "photocopy",
           "xerox",
+          "print",
+          "printing",
           "basement stationery",
-          "supplies"
+          "supplies",
+          "snacks"
         ],
         "desc": "Stationery tuck shop located in the basement of Block 36 where students can purchase necessary stationery items such as pens, notebooks, and academic supplies.",
         "hours": "Open during university academic hours",
@@ -5690,6 +5719,102 @@
         "image": ""
       },
       "id": "tuck-shop-block-36"
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.70561334281798,
+          31.25452467299325
+        ]
+      },
+      "properties": {
+        "id": "mittal-school-of-business",
+        "name": "Mittal School of Business (MSB)",
+        "groupId": "business-school",
+        "groupName": "Mittal School of Business",
+        "category": "academics",
+        "type": "Academic Block",
+        "lat": 31.25452467299325,
+        "lng": 75.70561334281798,
+        "floor": "Multi-Storey Academic Block",
+        "facilities": [
+          "Classrooms & Lecture Theatres",
+          "Faculty Cabins & Dean Office",
+          "Seminar & Conference Halls",
+          "Computer Labs & Business Analytics Labs",
+          "Management, Commerce & Economics Departments"
+        ],
+        "tags": [
+          "mittal school of business",
+          "school of business",
+          "business school",
+          "msb",
+          "management",
+          "mba",
+          "bba",
+          "commerce",
+          "economics",
+          "business",
+          "block 14",
+          "mittal business school"
+        ],
+        "desc": "Mittal School of Business (MSB) at Lovely Professional University. Houses management, commerce, economics, and business administration programs.",
+        "hours": "08:00 AM - 05:30 PM",
+        "phone": "",
+        "image": ""
+      },
+      "id": "mittal-school-of-business"
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          75.70605304160388,
+          31.255099024605357
+        ]
+      },
+      "properties": {
+        "id": "division-of-student-relationship",
+        "name": "Division of Student Relationship (DSR / DSW)",
+        "groupId": "student-services",
+        "groupName": "Student Welfare & Support",
+        "category": "offices",
+        "type": "Student Welfare & Support Office",
+        "lat": 31.255099024605357,
+        "lng": 75.70605304160388,
+        "floor": "Administrative Office",
+        "facilities": [
+          "Student Grievance Redressal",
+          "Academic Issues Helpdesk",
+          "Hostel Issues Support",
+          "Student Counseling & Welfare Support",
+          "General Student Problem Resolution Desk"
+        ],
+        "tags": [
+          "dsr",
+          "dsw",
+          "division of student relationship",
+          "division of student welfare",
+          "student relationship",
+          "student welfare",
+          "academic problem",
+          "hostel problem",
+          "student problem",
+          "student issues",
+          "complaint",
+          "helpdesk",
+          "grievance",
+          "student support"
+        ],
+        "desc": "Division of Student Relationship (DSR) / Division of Student Welfare (DSW). Students can reach out here for any issues regarding academics, student problems, hostels, grievances, or overall student welfare.",
+        "hours": "09:00 AM - 05:30 PM",
+        "phone": "",
+        "image": ""
+      },
+      "id": "division-of-student-relationship"
     }
   ]
 }

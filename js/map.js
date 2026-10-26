@@ -987,7 +987,7 @@ class CampusMapController {
     if (text.includes("gym") || text.includes("sports") || text.includes("stadium") || text.includes("ground") || text.includes("court") || text.includes("fitness") || text.includes("pool")) return "sports";
     if (text.includes("hostel") || text.includes("residential") || text.includes("bh-") || text.includes("bh ") || text.includes("bs-") || text.includes("bs ") || text.includes("gh-") || text.includes("gh ") || text.includes("gs-") || text.includes("gs ") || text.includes("apartment") || text.includes("studio") || text.includes("boys hostel") || text.includes("girls hostel") || text.includes("girls studio") || category === "hostels") return "hostels";
     if (text.includes("atm") || text.includes("bank") || text.includes("finance") || text.includes("post office")) return "finance";
-    if (text.includes("mall") || text.includes("unimall") || text.includes("shop") || text.includes("mart") || text.includes("store") || text.includes("salon")) return "shop";
+    if (text.includes("mall") || text.includes("unimall") || text.includes("shop") || text.includes("mart") || text.includes("store") || text.includes("salon") || text.includes("stationery") || text.includes("tuck")) return "shop";
     if (text.includes("cse") || text.includes("computer science") || text.includes("coding") || text.includes("software") || text.includes("tech")) return "tech";
     if (text.includes("admin") || text.includes("office") || text.includes("dean") || text.includes("director") || text.includes("admission") || text.includes("reception") || category === "offices" || category === "office") return "offices";
     if (category === "academics" || category === "academic" || text.includes("block") || text.includes("department") || text.includes("school of")) return "academics";
@@ -1168,7 +1168,10 @@ class CampusMapController {
       let isVisibleAtZoom = true;
       if (loc.visibleFromZoom) {
         // High zoom details (e.g. offices/faculty cabins) visible at zoom >= 18.5
-        const zoomThreshold = Math.min(loc.visibleFromZoom, 18.5);
+        // Tuck shops visible at zoom >= 17.0
+        const zoomThreshold = loc.id && loc.id.startsWith("tuck-shop-")
+          ? 17.0
+          : Math.min(loc.visibleFromZoom, 18.5);
         isVisibleAtZoom = isRevealed || (
           currentZoom >= zoomThreshold &&
           (!bounds || (bounds.getWest() <= loc.lng && loc.lng <= bounds.getEast() && bounds.getSouth() <= loc.lat && loc.lat <= bounds.getNorth()))
@@ -1385,11 +1388,15 @@ class CampusMapController {
         loc.id === "unipolis" ||
         loc.id === "unimall" ||
         loc.id === "sports-complex" ||
-        loc.id === "block-29"
+        loc.id === "block-29" ||
+        loc.id === "mittal-school-of-business" ||
+        loc.id === "division-of-student-relationship"
       ) {
         priority = 60;
       } else if (loc.id.startsWith("main-gate")) {
         priority = 50;
+      } else if (loc.id && loc.id.startsWith("tuck-shop-")) {
+        priority = 35;
       } else if (loc.visibleFromZoom) {
         priority = 5;
       }

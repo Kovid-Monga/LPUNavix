@@ -281,6 +281,36 @@ def find_structured_matches(query: str, records: list[Record]) -> list[Record]:
         if matches:
             return matches
 
+    # 5.11 Mittal School of Business queries
+    # e.g. "Where is Mittal School of Business?", "MSB", "School of Business", "Business School"
+    is_msb_query = bool(
+        re.search(
+            r"\b(mittal\s+school\s+of\s+business|mittal\s+business\s+school|school\s+of\s+business|business\s+school|msb)\b",
+            clean_q,
+        )
+    )
+    if is_msb_query:
+        for r in records:
+            if r.id == "mittal-school-of-business":
+                add(r)
+        if matches:
+            return matches
+
+    # 5.12 Division of Student Relationship (DSR) & Division of Student Welfare (DSW) queries
+    # e.g. "Where is DSR?", "Where is DSW?", "Where should I go for academic problems?", "hostel problem", "student problem"
+    is_dsr_query = bool(
+        re.search(
+            r"\b(dsr|dsw|division\s+of\s+student\s+relationship|division\s+of\s+student\s+welfare|student\s+relationship|student\s+welfare|grievances?|student\s+grievances?|student\s+problems?|academic\s+problems?|hostel\s+problems?|student\s+complaints?|student\s+issues?)\b",
+            clean_q,
+        )
+    )
+    if is_dsr_query:
+        for r in records:
+            if r.id == "division-of-student-relationship":
+                add(r)
+        if matches:
+            return matches
+
     # 6. Block queries (e.g. "Who sits in Block 27", "Where is Block 28", "Block 34")
     if block_m:
         b_val = block_m.group(1)

@@ -225,7 +225,10 @@ def has_explicit_target(question: str, records: list[Record]) -> bool:
         "swimming pool", "stadium", "auditorium", "shanti devi mittal", "baldev raj mittal",
         "unipolis", "unimall", "uni mall", "mall", "sports complex", "indoor sports",
         "block 29", "block-29", "division of admissions", "admissions", "admission queries", "admission office",
-        "stationery", "tuck shop", "tuck shops", "stationery shop", "pens", "notebooks"
+        "stationery", "tuck shop", "tuck shops", "stationery shop", "pens", "notebooks",
+        "mittal school of business", "school of business", "business school", "msb",
+        "dsr", "dsw", "division of student relationship", "division of student welfare",
+        "student relationship", "student welfare"
     ]
     for kw in known_landmarks:
         if re.search(r"\b" + re.escape(kw) + r"\b", clean_q, re.I):

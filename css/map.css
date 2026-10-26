@@ -408,7 +408,7 @@
   --cat-color-glow: rgba(180, 83, 9, 0.28);
 }
 
-.pin-shop, .cluster-shop {
+.pin-shop, .cluster-shop, .pin-stationery, .cluster-stationery, .pin-tuck-shop, .cluster-tuck-shop {
   --cat-color: #ea580c;
   --cat-color-light: #ffedd5;
   --cat-color-glow: rgba(234, 88, 12, 0.28);

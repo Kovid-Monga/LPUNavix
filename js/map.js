@@ -694,9 +694,18 @@ class CampusMapController {
     this.map.on("zoom", () => {
       if (this.currentConnectors) this.renderConnectorDots();
     });
-    this.map.on("click", "road-core", event => this.showNetworkPopup(event, "Road"));
-    this.map.on("click", "footpath-area-fill", event => this.showNetworkPopup(event, "Footpath / Walkway"));
-    this.map.on("click", "footpath-line-core", event => this.showNetworkPopup(event, "Footpath / Walkway"));
+    this.map.on("click", "road-core", event => {
+      if (window.AdminBlocks && window.AdminBlocks.handleMapFeatureClick(event, "Road")) return;
+      this.showNetworkPopup(event, "Road");
+    });
+    this.map.on("click", "footpath-area-fill", event => {
+      if (window.AdminBlocks && window.AdminBlocks.handleMapFeatureClick(event, "Footpath / Walkway")) return;
+      this.showNetworkPopup(event, "Footpath / Walkway");
+    });
+    this.map.on("click", "footpath-line-core", event => {
+      if (window.AdminBlocks && window.AdminBlocks.handleMapFeatureClick(event, "Footpath / Walkway")) return;
+      this.showNetworkPopup(event, "Footpath / Walkway");
+    });
     this.map.on("mouseenter", "road-core", () => { this.map.getCanvas().style.cursor = "pointer"; });
     this.map.on("mouseleave", "road-core", () => { this.map.getCanvas().style.cursor = ""; });
     this.map.on("mouseenter", "footpath-area-fill", () => { this.map.getCanvas().style.cursor = "pointer"; });

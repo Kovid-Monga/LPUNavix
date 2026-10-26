@@ -42,6 +42,7 @@ from api.rag import (
     embed_query,
     generate_reply,
 )
+from api.blocks import router as blocks_router
 
 
 @asynccontextmanager
@@ -106,6 +107,8 @@ def health_check():
 
 # Mount the Campus Assistant RAG router
 app.include_router(rag_router)
+# Mount the Road Blocks & Admin router
+app.include_router(blocks_router)
 
 
 # In-memory store of the latest known location for each kart.

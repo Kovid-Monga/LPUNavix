@@ -1,0 +1,58 @@
+[
+  {
+    "id": "blk_725376fcf062",
+    "name": "Campus Footpath",
+    "type": "segment",
+    "refId": "31.252333,75.702680__31.252926,75.702703",
+    "wayId": "1566888541",
+    "coords": [
+      [
+        31.252333,
+        75.70268
+      ],
+      [
+        31.252926,
+        75.702703
+      ]
+    ],
+    "markerCoord": [
+      31.25261377677434,
+      75.7026907024221
+    ],
+    "reason": "Footpath maintenance / Repair",
+    "modes": [
+      "walking"
+    ],
+    "createdAt": "2026-10-26T08:27:27.312834+00:00",
+    "expiresAt": null,
+    "createdBy": "kovid"
+  },
+  {
+    "id": "blk_6478c4e2d62b",
+    "name": "Campus Footpath",
+    "type": "segment",
+    "refId": "31.252330,75.703096__31.252333,75.702884",
+    "wayId": "422552449",
+    "coords": [
+      [
+        31.25233,
+        75.703096
+      ],
+      [
+        31.252333493573975,
+        75.70288422845024
+      ]
+    ],
+    "markerCoord": [
+      31.25233487710338,
+      75.7028915591016
+    ],
+    "reason": "Footpath maintenance / Repair",
+    "modes": [
+      "walking"
+    ],
+    "createdAt": "2026-10-26T08:29:33.156869+00:00",
+    "expiresAt": null,
+    "createdBy": "kovid"
+  }
+]

@@ -83,6 +83,7 @@ class UIController {
 
         case "alerts":
           this.openLeftPanel("alerts-panel", null, true);
+          if (window.AdminBlocks) window.AdminBlocks.renderAlertsPanelContent();
           document.querySelectorAll(".nav-item-btn").forEach(btn => {
             btn.classList.toggle("active", btn.dataset.view === "alerts");
           });

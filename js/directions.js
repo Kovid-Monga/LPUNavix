@@ -10,7 +10,84 @@ class CampusRoadGraph {
   constructor() {
     this.nodes = new Map(); // id -> { id, lat, lng, neighbors: [], hasFootEdge, hasVehEdge, wayIds: Set, isEndpoint }
     this.segments = []; // array of segments for orthogonal projection
+    this.blockedSegmentIds = new Set();
+    this.blockedWayIds = new Set();
+    this.activeBlocks = [];
     this.initialized = false;
+  }
+
+  setBlockedRoads(blocks = []) {
+    this.blockedSegmentIds.clear();
+    this.blockedWayIds.clear();
+    this.activeBlocks = Array.isArray(blocks) ? blocks : [];
+    this.activeBlocks.forEach(b => {
+      if (!b) return;
+      if (b.type === "segment" && b.refId) {
+        this.blockedSegmentIds.add(b.refId);
+      } else if (b.type === "way" || b.wayId) {
+        if (b.wayId) this.blockedWayIds.add(String(b.wayId));
+        if (b.refId) this.blockedWayIds.add(String(b.refId));
+      }
+
+      // Spatial matching fallback: ensure any graph segment within 15m of the closure marker is blocked
+      const coordToMatch = (b.markerCoord && Array.isArray(b.markerCoord) && b.markerCoord.length === 2)
+        ? b.markerCoord
+        : (b.coords && Array.isArray(b.coords) && b.coords.length >= 2 ? [(b.coords[0][0] + b.coords[1][0]) / 2, (b.coords[0][1] + b.coords[1][1]) / 2] : null);
+
+      if (coordToMatch && this.segments && this.segments.length > 0) {
+        for (const seg of this.segments) {
+          const proj = this.projectPointOnSegment(coordToMatch[0], coordToMatch[1], seg.p1[0], seg.p1[1], seg.p2[0], seg.p2[1]);
+          const d = this.haversineDistance(coordToMatch[0], coordToMatch[1], proj.lat, proj.lng);
+          if (d < 15) {
+            this.blockedSegmentIds.add(seg.segId);
+          }
+        }
+      }
+    });
+  }
+
+  isSegmentBlocked(seg, mode = 'walking') {
+    if (!seg) return false;
+    if (this.blockedSegmentIds.size === 0 && this.blockedWayIds.size === 0) return false;
+    if (seg.segId && this.blockedSegmentIds.has(seg.segId)) return true;
+    if (seg.wayId && this.blockedWayIds.has(String(seg.wayId))) return true;
+    return false;
+  }
+
+  isEdgeBlocked(edge, mode = 'walking') {
+    if (!edge) return false;
+    if (this.blockedSegmentIds.size === 0 && this.blockedWayIds.size === 0) return false;
+    if (edge.segId && this.blockedSegmentIds.has(edge.segId)) return true;
+    if (edge.wayId && this.blockedWayIds.has(String(edge.wayId))) return true;
+    if (edge.isBridge) {
+      // Guard synthetic bridge: cannot connect to/from a node whose adjacent way/segments are blocked
+      const n1 = this.nodes.get(edge.node1Id);
+      const n2 = this.nodes.get(edge.node2Id);
+      if (n1 && n1.wayIds) {
+        for (const w of n1.wayIds) {
+          if (this.blockedWayIds.has(String(w))) return true;
+        }
+      }
+      if (n2 && n2.wayIds) {
+        for (const w of n2.wayIds) {
+          if (this.blockedWayIds.has(String(w))) return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  isRouteAffected(route, closures = []) {
+    if (!route || !Array.isArray(closures) || closures.length === 0) return false;
+    const routeEdgeIds = new Set(route.edgeIds || []);
+    const routeWayIds = new Set((route.wayIds || []).map(String));
+    for (const c of closures) {
+      if (!c) continue;
+      if (c.type === "segment" && c.refId && routeEdgeIds.has(c.refId)) return true;
+      if (c.wayId && routeWayIds.has(String(c.wayId))) return true;
+      if (c.refId && routeWayIds.has(String(c.refId))) return true;
+    }
+    return false;
   }
 
   haversineDistance(lat1, lon1, lat2, lon2) {
@@ -115,6 +192,7 @@ class CampusRoadGraph {
 
         const id1 = node1.id;
         const id2 = node2.id;
+        const segId = id1 < id2 ? `${id1}__${id2}` : `${id2}__${id1}`;
 
         // Forward edge
         node1.neighbors.push({
@@ -125,6 +203,7 @@ class CampusRoadGraph {
           isVeh,
           isOneway,
           wayId: way.id,
+          segId,
           forward: true
         });
 
@@ -137,6 +216,7 @@ class CampusRoadGraph {
           isVeh: isVeh && !isOneway,
           isOneway,
           wayId: way.id,
+          segId,
           forward: false
         });
 
@@ -146,6 +226,7 @@ class CampusRoadGraph {
           p2: [lat2, lng2],
           id1,
           id2,
+          segId,
           dist,
           isFoot,
           isVeh,
@@ -177,10 +258,12 @@ class CampusRoadGraph {
         const d = this.haversineDistance(ep.lat, ep.lng, other.lat, other.lng);
         if (d <= 8.5) {
           const vehJunction = ep.hasVehEdge && other.hasVehEdge;
+          const junctionSegId = `junction_${ep.id < other.id ? ep.id + "__" + other.id : other.id + "__" + ep.id}`;
           ep.neighbors.push({
             id: other.id,
             dist: d,
             highway: 'junction',
+            segId: junctionSegId,
             isFoot: true,
             isVeh: vehJunction,
             isOneway: false,
@@ -191,6 +274,7 @@ class CampusRoadGraph {
             id: ep.id,
             dist: d,
             highway: 'junction',
+            segId: junctionSegId,
             isFoot: true,
             isVeh: vehJunction,
             isOneway: false,
@@ -260,10 +344,15 @@ class CampusRoadGraph {
         const n1 = this.nodes.get(bestOtherId);
         const n2 = this.nodes.get(bestMainId);
         const veh = n1.hasVehEdge && n2.hasVehEdge;
+        const bridgeSegId = `bridge_${bestOtherId < bestMainId ? bestOtherId + "__" + bestMainId : bestMainId + "__" + bestOtherId}`;
         n1.neighbors.push({
           id: bestMainId,
           dist: minDist,
           highway: 'bridge',
+          segId: bridgeSegId,
+          isBridge: true,
+          node1Id: bestOtherId,
+          node2Id: bestMainId,
           isFoot: true,
           isVeh: veh,
           isOneway: false,
@@ -274,6 +363,10 @@ class CampusRoadGraph {
           id: bestOtherId,
           dist: minDist,
           highway: 'bridge',
+          segId: bridgeSegId,
+          isBridge: true,
+          node1Id: bestOtherId,
+          node2Id: bestMainId,
           isFoot: true,
           isVeh: veh,
           isOneway: false,
@@ -297,6 +390,7 @@ class CampusRoadGraph {
       } else {
         if (!seg.isFoot) continue;
       }
+      if (this.isSegmentBlocked(seg, mode)) continue;
 
       const proj = this.projectPointOnSegment(lat, lng, seg.p1[0], seg.p1[1], seg.p2[0], seg.p2[1]);
       const d = this.haversineDistance(lat, lng, proj.lat, proj.lng);
@@ -348,6 +442,10 @@ class CampusRoadGraph {
   }
 
   getEdgeCost(edge, mode = 'walking') {
+    if (this.isEdgeBlocked(edge, mode)) {
+      return Infinity;
+    }
+
     if (mode === 'drive' || mode === 'kart' || mode === 'moto') {
       if (edge.highway === 'steps' || edge.highway === 'footway' || edge.highway === 'pedestrian' || edge.highway === 'path') {
         return Infinity;
@@ -378,7 +476,7 @@ class CampusRoadGraph {
     if (!startSnap || !endSnap) return null;
 
     // Special case: Both points project onto the exact same road segment
-    if (startSnap.seg && endSnap.seg && startSnap.seg === endSnap.seg) {
+    if (startSnap.seg && endSnap.seg && startSnap.seg === endSnap.seg && !this.isSegmentBlocked(startSnap.seg, mode)) {
       const roadPath = [
         [startSnap.lat, startSnap.lng],
         [endSnap.lat, endSnap.lng]
@@ -397,6 +495,8 @@ class CampusRoadGraph {
       return {
         path: pathCoords,
         roadPath,
+        edgeIds: startSnap.seg.segId ? [startSnap.seg.segId] : [],
+        wayIds: startSnap.seg.wayId ? [String(startSnap.seg.wayId)] : [],
         startConnector,
         endConnector,
         startJunction: startConnector ? [startSnap.lat, startSnap.lng] : null,
@@ -552,6 +652,17 @@ class CampusRoadGraph {
 
     // Reconstruct road path
     const rawRoadPath = [];
+    const traversedEdgeIds = new Set();
+    const traversedWayIds = new Set();
+    if (startSnap.seg) {
+      if (startSnap.seg.segId) traversedEdgeIds.add(startSnap.seg.segId);
+      if (startSnap.seg.wayId) traversedWayIds.add(String(startSnap.seg.wayId));
+    }
+    if (endSnap.seg) {
+      if (endSnap.seg.segId) traversedEdgeIds.add(endSnap.seg.segId);
+      if (endSnap.seg.wayId) traversedWayIds.add(String(endSnap.seg.wayId));
+    }
+
     let curr = tempEndId;
     while (curr) {
       if (curr === tempEndId) {
@@ -562,7 +673,18 @@ class CampusRoadGraph {
         const n = this.nodes.get(curr);
         if (n) rawRoadPath.unshift([n.lat, n.lng]);
       }
-      curr = cameFrom.get(curr);
+      const prev = cameFrom.get(curr);
+      if (prev) {
+        const pNode = this.nodes.get(prev);
+        if (pNode && Array.isArray(pNode.neighbors)) {
+          const edge = pNode.neighbors.find(e => e.id === curr);
+          if (edge) {
+            if (edge.segId) traversedEdgeIds.add(edge.segId);
+            if (edge.wayId) traversedWayIds.add(String(edge.wayId));
+          }
+        }
+      }
+      curr = prev;
     }
 
     // Deduplicate consecutive identical points
@@ -594,6 +716,8 @@ class CampusRoadGraph {
     return {
       path: pathCoords,
       roadPath: cleanRoadPath.length >= 2 ? cleanRoadPath : pathCoords,
+      edgeIds: Array.from(traversedEdgeIds),
+      wayIds: Array.from(traversedWayIds),
       startConnector,
       endConnector,
       startJunction: startConnector ? [startSnap.lat, startSnap.lng] : null,

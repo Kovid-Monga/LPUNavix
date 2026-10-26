@@ -142,12 +142,10 @@
           </div>
         </div>
         <div class="mobile-header-actions">
-          <button class="mobile-action-btn" title="Campus Alerts" onclick="window.UIController.switchView('alerts')">
+          <button id="mobile-admin-btn" class="mobile-action-btn admin-btn" title="Admin Portal" onclick="window.AdminBlocks.openAdminModal()">
             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
             </svg>
-            <span class="notif-badge"></span>
           </button>
           <button class="mobile-action-btn" title="Settings" onclick="window.UIController.switchView('settings')">
             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -200,12 +198,11 @@
 
           <!-- Right Quick Actions (Desktop only) -->
           <div class="topbar-actions">
-            <button class="topbar-btn" title="Campus Alerts" onclick="window.UIController.switchView('alerts')">
+            <button id="desktop-admin-btn" class="topbar-btn admin-btn" title="Admin Portal" onclick="window.AdminBlocks.openAdminModal()">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
               </svg>
-              <span class="notif-badge"></span>
+              <span class="admin-btn-label">Admin</span>
             </button>
             <button class="topbar-btn" title="Settings & Preferences" onclick="window.UIController.switchView('settings')">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -616,73 +613,8 @@
         </div>
 
         <div class="panel-content">
-          <!-- Alert Warning Card -->
-          <div class="campus-alert-banner">
-            <svg class="alert-banner-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              stroke-width="2.5">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="12" y1="8" x2="12" y2="12"></line>
-              <line x1="12" y1="16" x2="12.01" y2="16"></line>
-            </svg>
-            <div class="alert-banner-text">
-              <h4>Path Closed for Maintenance</h4>
-              <p>We've found an alternative smart route avoiding construction near Central Boulevard.</p>
-            </div>
-          </div>
-
-          <div class="route-comparison-card">
-            <div>
-              <div style="font-weight:800;font-size:14px;color:var(--text-primary);">New Route (Walking)</div>
-              <div style="font-size:12px;color:var(--color-primary);font-weight:600;">560 m • 7 min</div>
-            </div>
-            <span class="badge badge-live">Optimized</span>
-          </div>
-
-          <div class="steps-list">
-            <div class="step-item">
-              <div class="step-icon-wrapper"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" stroke-width="2.5">
-                  <line x1="12" y1="19" x2="12" y2="5"></line>
-                  <polyline points="5 12 12 5 19 12"></polyline>
-                </svg></div>
-              <div class="step-instruction">
-                <div class="step-main-text">Start from Main Gate</div>
-                <div class="step-distance">100 m</div>
-              </div>
-            </div>
-            <div class="step-item">
-              <div class="step-icon-wrapper"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" stroke-width="2.5">
-                  <polyline points="15 14 20 9 15 4"></polyline>
-                  <path d="M4 20v-7a4 4 0 0 1 4-4h12"></path>
-                </svg></div>
-              <div class="step-instruction">
-                <div class="step-main-text">Turn right towards Central Avenue (Detour)</div>
-                <div class="step-distance">120 m</div>
-              </div>
-            </div>
-            <div class="step-item">
-              <div class="step-icon-wrapper"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" stroke-width="2.5">
-                  <line x1="12" y1="19" x2="12" y2="5"></line>
-                  <polyline points="5 12 12 5 19 12"></polyline>
-                </svg></div>
-              <div class="step-instruction">
-                <div class="step-main-text">Continue straight past University Library</div>
-                <div class="step-distance">200 m</div>
-              </div>
-            </div>
-            <div class="step-item destination">
-              <div class="step-icon-wrapper"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" stroke-width="2.5">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                  <circle cx="12" cy="10" r="3"></circle>
-                </svg></div>
-              <div class="step-instruction">
-                <div class="step-main-text">You have arrived at Block 11</div>
-                <div class="step-distance">Destination</div>
-              </div>
-            </div>
+          <div id="alerts-panel-blocks-container" class="panel-content-body">
+            <!-- Dynamically populated by window.AdminBlocks with active road closures -->
           </div>
         </div>
       </div>
@@ -1349,11 +1281,124 @@
     </div>
   </div>
 
+  <!-- Floating Plotting Toolbar (Active in Plotting Mode) -->
+  <div id="admin-plot-floating-bar" class="admin-plot-floating-bar">
+    <span>🚧 <strong>Block Mode Active:</strong> Click any road or footpath on the map</span>
+    <button class="admin-plot-bar-btn" onclick="window.AdminBlocks.togglePlottingMode()">Exit Mode</button>
+  </div>
+
+  <!-- Admin Login Modal (No Sign-Up) -->
+  <div id="admin-login-modal" class="admin-modal-overlay" style="display: none;">
+    <div class="admin-modal-card">
+      <div class="admin-modal-header">
+        <div>
+          <div class="admin-modal-title">Admin Portal</div>
+          <div class="admin-modal-subtitle">Authorized campus road & closure management</div>
+        </div>
+        <button class="admin-modal-close" onclick="window.AdminBlocks.closeModal('admin-login-modal')">✕</button>
+      </div>
+      <form id="admin-login-form">
+        <div id="admin-login-error" style="display: none; color: #dc2626; font-size: 12.5px; background: #fef2f2; border: 1px solid #fecaca; padding: 8px 12px; border-radius: 8px; margin-bottom: 12px; font-weight: 600;"></div>
+        <div class="admin-input-group">
+          <label for="admin-user-input">Username</label>
+          <input id="admin-user-input" class="admin-text-input" type="text" placeholder="Enter admin username" autocomplete="username" required />
+        </div>
+        <div class="admin-input-group">
+          <label for="admin-pass-input">Password</label>
+          <input id="admin-pass-input" class="admin-text-input" type="password" placeholder="Enter admin password" autocomplete="current-password" required />
+        </div>
+        <button type="submit" class="admin-primary-btn">Sign In to Admin</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Admin Panel / Active Closures Modal -->
+  <div id="admin-panel-modal" class="admin-modal-overlay" style="display: none;">
+    <div class="admin-modal-card" style="max-width: 500px;">
+      <div class="admin-modal-header">
+        <div>
+          <div class="admin-modal-title">Campus Road Closures</div>
+          <div class="admin-modal-subtitle">Plot closures on map or reopen pathways</div>
+        </div>
+        <button class="admin-modal-close" onclick="window.AdminBlocks.closeModal('admin-panel-modal')">✕</button>
+      </div>
+
+      <div style="display: flex; gap: 10px; margin-bottom: 16px;">
+        <button class="admin-primary-btn" style="margin-top: 0; flex: 1;" onclick="window.AdminBlocks.togglePlottingMode()">
+          🚧 Add Road / Footpath Block
+        </button>
+        <button class="admin-danger-btn" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1;" onclick="window.AdminBlocks.logout()">
+          Log Out
+        </button>
+      </div>
+
+      <div style="font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 8px;">Active Closures</div>
+      <div id="admin-active-blocks-list" style="max-height: 260px; overflow-y: auto;">
+        <!-- Populated dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Road Closure Confirmation Modal -->
+  <div id="admin-block-confirm-modal" class="admin-modal-overlay" style="display: none;">
+    <div class="admin-modal-card">
+      <div class="admin-modal-header">
+        <div>
+          <div class="admin-modal-title" style="color: #dc2626; display: flex; align-items: center; gap: 6px;">
+            <span>🚧</span> <span>Close Pathway Section</span>
+          </div>
+          <div id="block-confirm-road-name" class="admin-modal-subtitle" style="font-weight: 700; color: #0f172a; margin-top: 3px;">
+            Campus Roadway
+          </div>
+        </div>
+        <button class="admin-modal-close" onclick="window.AdminBlocks.closeModal('admin-block-confirm-modal')">✕</button>
+      </div>
+
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 14px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <div style="font-size: 11px; color: #64748b; font-weight: 600;">SCOPE</div>
+          <div id="block-scope-info" style="font-size: 13px; font-weight: 700; color: #1e293b; margin-top: 2px;">Clicked Section (~25 m)</div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-size: 11px; color: #64748b; font-weight: 600;">AFFECTED MODE</div>
+          <div id="block-mode-info" style="font-size: 12px; font-weight: 700; color: #dc2626; margin-top: 2px;">Walking Only</div>
+        </div>
+      </div>
+
+      <div class="admin-input-group">
+        <label for="block-reason-input">Reason for Closure</label>
+        <input id="block-reason-input" class="admin-text-input" type="text" placeholder="e.g. Construction / Repair work, Event, Maintenance" />
+      </div>
+
+      <div class="admin-input-group">
+        <label for="block-expiry-select">Expected Duration / Expiry</label>
+        <select id="block-expiry-select" class="admin-text-input">
+          <option value="never">Indefinite (until manual unblock)</option>
+          <option value="2">2 Hours</option>
+          <option value="4">4 Hours</option>
+          <option value="8">8 Hours</option>
+          <option value="24">24 Hours (1 Day)</option>
+          <option value="72">3 Days</option>
+        </select>
+      </div>
+
+      <div style="display: flex; gap: 10px; margin-top: 18px;">
+        <button class="admin-primary-btn" style="background: #dc2626; flex: 1; margin-top: 0;" onclick="window.AdminBlocks.confirmCreateBlock()">
+          Confirm Road Block
+        </button>
+        <button class="admin-modal-close" style="width: auto; height: auto; border-radius: 12px; padding: 10px 16px;" onclick="window.AdminBlocks.closeModal('admin-block-confirm-modal')">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Core Scripts -->
   <script src="https://unpkg.com/maplibre-gl@5.6.2/dist/maplibre-gl.js"></script>
   <script src="js/data.js"></script>
   <script src="js/map.js"></script>
   <script src="js/directions.js"></script>
+  <script src="js/admin_blocks.js"></script>
   <script src="js/karts.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/assistant.js"></script>

@@ -1,0 +1,36 @@
+[2026-10-26T07:31:38.865850+00:00] [USER:admin] [ACTION:LOGIN] [BLOCK_ID:-] Logged in from testclient
+[2026-10-26T07:31:38.876276+00:00] [USER:admin] [ACTION:CREATE_BLOCK] [BLOCK_ID:blk_8a20f36378ae] Blocked segment 'Central Boulevard (East)' (node_test_1__node_test_2): Road resurfacing & cable laying
+[2026-10-26T07:31:38.891964+00:00] [USER:admin] [ACTION:DELETE_BLOCK] [BLOCK_ID:blk_8a20f36378ae] Unblocked Central Boulevard (East) (node_test_1__node_test_2)
+[2026-10-26T07:31:38.898780+00:00] [USER:admin] [ACTION:LOGOUT] [BLOCK_ID:-] Admin logged out; session revoked
+[2026-10-26T07:45:14.945283+00:00] [USER:admin] [ACTION:LOGIN] [BLOCK_ID:-] Logged in from testclient
+[2026-10-26T07:45:14.954792+00:00] [USER:admin] [ACTION:CREATE_BLOCK] [BLOCK_ID:blk_6b41f3f213d4] Blocked segment 'Central Boulevard (East)' (node_test_1__node_test_2): Road resurfacing & cable laying
+[2026-10-26T07:45:14.972234+00:00] [USER:admin] [ACTION:DELETE_BLOCK] [BLOCK_ID:blk_6b41f3f213d4] Unblocked Central Boulevard (East) (node_test_1__node_test_2)
+[2026-10-26T07:45:14.979290+00:00] [USER:admin] [ACTION:LOGOUT] [BLOCK_ID:-] Admin logged out; session revoked
+[2026-10-26T07:49:22.758126+00:00] [USER:admin] [ACTION:LOGIN] [BLOCK_ID:-] Logged in from 127.0.0.1
+[2026-10-26T07:49:26.873577+00:00] [USER:admin] [ACTION:CREATE_BLOCK] [BLOCK_ID:blk_157cfdfbe9a6] Blocked segment 'Central Boulevard (East)' (31.255345,75.703947__31.255396,75.703952): Underground Electrical Maintenance
+[2026-10-26T07:49:30.948924+00:00] [USER:admin] [ACTION:DELETE_BLOCK] [BLOCK_ID:blk_157cfdfbe9a6] Unblocked Central Boulevard (East) (31.255345,75.703947__31.255396,75.703952)
+[2026-10-26T07:49:35.041167+00:00] [USER:admin] [ACTION:LOGOUT] [BLOCK_ID:-] Admin logged out; session revoked
+[2026-10-26T07:55:44.315814+00:00] [USER:kovid] [ACTION:LOGIN] [BLOCK_ID:-] Logged in from 127.0.0.1
+[2026-10-26T07:58:53.170019+00:00] [USER:kovid] [ACTION:LOGIN] [BLOCK_ID:-] Logged in from 2401:4900:1c34:7bf1:a:1a5:db4e:4711
+[2026-10-26T07:59:41.484736+00:00] [USER:kovid] [ACTION:CREATE_BLOCK] [BLOCK_ID:blk_3f3c2cb0ab62] Blocked segment 'Campus Footpath' (31.252319,75.702603__31.252616,75.702247): Maintenance / Construction work
+[2026-10-26T08:00:01.321240+00:00] [USER:kovid] [ACTION:CREATE_BLOCK] [BLOCK_ID:blk_2e44da67fc8e] Blocked segment 'Campus Footpath' (31.252319,75.702603__31.252616,75.702247): Maintenance / Construction work
+[2026-10-26T08:00:23.804173+00:00] [USER:kovid] [ACTION:DELETE_BLOCK] [BLOCK_ID:blk_2e44da67fc8e] Unblocked Campus Footpath (31.252319,75.702603__31.252616,75.702247)
+[2026-10-26T08:06:18.310554+00:00] [USER:kovid] [ACTION:CREATE_BLOCK] [BLOCK_ID:blk_ca9e2e1c3ea9] Blocked segment 'Campus Footpath' (31.252319,75.702603__31.252616,75.702247): Maintenance / Construction work
+[2026-10-26T08:06:40.403487+00:00] [USER:kovid] [ACTION:CREATE_BLOCK] [BLOCK_ID:blk_ce5821c16a36] Blocked way 'Campus Footpath' (way_1): Maintenance / Construction work
+[2026-10-26T08:23:30.089341+00:00] [USER:kovid] [ACTION:LOGIN] [BLOCK_ID:-] Logged in from 127.0.0.1
+[2026-10-26T08:23:34.180848+00:00] [USER:kovid] [ACTION:CREATE_BLOCK] [BLOCK_ID:blk_59294728a8e0] Blocked segment 'Central Boulevard (East)' (31.255345,75.703947__31.255396,75.703952): Underground Electrical Maintenance
+[2026-10-26T08:23:38.271947+00:00] [USER:kovid] [ACTION:DELETE_BLOCK] [BLOCK_ID:blk_59294728a8e0] Unblocked Central Boulevard (East) (31.255345,75.703947__31.255396,75.703952)
+[2026-10-26T08:23:42.358855+00:00] [USER:kovid] [ACTION:LOGOUT] [BLOCK_ID:-] Admin logged out; session revoked
+[2026-10-26T08:26:38.658873+00:00] [USER:kovid] [ACTION:LOGIN] [BLOCK_ID:-] Logged in from 2401:4900:1c34:7bf1:a:1a5:db4e:4711
+[2026-10-26T08:26:42.806574+00:00] [USER:kovid] [ACTION:DELETE_BLOCK] [BLOCK_ID:blk_ca9e2e1c3ea9] Unblocked Campus Footpath (31.252319,75.702603__31.252616,75.702247)
+[2026-10-26T08:26:44.268109+00:00] [USER:kovid] [ACTION:DELETE_BLOCK] [BLOCK_ID:blk_ce5821c16a36] Unblocked Campus Footpath (way_1)
+[2026-10-26T08:27:27.315785+00:00] [USER:kovid] [ACTION:CREATE_BLOCK] [BLOCK_ID:blk_725376fcf062] Blocked segment 'Campus Footpath' (31.252319,75.702603__31.252552,75.702324): Footpath maintenance / Repair
+[2026-10-26T08:29:33.159642+00:00] [USER:kovid] [ACTION:CREATE_BLOCK] [BLOCK_ID:blk_6478c4e2d62b] Blocked segment 'Campus Footpath' (31.252251,75.702473__31.252319,75.702603): Footpath maintenance / Repair
+[2026-10-26T08:31:18.728714+00:00] [USER:kovid] [ACTION:LOGIN] [BLOCK_ID:-] Logged in from 127.0.0.1
+[2026-10-26T08:31:22.832749+00:00] [USER:kovid] [ACTION:CREATE_BLOCK] [BLOCK_ID:blk_736da992c1f3] Blocked segment 'Central Boulevard (East)' (31.255345,75.703947__31.255396,75.703952): Underground Electrical Maintenance
+[2026-10-26T08:31:26.905949+00:00] [USER:kovid] [ACTION:DELETE_BLOCK] [BLOCK_ID:blk_736da992c1f3] Unblocked Central Boulevard (East) (31.255345,75.703947__31.255396,75.703952)
+[2026-10-26T08:31:30.972463+00:00] [USER:kovid] [ACTION:LOGOUT] [BLOCK_ID:-] Admin logged out; session revoked
+[2026-10-26T08:41:33.794654+00:00] [USER:kovid] [ACTION:LOGIN] [BLOCK_ID:-] Logged in from 127.0.0.1
+[2026-10-26T08:41:37.879839+00:00] [USER:kovid] [ACTION:CREATE_BLOCK] [BLOCK_ID:blk_201b6c2a350e] Blocked segment 'Central Boulevard (East)' (31.255345,75.703947__31.255396,75.703952): Underground Electrical Maintenance
+[2026-10-26T08:41:41.989266+00:00] [USER:kovid] [ACTION:DELETE_BLOCK] [BLOCK_ID:blk_201b6c2a350e] Unblocked Central Boulevard (East) (31.255345,75.703947__31.255396,75.703952)
+[2026-10-26T08:41:46.059238+00:00] [USER:kovid] [ACTION:LOGOUT] [BLOCK_ID:-] Admin logged out; session revoked

@@ -405,7 +405,7 @@
           "events",
           "seminar hall"
         ],
-        "desc": "Shanti Devi Mittal Auditorium on the LPU campus — premier venue for convocations, cultural fests, national conferences, academic symposiums, and university events.",
+        "desc": "Shanti Devi Mittal Auditorium on the LPU campus â€” premier venue for convocations, cultural fests, national conferences, academic symposiums, and university events.",
         "hours": "Open on Event/Campus Schedule",
         "phone": "",
         "image": ""
@@ -560,9 +560,11 @@
           "stationery",
           "tuck shop",
           "stationery shop",
-          "basement tuck shop"
+          "pens",
+          "notebooks",
+          "basement stationery"
         ],
-        "desc": "Block 26 - Department of Computer Science & Engineering. Features a stationery tuck shop in the basement for student supplies.",
+        "desc": "Block 26 - Department of Computer Science & Engineering. Features a stationery tuck shop in the basement where students can purchase necessary stationery items.",
         "hours": "8:00 AM - 5:30 PM",
         "phone": "",
         "image": ""
@@ -603,12 +605,14 @@
           "stationery",
           "tuck shop",
           "stationery shop",
-          "basement tuck shop"
+          "pens",
+          "notebooks",
+          "basement stationery"
         ],
         "hours": "8:00 AM - 5:30 PM",
         "phone": "",
         "image": "",
-        "desc": " Features a stationery tuck shop in the basement for student supplies."
+        "desc": "Block 27 - Department of Computer Science & Engineering. Features a stationery tuck shop in the basement where students can purchase necessary stationery items."
       },
       "id": "block-27"
     },
@@ -646,9 +650,11 @@
           "stationery",
           "tuck shop",
           "stationery shop",
-          "basement tuck shop"
+          "pens",
+          "notebooks",
+          "basement stationery"
         ],
-        "desc": "Block 28 - Department of Computer Science & Engineering. Features a stationery tuck shop in the basement for student supplies.",
+        "desc": "Block 28 - Department of Computer Science & Engineering. Features a stationery tuck shop in the basement where students can purchase necessary stationery items.",
         "hours": "8:00 AM - 5:30 PM",
         "phone": "",
         "image": ""
@@ -827,9 +833,11 @@
           "stationery",
           "tuck shop",
           "stationery shop",
-          "basement tuck shop"
+          "pens",
+          "notebooks",
+          "basement stationery"
         ],
-        "desc": "Block 36 - Department of Computer Science & Engineering. Features a stationery tuck shop in the basement for student supplies.",
+        "desc": "Block 36 - Department of Computer Science & Engineering. Features a stationery tuck shop in the basement where students can purchase necessary stationery items.",
         "hours": "8:00 AM - 5:30 PM",
         "phone": "",
         "image": ""
@@ -5270,29 +5278,31 @@
         "type": "Auditorium",
         "lat": 31.25508484640442,
         "lng": 75.70481111154697,
-        "floor": "Ground Floor & Arena",
+        "floor": "Central Event Arena",
         "facilities": [
-          "10000+ Seating Arena",
-          "Stage",
-          "Acoustics",
-          "Green Rooms",
-          "Central Event Venue",
-          "Student Reporting Area"
+          "Indoor Mega-Auditorium (10,000+ Seating Capacity)",
+          "Major University Events & Convocations",
+          "Celebrity Visits & Cultural Festivals",
+          "Initial Student Reporting Venue"
         ],
         "tags": [
           "unipolis",
+          "mega auditorium",
+          "indoor arena",
           "auditorium",
-          "mega-auditorium",
-          "event arena",
-          "arena",
-          "cultural festivals",
+          "audi",
+          "major university events",
+          "university events",
           "events",
           "celebrity visits",
+          "cultural festivals",
           "initial student reporting",
-          "student reporting"
+          "student reporting",
+          "reporting venue",
+          "seating capacity 10000"
         ],
         "desc": "Unipolis is a massive central indoor mega-auditorium and event arena with a seating capacity of over 10,000 people. It serves as a major venue for university events, celebrity visits, cultural festivals, and initial student reporting.",
-        "hours": "Open for Events and University Functions",
+        "hours": "Open on Event/Campus Schedule",
         "phone": "",
         "image": ""
       },
@@ -5311,32 +5321,34 @@
         "id": "unimall",
         "name": "UniMall",
         "groupId": "mall",
-        "groupName": "UniMall & Campus Shopping",
-        "category": "food",
+        "groupName": "Mall",
+        "category": "others",
         "type": "Mall",
         "lat": 31.255736035957618,
         "lng": 75.70531804905326,
-        "floor": "Multi-Storey Shopping Mall",
+        "floor": "Multi-level Shopping Mall",
         "facilities": [
-          "Retail Shops",
-          "Food Court",
-          "Lifestyle Stores",
-          "Electronics",
-          "Convenience Services"
+          "Retail Stores & Outlets",
+          "Food Court & Eateries",
+          "Stationery & Books",
+          "Salon & Grooming",
+          "Student Services"
         ],
         "tags": [
           "unimall",
           "uni mall",
           "mall",
           "shopping mall",
-          "campus mall",
-          "shopping",
           "stores",
-          "food",
-          "lifestyle"
+          "shops",
+          "supermarket",
+          "retail",
+          "food court",
+          "stationery",
+          "salon"
         ],
-        "desc": "UniMall is the main campus shopping mall featuring retail stores, food outlets, lifestyle brands, and daily conveniences for students and staff.",
-        "hours": "09:00 AM - 10:00 PM",
+        "desc": "UniMall is the central shopping mall on the LPU campus featuring retail stores, food outlets, stationery, salon, and essential student services.",
+        "hours": "9:00 AM - 9:00 PM",
         "phone": "",
         "image": ""
       },
@@ -5355,37 +5367,31 @@
         "id": "sports-complex",
         "name": "Sports Complex",
         "groupId": "sports",
-        "groupName": "Sports Complex & Facilities",
+        "groupName": "Sports Complex",
         "category": "sports",
         "type": "Sports Complex",
         "lat": 31.250861939005805,
         "lng": 75.7014581867459,
-        "floor": "Multi-level Indoor Sports Arena",
+        "floor": "Indoor Sports Facility",
         "facilities": [
-          "Indoor Sports Arena",
-          "Badminton Courts",
-          "Basketball Courts",
-          "Gymnasium",
-          "Swimming Pool",
-          "Table Tennis",
-          "Squash Courts",
-          "Shooting Range"
+          "Indoor Sports Courts",
+          "Badminton & Table Tennis",
+          "Gymnasium & Fitness Arena",
+          "Squash & Indoor Basketball"
         ],
         "tags": [
           "sports complex",
-          "sports",
           "indoor sports",
+          "sports",
           "gym",
           "badminton",
-          "basketball",
-          "swimming",
           "table tennis",
-          "squash",
-          "athletics",
-          "fitness"
+          "indoor games",
+          "fitness center",
+          "indoor arena"
         ],
-        "desc": "The Sports Complex is a campus facility for indoor sports, fitness, swimming, and competitive university athletics.",
-        "hours": "06:00 AM - 09:00 PM",
+        "desc": "The Sports Complex is a campus facility for indoor sports.",
+        "hours": "Open on Campus Schedule",
         "phone": "",
         "image": ""
       },
@@ -5403,35 +5409,35 @@
       "properties": {
         "id": "block-29",
         "name": "Block 29 (Admission Block)",
-        "groupId": "admin-block",
-        "groupName": "Administrative & Academic Blocks",
+        "groupId": null,
+        "groupName": null,
         "category": "academics",
-        "type": "Academic & Administrative Block",
+        "type": "Administrative & Academic Block",
         "lat": 31.2527216721804,
         "lng": 75.70413172657196,
-        "floor": "Multi-Storey Academic Block",
+        "floor": "Multi-storey Block",
         "facilities": [
           "Division of Admissions",
-          "Admission Counseling",
+          "Admission Counseling & Helpdesk",
           "Document Verification",
-          "Fee Counters",
-          "Academic Offices",
-          "Classrooms"
+          "Fee & Enrollment Queries"
         ],
         "tags": [
           "block 29",
           "block-29",
-          "block29",
+          "b29",
           "admission block",
           "division of admissions",
           "admissions",
+          "admission",
           "admission office",
           "admission queries",
+          "enrollment",
           "administrative block",
           "academic block"
         ],
-        "desc": "Block 29 (Admission Block) houses the Division of Admissions which handles admission-related queries, counseling, and document verification, along with academic and administrative departments.",
-        "hours": "09:00 AM - 05:00 PM",
+        "desc": "The Division of Admissions is located in Block 29 (Admission Block) and handles admission-related queries, counseling, and document verification.",
+        "hours": "9:00 AM - 5:30 PM",
         "phone": "",
         "image": ""
       },
@@ -5519,7 +5525,7 @@
       },
       "properties": {
         "id": "tuck-shop-block-26",
-        "name": "Block 26 — Basement: Stationery Tuck Shop",
+        "name": "Block 26 â€” Basement: Stationery Tuck Shop",
         "blockId": "block-26",
         "floor": "Basement",
         "lat": 31.25248,
@@ -5540,24 +5546,29 @@
           "tuck shop",
           "stationery shop",
           "stationery tuck shop",
-          "block 26 tuck shop",
-          "block 26 stationery",
-          "block 26",
-          "b26",
           "pens",
           "notebooks",
+          "block 26",
+          "block 26 basement",
+          "block 26 tuck shop",
+          "block 26 stationery",
+          "buy stationery",
           "photocopy",
           "xerox",
           "print",
           "printing",
-          "basement stationery",
-          "supplies",
+          "b26",
           "snacks"
         ],
-        "desc": "Stationery tuck shop located in the basement of Block 26 where students can purchase necessary stationery items such as pens, notebooks, and academic supplies.",
-        "hours": "Open during university academic hours",
+        "desc": "Stationery tuck shop in the basement of Block 26 where students can purchase necessary stationery items, printouts, notebooks, and academic supplies.",
+        "hours": "8:00 AM - 6:00 PM",
         "phone": "",
-        "image": ""
+        "image": "",
+        "groupId": "cse-dept",
+        "groupName": "School of Computer Science & Engineering (CSE)",
+        "parentBlockIds": [
+          "block-26"
+        ]
       },
       "id": "tuck-shop-block-26"
     },
@@ -5572,7 +5583,7 @@
       },
       "properties": {
         "id": "tuck-shop-block-27",
-        "name": "Block 27 — Basement: Stationery Tuck Shop",
+        "name": "Block 27 â€” Basement: Stationery Tuck Shop",
         "blockId": "block-27",
         "floor": "Basement",
         "lat": 31.25248,
@@ -5593,24 +5604,29 @@
           "tuck shop",
           "stationery shop",
           "stationery tuck shop",
-          "block 27 tuck shop",
-          "block 27 stationery",
-          "block 27",
-          "b27",
           "pens",
           "notebooks",
+          "block 27",
+          "block 27 basement",
+          "block 27 tuck shop",
+          "block 27 stationery",
+          "buy stationery",
           "photocopy",
           "xerox",
           "print",
           "printing",
-          "basement stationery",
-          "supplies",
+          "b27",
           "snacks"
         ],
-        "desc": "Stationery tuck shop located in the basement of Block 27 where students can purchase necessary stationery items such as pens, notebooks, and academic supplies.",
-        "hours": "Open during university academic hours",
+        "desc": "Stationery tuck shop in the basement of Block 27 where students can purchase necessary stationery items, printouts, notebooks, and academic supplies.",
+        "hours": "8:00 AM - 6:00 PM",
         "phone": "",
-        "image": ""
+        "image": "",
+        "groupId": "cse-dept",
+        "groupName": "School of Computer Science & Engineering (CSE)",
+        "parentBlockIds": [
+          "block-27"
+        ]
       },
       "id": "tuck-shop-block-27"
     },
@@ -5625,7 +5641,7 @@
       },
       "properties": {
         "id": "tuck-shop-block-28",
-        "name": "Block 28 — Basement: Stationery Tuck Shop",
+        "name": "Block 28 â€” Basement: Stationery Tuck Shop",
         "blockId": "block-28",
         "floor": "Basement",
         "lat": 31.25248,
@@ -5646,24 +5662,29 @@
           "tuck shop",
           "stationery shop",
           "stationery tuck shop",
-          "block 28 tuck shop",
-          "block 28 stationery",
-          "block 28",
-          "b28",
           "pens",
           "notebooks",
+          "block 28",
+          "block 28 basement",
+          "block 28 tuck shop",
+          "block 28 stationery",
+          "buy stationery",
           "photocopy",
           "xerox",
           "print",
           "printing",
-          "basement stationery",
-          "supplies",
+          "b28",
           "snacks"
         ],
-        "desc": "Stationery tuck shop located in the basement of Block 28 where students can purchase necessary stationery items such as pens, notebooks, and academic supplies.",
-        "hours": "Open during university academic hours",
+        "desc": "Stationery tuck shop in the basement of Block 28 where students can purchase necessary stationery items, printouts, notebooks, and academic supplies.",
+        "hours": "8:00 AM - 6:00 PM",
         "phone": "",
-        "image": ""
+        "image": "",
+        "groupId": "cse-dept",
+        "groupName": "School of Computer Science & Engineering (CSE)",
+        "parentBlockIds": [
+          "block-28"
+        ]
       },
       "id": "tuck-shop-block-28"
     },
@@ -5673,15 +5694,15 @@
         "type": "Point",
         "coordinates": [
           75.70412763243169,
-          31.25150
+          31.2515
         ]
       },
       "properties": {
         "id": "tuck-shop-block-36",
-        "name": "Block 36 — Basement: Stationery Tuck Shop",
+        "name": "Block 36 â€” Basement: Stationery Tuck Shop",
         "blockId": "block-36",
         "floor": "Basement",
-        "lat": 31.25150,
+        "lat": 31.2515,
         "lng": 75.70412763243169,
         "category": "others",
         "type": "Stationery Tuck Shop",
@@ -5699,24 +5720,29 @@
           "tuck shop",
           "stationery shop",
           "stationery tuck shop",
-          "block 36 tuck shop",
-          "block 36 stationery",
-          "block 36",
-          "b36",
           "pens",
           "notebooks",
+          "block 36",
+          "block 36 basement",
+          "block 36 tuck shop",
+          "block 36 stationery",
+          "buy stationery",
           "photocopy",
           "xerox",
           "print",
           "printing",
-          "basement stationery",
-          "supplies",
+          "b36",
           "snacks"
         ],
-        "desc": "Stationery tuck shop located in the basement of Block 36 where students can purchase necessary stationery items such as pens, notebooks, and academic supplies.",
-        "hours": "Open during university academic hours",
+        "desc": "Stationery tuck shop in the basement of Block 36 where students can purchase necessary stationery items, printouts, notebooks, and academic supplies.",
+        "hours": "8:00 AM - 6:00 PM",
         "phone": "",
-        "image": ""
+        "image": "",
+        "groupId": "cse-dept",
+        "groupName": "School of Computer Science & Engineering (CSE)",
+        "parentBlockIds": [
+          "block-36"
+        ]
       },
       "id": "tuck-shop-block-36"
     },
@@ -5761,7 +5787,7 @@
           "mittal business school"
         ],
         "desc": "Mittal School of Business (MSB) at Lovely Professional University. Houses management, commerce, economics, and business administration programs.",
-        "hours": "08:00 AM - 05:30 PM",
+        "hours": "8:00 AM - 5:30 PM",
         "phone": "",
         "image": ""
       },
@@ -5810,7 +5836,7 @@
           "student support"
         ],
         "desc": "Division of Student Relationship (DSR) / Division of Student Welfare (DSW). Students can reach out here for any issues regarding academics, student problems, hostels, grievances, or overall student welfare.",
-        "hours": "09:00 AM - 05:30 PM",
+        "hours": "9:00 AM - 5:30 PM",
         "phone": "",
         "image": ""
       },

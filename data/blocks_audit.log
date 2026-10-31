@@ -34,3 +34,74 @@
 [2026-10-26T08:41:37.879839+00:00] [USER:kovid] [ACTION:CREATE_BLOCK] [BLOCK_ID:blk_201b6c2a350e] Blocked segment 'Central Boulevard (East)' (31.255345,75.703947__31.255396,75.703952): Underground Electrical Maintenance
 [2026-10-26T08:41:41.989266+00:00] [USER:kovid] [ACTION:DELETE_BLOCK] [BLOCK_ID:blk_201b6c2a350e] Unblocked Central Boulevard (East) (31.255345,75.703947__31.255396,75.703952)
 [2026-10-26T08:41:46.059238+00:00] [USER:kovid] [ACTION:LOGOUT] [BLOCK_ID:-] Admin logged out; session revoked
+[2026-10-27T20:01:28.907759+00:00] [USER:kovid] [ACTION:LOGIN] [BLOCK_ID:-] Logged in from 127.0.0.1
+[2026-10-27T20:01:33.013919+00:00] [USER:kovid] [ACTION:CREATE_BLOCK] [BLOCK_ID:blk_5bb163a90a71] Blocked segment 'Central Boulevard (East)' (31.255345,75.703947__31.255396,75.703952): Underground Electrical Maintenance
+[2026-10-27T20:01:37.094707+00:00] [USER:kovid] [ACTION:DELETE_BLOCK] [BLOCK_ID:blk_5bb163a90a71] Unblocked Central Boulevard (East) (31.255345,75.703947__31.255396,75.703952)
+[2026-10-27T20:01:41.252404+00:00] [USER:kovid] [ACTION:LOGOUT] [BLOCK_ID:-] Admin logged out; session revoked
+[2026-10-27T20:33:09.111104+00:00] [USER:kovid] [ACTION:LOGIN] [BLOCK_ID:-] Logged in from 127.0.0.1
+[2026-10-27T20:33:13.194611+00:00] [USER:kovid] [ACTION:CREATE_BLOCK] [BLOCK_ID:blk_5ca3e88c5cc8] Blocked segment 'Central Boulevard (East)' (31.255345,75.703947__31.255396,75.703952): Underground Electrical Maintenance
+[2026-10-27T20:33:17.281627+00:00] [USER:kovid] [ACTION:DELETE_BLOCK] [BLOCK_ID:blk_5ca3e88c5cc8] Unblocked Central Boulevard (East) (31.255345,75.703947__31.255396,75.703952)
+[2026-10-27T20:33:21.370705+00:00] [USER:kovid] [ACTION:LOGOUT] [BLOCK_ID:-] Admin logged out; session revoked
+[2026-10-27T21:08:21.856976+00:00] [USER:kovid] [ACTION:LOGIN] [BLOCK_ID:-] Logged in from 127.0.0.1
+[2026-10-27T21:08:25.931884+00:00] [USER:kovid] [ACTION:CREATE_BLOCK] [BLOCK_ID:blk_bd956eb41882] Blocked segment 'Central Boulevard (East)' (31.255345,75.703947__31.255396,75.703952): Underground Electrical Maintenance
+[2026-10-27T21:08:30.015579+00:00] [USER:kovid] [ACTION:DELETE_BLOCK] [BLOCK_ID:blk_bd956eb41882] Unblocked Central Boulevard (East) (31.255345,75.703947__31.255396,75.703952)
+[2026-10-27T21:08:34.101930+00:00] [USER:kovid] [ACTION:LOGOUT] [BLOCK_ID:-] Admin logged out; session revoked
+[2026-10-28T07:01:24.973156+00:00] [USER:kovid] [ACTION:LOGIN] [BLOCK_ID:-] Logged in from 2409:40d1:101d:ec35:f4ec:e7ff:fe41:2b5d
+[2026-10-28T07:01:27.774647+00:00] [USER:kovid] [ACTION:DELETE_BLOCK] [BLOCK_ID:blk_725376fcf062] Unblocked Campus Footpath (31.252333,75.702680__31.252926,75.702703)
+[2026-10-28T07:01:29.170155+00:00] [USER:kovid] [ACTION:DELETE_BLOCK] [BLOCK_ID:blk_6478c4e2d62b] Unblocked Campus Footpath (31.252330,75.703096__31.252333,75.702884)
+[2026-10-31T03:56:17.559791+00:00] [USER:admin] [ACTION:LOGIN] [BLOCK_ID:-] Logged in from testclient
+[2026-10-31T03:56:17.580633+00:00] [USER:admin] [ACTION:CREATE_BLOCK] [BLOCK_ID:blk_0e16688f7ef8] Blocked segment 'Central Boulevard (East)' (node_test_1__node_test_2): Road resurfacing & cable laying
+[2026-10-31T03:56:17.606122+00:00] [USER:admin] [ACTION:DELETE_BLOCK] [BLOCK_ID:blk_0e16688f7ef8] Unblocked Central Boulevard (East) (node_test_1__node_test_2)
+[2026-10-31T03:56:17.617361+00:00] [USER:admin] [ACTION:LOGOUT] [BLOCK_ID:-] Admin logged out; session revoked
+[2026-10-31T04:17:00.610974+00:00] [USER:admin] [ACTION:LOGIN] [BLOCK_ID:-] Logged in from testclient
+[2026-10-31T04:17:00.627754+00:00] [USER:admin] [ACTION:CREATE_BLOCK] [BLOCK_ID:blk_d68ebc21532d] Blocked segment 'Central Boulevard (East)' (node_test_1__node_test_2): Road resurfacing & cable laying
+[2026-10-31T04:17:00.653120+00:00] [USER:admin] [ACTION:DELETE_BLOCK] [BLOCK_ID:blk_d68ebc21532d] Unblocked Central Boulevard (East) (node_test_1__node_test_2)
+[2026-10-31T04:17:00.667618+00:00] [USER:admin] [ACTION:LOGOUT] [BLOCK_ID:-] Admin logged out; session revoked
+[2026-10-31T04:21:19.679231+00:00] [USER:admin] [ACTION:LOGIN] [BLOCK_ID:-] Logged in from testclient
+[2026-10-31T04:21:19.696106+00:00] [USER:admin] [ACTION:CREATE_BLOCK] [BLOCK_ID:blk_9a417c2c0308] Blocked segment 'Central Boulevard (East)' (node_test_1__node_test_2): Road resurfacing & cable laying
+[2026-10-31T04:21:19.739469+00:00] [USER:admin] [ACTION:DELETE_BLOCK] [BLOCK_ID:blk_9a417c2c0308] Unblocked Central Boulevard (East) (node_test_1__node_test_2)
+[2026-10-31T04:21:19.752386+00:00] [USER:admin] [ACTION:LOGOUT] [BLOCK_ID:-] Admin logged out; session revoked
+[2026-10-31T04:37:36.405559+00:00] [USER:admin] [ACTION:LOGIN] [BLOCK_ID:-] Logged in from testclient
+[2026-10-31T04:37:36.422736+00:00] [USER:admin] [ACTION:CREATE_BLOCK] [BLOCK_ID:blk_58332694c87e] Blocked segment 'Central Boulevard (East)' (node_test_1__node_test_2): Road resurfacing & cable laying
+[2026-10-31T04:37:36.455394+00:00] [USER:admin] [ACTION:DELETE_BLOCK] [BLOCK_ID:blk_58332694c87e] Unblocked Central Boulevard (East) (node_test_1__node_test_2)
+[2026-10-31T04:37:36.468755+00:00] [USER:admin] [ACTION:LOGOUT] [BLOCK_ID:-] Admin logged out; session revoked
+[2026-10-31T05:11:38.430027+00:00] [USER:admin] [ACTION:LOGIN] [BLOCK_ID:-] Logged in from testclient
+[2026-10-31T05:11:38.475123+00:00] [USER:admin] [ACTION:CREATE_BLOCK] [BLOCK_ID:blk_731d7de8fb90] Blocked segment 'Central Boulevard (East)' (node_test_1__node_test_2): Road resurfacing & cable laying
+[2026-10-31T05:11:38.541197+00:00] [USER:admin] [ACTION:DELETE_BLOCK] [BLOCK_ID:blk_731d7de8fb90] Unblocked Central Boulevard (East) (node_test_1__node_test_2)
+[2026-10-31T05:11:38.572382+00:00] [USER:admin] [ACTION:LOGOUT] [BLOCK_ID:-] Admin logged out; session revoked
+[2026-10-31T05:18:05.489452+00:00] [USER:admin] [ACTION:LOGIN] [BLOCK_ID:-] Logged in from testclient
+[2026-10-31T05:18:05.510272+00:00] [USER:admin] [ACTION:CREATE_BLOCK] [BLOCK_ID:blk_d56b4fca44f4] Blocked segment 'Central Boulevard (East)' (node_test_1__node_test_2): Road resurfacing & cable laying
+[2026-10-31T05:18:05.542499+00:00] [USER:admin] [ACTION:DELETE_BLOCK] [BLOCK_ID:blk_d56b4fca44f4] Unblocked Central Boulevard (East) (node_test_1__node_test_2)
+[2026-10-31T05:18:05.561623+00:00] [USER:admin] [ACTION:LOGOUT] [BLOCK_ID:-] Admin logged out; session revoked
+[2026-10-31T05:19:19.633857+00:00] [USER:admin] [ACTION:LOGIN] [BLOCK_ID:-] Logged in from testclient
+[2026-10-31T05:19:19.663414+00:00] [USER:admin] [ACTION:CREATE_BLOCK] [BLOCK_ID:blk_3858b1ae5c2f] Blocked segment 'Central Boulevard (East)' (node_test_1__node_test_2): Road resurfacing & cable laying
+[2026-10-31T05:19:19.677862+00:00] [USER:admin] [ACTION:DELETE_BLOCK] [BLOCK_ID:blk_3858b1ae5c2f] Unblocked Central Boulevard (East) (node_test_1__node_test_2)
+[2026-10-31T05:19:19.684661+00:00] [USER:admin] [ACTION:LOGOUT] [BLOCK_ID:-] Admin logged out; session revoked
+[2026-10-31T05:20:50.019310+00:00] [USER:admin] [ACTION:LOGIN] [BLOCK_ID:-] Logged in from testclient
+[2026-10-31T05:20:50.039159+00:00] [USER:admin] [ACTION:CREATE_BLOCK] [BLOCK_ID:blk_b72b8ab34052] Blocked segment 'Central Boulevard (East)' (node_test_1__node_test_2): Road resurfacing & cable laying
+[2026-10-31T05:20:50.054542+00:00] [USER:admin] [ACTION:DELETE_BLOCK] [BLOCK_ID:blk_b72b8ab34052] Unblocked Central Boulevard (East) (node_test_1__node_test_2)
+[2026-10-31T05:20:50.062028+00:00] [USER:admin] [ACTION:LOGOUT] [BLOCK_ID:-] Admin logged out; session revoked
+[2026-10-31T05:21:31.241409+00:00] [USER:admin] [ACTION:LOGIN] [BLOCK_ID:-] Logged in from testclient
+[2026-10-31T05:21:31.283701+00:00] [USER:admin] [ACTION:CREATE_BLOCK] [BLOCK_ID:blk_c7e3746776e7] Blocked segment 'Central Boulevard (East)' (node_test_1__node_test_2): Road resurfacing & cable laying
+[2026-10-31T05:21:31.299112+00:00] [USER:admin] [ACTION:DELETE_BLOCK] [BLOCK_ID:blk_c7e3746776e7] Unblocked Central Boulevard (East) (node_test_1__node_test_2)
+[2026-10-31T05:21:31.306395+00:00] [USER:admin] [ACTION:LOGOUT] [BLOCK_ID:-] Admin logged out; session revoked
+[2026-10-31T05:34:16.208979+00:00] [USER:admin] [ACTION:LOGIN] [BLOCK_ID:-] Logged in from testclient
+[2026-10-31T05:34:16.219673+00:00] [USER:admin] [ACTION:CREATE_BLOCK] [BLOCK_ID:blk_1abdc5c376dd] Blocked segment 'Central Boulevard (East)' (node_test_1__node_test_2): Road resurfacing & cable laying
+[2026-10-31T05:34:16.234746+00:00] [USER:admin] [ACTION:DELETE_BLOCK] [BLOCK_ID:blk_1abdc5c376dd] Unblocked Central Boulevard (East) (node_test_1__node_test_2)
+[2026-10-31T05:34:16.241469+00:00] [USER:admin] [ACTION:LOGOUT] [BLOCK_ID:-] Admin logged out; session revoked
+[2026-10-31T05:40:25.944648+00:00] [USER:admin] [ACTION:LOGIN] [BLOCK_ID:-] Logged in from testclient
+[2026-10-31T05:40:25.960760+00:00] [USER:admin] [ACTION:CREATE_BLOCK] [BLOCK_ID:blk_44ebf64d00e1] Blocked segment 'Central Boulevard (East)' (node_test_1__node_test_2): Road resurfacing & cable laying
+[2026-10-31T05:40:25.982206+00:00] [USER:admin] [ACTION:DELETE_BLOCK] [BLOCK_ID:blk_44ebf64d00e1] Unblocked Central Boulevard (East) (node_test_1__node_test_2)
+[2026-10-31T05:40:25.994311+00:00] [USER:admin] [ACTION:LOGOUT] [BLOCK_ID:-] Admin logged out; session revoked
+[2026-10-31T05:50:59.472979+00:00] [USER:admin] [ACTION:LOGIN] [BLOCK_ID:-] Logged in from testclient
+[2026-10-31T05:50:59.487422+00:00] [USER:admin] [ACTION:CREATE_BLOCK] [BLOCK_ID:blk_dea98761b72c] Blocked segment 'Central Boulevard (East)' (node_test_1__node_test_2): Road resurfacing & cable laying
+[2026-10-31T05:50:59.509648+00:00] [USER:admin] [ACTION:DELETE_BLOCK] [BLOCK_ID:blk_dea98761b72c] Unblocked Central Boulevard (East) (node_test_1__node_test_2)
+[2026-10-31T05:50:59.519939+00:00] [USER:admin] [ACTION:LOGOUT] [BLOCK_ID:-] Admin logged out; session revoked
+[2026-10-31T06:11:35.529148+00:00] [USER:admin] [ACTION:LOGIN] [BLOCK_ID:-] Logged in from testclient
+[2026-10-31T06:11:35.544335+00:00] [USER:admin] [ACTION:CREATE_BLOCK] [BLOCK_ID:blk_609e0b037bcd] Blocked segment 'Central Boulevard (East)' (node_test_1__node_test_2): Road resurfacing & cable laying
+[2026-10-31T06:11:35.575631+00:00] [USER:admin] [ACTION:DELETE_BLOCK] [BLOCK_ID:blk_609e0b037bcd] Unblocked Central Boulevard (East) (node_test_1__node_test_2)
+[2026-10-31T06:11:35.588964+00:00] [USER:admin] [ACTION:LOGOUT] [BLOCK_ID:-] Admin logged out; session revoked
+[2026-10-31T13:04:44.297518+00:00] [USER:admin] [ACTION:LOGIN] [BLOCK_ID:-] Logged in from testclient
+[2026-10-31T13:04:44.316334+00:00] [USER:admin] [ACTION:CREATE_BLOCK] [BLOCK_ID:blk_1ea228cb402b] Blocked segment 'Central Boulevard (East)' (node_test_1__node_test_2): Road resurfacing & cable laying
+[2026-10-31T13:04:44.341001+00:00] [USER:admin] [ACTION:DELETE_BLOCK] [BLOCK_ID:blk_1ea228cb402b] Unblocked Central Boulevard (East) (node_test_1__node_test_2)
+[2026-10-31T13:04:44.351912+00:00] [USER:admin] [ACTION:LOGOUT] [BLOCK_ID:-] Admin logged out; session revoked

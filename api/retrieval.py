@@ -1,12 +1,17 @@
 """
-In-memory semantic and structured search over the normalized campus records.
-No vector DB — the dataset is small enough that a linear scan over
-NumPy arrays is effectively instant.
+api/retrieval.py — Structured Contextual Retrieval Engine for LPUNavix
+========================================================================
+Combines deterministic structured matching (UIDs, notations, HOD departments,
+blocks, rooms, landmarks, hostels, stationery tuck shops, Unipolis, UniMall)
+with fast vectorized semantic ranking.
+
+Also implements conversational context resolution (anaphora resolution,
+entity tracking, follow-up rewriting).
 """
 
 import os
 import re
-from typing import List, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 import numpy as np
 
@@ -14,7 +19,6 @@ from api.data_loader import Record
 
 CONFIDENT_THRESHOLD = float(os.environ.get("RETRIEVAL_CONFIDENT_THRESHOLD", 0.495))
 WEAK_THRESHOLD = float(os.environ.get("RETRIEVAL_WEAK_THRESHOLD", 0.45))
-
 TOP_K = int(os.environ.get("RETRIEVAL_TOP_K", 8))
 
 DEPT_ALIASES = {
@@ -63,7 +67,7 @@ DEPT_ALIASES = {
 }
 
 
-def find_structured_matches(query: str, records: list[Record]) -> list[Record]:
+def find_structured_matches(query: str, records: List[Record]) -> List[Record]:
     """Perform deterministic, structured matching for UIDs, location notations,
     person names, HOD departments, blocks, rooms, and administrative roles.
     """
@@ -71,8 +75,8 @@ def find_structured_matches(query: str, records: list[Record]) -> list[Record]:
     clean_q = re.sub(r"[^\w\s\-\/]", " ", q)
     words = clean_q.split()
 
-    matches: list[Record] = []
-    seen_ids = set()
+    matches: List[Record] = []
+    seen_ids: Set[str] = set()
 
     def add(r: Record):
         if r.id not in seen_ids:
@@ -137,7 +141,7 @@ def find_structured_matches(query: str, records: list[Record]) -> list[Record]:
             return matches
 
     # 5. Block + Room (+ Seating) queries (e.g. "Room 202 of Block 28", "Block 34 Room 202")
-    block_m = re.search(r"\bblock\s*(\d{2})\b", clean_q)
+    block_m = re.search(r"\b(?:block|blok|b)[\s-]*(\d{1,2})\b", clean_q)
     room_m = re.search(r"\broom\s*([0-9]{3}[a-zA-Z]?)\b", clean_q)
     seat_m = re.search(r"\b(?:cabin|seating|seat|c)\s*([cC]?\d)\b", clean_q)
     seating_val = None
@@ -172,8 +176,6 @@ def find_structured_matches(query: str, records: list[Record]) -> list[Record]:
             return matches
 
     # 5.6 Stationery Tuck Shop queries
-    # e.g. "Where can I buy stationery?", "Where are the tuck shops?", "Is there a stationery shop in Block 26?",
-    # "Where can I buy pens, notebooks, or other stationery?", "Which blocks have stationery shops in their basements?"
     is_stationery_query = bool(
         re.search(
             r"\b(stationery|stationary|tuck\s*shop|tuck\s*shops|tuckshop|tuckshops|pens?|notebooks?|photocopy|xerox)\b",
@@ -196,7 +198,6 @@ def find_structured_matches(query: str, records: list[Record]) -> list[Record]:
                         add(r)
                 return matches
             else:
-                # If queried about a block without a tuck shop (e.g. Block 25), return all 4 tuck shops so assistant can explain where they are
                 for tuck_id in ["tuck-shop-block-26", "tuck-shop-block-27", "tuck-shop-block-28", "tuck-shop-block-36"]:
                     for r in records:
                         if r.id == tuck_id:
@@ -204,7 +205,6 @@ def find_structured_matches(query: str, records: list[Record]) -> list[Record]:
                 if matches:
                     return matches
         else:
-            # General stationery query -> return all four known basement locations
             for tuck_id in ["tuck-shop-block-26", "tuck-shop-block-27", "tuck-shop-block-28", "tuck-shop-block-36"]:
                 for r in records:
                     if r.id == tuck_id:
@@ -213,10 +213,9 @@ def find_structured_matches(query: str, records: list[Record]) -> list[Record]:
                 return matches
 
     # 5.7 Division of Admissions & Block 29 queries
-    # e.g. "Where is the Division of Admissions?", "Where should I go for admission-related queries?", "Which block handles admissions?"
     is_admission_query = bool(
         re.search(
-            r"\b(admission|admissions|division\s+of\s+admissions|admission\s+queries|admission\s+office|admission\s+counseling)\b",
+            r"\b(admi[s]{1,2}ion[s]?|divi[s]{1,2}ion\s+of\s+admi[s]{1,2}ion[s]?|admission\s+queries|admission\s+office|admission\s+counseling)\b",
             clean_q,
         )
     )
@@ -228,10 +227,9 @@ def find_structured_matches(query: str, records: list[Record]) -> list[Record]:
             return matches
 
     # 5.8 Unipolis & Major Event Venue / Initial Reporting queries
-    # e.g. "Where is Unipolis?", "Where are major university events held?", "Where should students report initially?"
     is_unipolis_query = bool(
         re.search(
-            r"\b(unipolis|major\s+university\s+events|university\s+events\s+held|events\s+held|initial\s+student\s+reporting|report\s+initially|initial\s+reporting|student\s+reporting|mega\s+auditorium|event\s+arena)\b",
+            r"\b(unipoli[s]{1,3}|major\s+university\s+events|university\s+events\s+held|events\s+held|initial\s+student\s+reporting|report\s+initially|initial\s+reporting|student\s+reporting|mega\s+auditorium|event\s+arena)\b",
             clean_q,
         )
     )
@@ -246,7 +244,6 @@ def find_structured_matches(query: str, records: list[Record]) -> list[Record]:
             return matches
 
     # 5.9 UniMall queries
-    # e.g. "Where is UniMall?", "Where can I find the mall on campus?", "Where is the mall?"
     is_mall_query = bool(
         re.search(
             r"\b(unimall|uni\s*mall|mall\s+on\s+campus|find\s+the\s+mall|campus\s+mall|shopping\s+mall)\b",
@@ -264,7 +261,6 @@ def find_structured_matches(query: str, records: list[Record]) -> list[Record]:
             return matches
 
     # 5.10 Sports Complex & Indoor Sports queries
-    # e.g. "Where is the Sports Complex?", "Where can I play indoor sports?"
     is_sports_query = bool(
         re.search(
             r"\b(sports\s+complex|indoor\s+sports|play\s+indoor\s+sports|indoor\s+games|sports\s+facility)\b",
@@ -282,7 +278,6 @@ def find_structured_matches(query: str, records: list[Record]) -> list[Record]:
             return matches
 
     # 5.11 Mittal School of Business queries
-    # e.g. "Where is Mittal School of Business?", "MSB", "School of Business", "Business School"
     is_msb_query = bool(
         re.search(
             r"\b(mittal\s+school\s+of\s+business|mittal\s+business\s+school|school\s+of\s+business|business\s+school|msb)\b",
@@ -297,7 +292,6 @@ def find_structured_matches(query: str, records: list[Record]) -> list[Record]:
             return matches
 
     # 5.12 Division of Student Relationship (DSR) & Division of Student Welfare (DSW) queries
-    # e.g. "Where is DSR?", "Where is DSW?", "Where should I go for academic problems?", "hostel problem", "student problem"
     is_dsr_query = bool(
         re.search(
             r"\b(dsr|dsw|division\s+of\s+student\s+relationship|division\s+of\s+student\s+welfare|student\s+relationship|student\s+welfare|grievances?|student\s+grievances?|student\s+problems?|academic\s+problems?|hostel\s+problems?|student\s+complaints?|student\s+issues?)\b",
@@ -319,7 +313,6 @@ def find_structured_matches(query: str, records: list[Record]) -> list[Record]:
                 if r.block == b_val and r.uid:
                     add(r)
         else:
-            # Query is asking about the block itself (e.g. "Where is Block 28?", "Block 34")
             for r in records:
                 if r.id == f"block-{b_val}" or (r.id == f"block-{int(b_val)}" and r.kind == "location"):
                     add(r)
@@ -348,7 +341,7 @@ def find_structured_matches(query: str, records: list[Record]) -> list[Record]:
         if matches:
             return matches
 
-    # 8. Placement Cell / TPC queries (e.g. "Where is the placement cell?", "Where is TPC?", "TPC Block 32")
+    # 8. Placement Cell / TPC queries
     is_tpc_query = bool(
         re.search(r"\b(tpc|placement|placements|placement cell|training and placement)\b", clean_q)
     )
@@ -382,9 +375,9 @@ def find_structured_matches(query: str, records: list[Record]) -> list[Record]:
         if matches:
             return matches
 
-    # 9. Central Library / Library queries (e.g. "Where is the central library?", "Library", "Library in pathway", "Which floor is the library?")
+    # 9. Central Library / Library queries
     is_lib_query = bool(
-        re.search(r"\b(central\s+library|library|libraries|reading\s+room|study\s+room)\b", clean_q)
+        re.search(r"\b(centra[l]{1,2}\s+lib[a-z]*|lib[a-z]{2,4}y|librar[a-z]*|libraries|reading\s+room|study\s+room)\b", clean_q)
     )
     if is_lib_query:
         for r in records:
@@ -399,7 +392,18 @@ def find_structured_matches(query: str, records: list[Record]) -> list[Record]:
         if matches:
             return matches
 
-    # 10. Block 37 queries (e.g. "Where is Block 37?", "Block 37", "B37")
+    # 9.5 Uni Health Center / Clinic / Medical queries
+    is_health_query = bool(
+        re.search(r"\b(h[ea]{1,2}lth|clinic|doctor|medical|hospital|dispensary)\b", clean_q)
+    )
+    if is_health_query:
+        for r in records:
+            if r.id == "uni-health-center":
+                add(r)
+        if matches:
+            return matches
+
+    # 10. Block 37 queries
     if re.search(r"\b(block\s*37|b37)\b", clean_q):
         for r in records:
             if r.id == "block-37":
@@ -447,15 +451,7 @@ def find_structured_matches(query: str, records: list[Record]) -> list[Record]:
         if matches:
             return matches
 
-    # 12. Hostels / Studios / Apartments / Residential Area queries
-    # e.g. "gh1", "gh-1", "gh 1", "girls hostel 1", "gh2", "gh 3", "gh4"
-    # "gs 11", "gs11", "gs-11", "girls studio 11", "girls studios 11", "gs 12", "gs12"
-    # "bh1", "bh-1", "bh 1", "boys hostel 1", "hostel 1", "bh2", "bh3", "bh5", "bh6"
-    # "bs 11", "bs11", "bs-11", "boys studio 11", "bs 12", "bs 13"
-    # "boys apartment ab", "apartment ab", "boys apartment cd", "apartment cd"
-    # "residential area", "girls hostels", "girls studios", "boys hostels"
-
-    # Girls Hostels (GH-1 to GH-4)
+    # 12. Hostels / Studios / Apartments
     gh_m = re.search(r"\b(?:gh|girls\s+hostel)[\s-]*([1-4])\b", clean_q)
     if gh_m:
         h_num = gh_m.group(1)
@@ -466,7 +462,6 @@ def find_structured_matches(query: str, records: list[Record]) -> list[Record]:
         if matches:
             return matches
 
-    # Girls Studios (GS-11 and GS-12)
     gs_m = re.search(r"\b(?:gs|girls\s+studio|girls\s+studios)[\s-]*(1[1-2])\b", clean_q)
     if gs_m:
         s_num = gs_m.group(1)
@@ -477,8 +472,7 @@ def find_structured_matches(query: str, records: list[Record]) -> list[Record]:
         if matches:
             return matches
 
-    # Boys Hostels (BH-1 to BH-6)
-    bh_m = re.search(r"\b(?:bh|boys\s+hostel|hostel)[\s-]*([1-6])\b", clean_q)
+    bh_m = re.search(r"\b(?:bh|boys\s+hoste[l]{1,2}|hoste[l]{1,2})[\s-]*([1-6])\b", clean_q)
     if bh_m:
         h_num = bh_m.group(1)
         target_id = f"bh-{h_num}"
@@ -488,7 +482,6 @@ def find_structured_matches(query: str, records: list[Record]) -> list[Record]:
         if matches:
             return matches
 
-    # Boys Studios (BS-11 to BS-13)
     bs_m = re.search(r"\b(?:bs|boys\s+studio|studio)[\s-]*(1[1-3])\b", clean_q)
     if bs_m:
         s_num = bs_m.group(1)
@@ -513,15 +506,13 @@ def find_structured_matches(query: str, records: list[Record]) -> list[Record]:
         if matches:
             return matches
 
-    # Girls hostels queries (general)
-    if re.search(r"\b(?:girls\s+hostel|girls\s+hostels|gh)\b", clean_q):
+    if re.search(r"\b(?:girls\s+hoste[l]{1,2}|girls\s+hoste[l]{1,2}s|gh)\b", clean_q):
         for r in records:
             if r.id in ("gh-1", "gh-2", "gh-3", "gh-4"):
                 add(r)
         if matches:
             return matches
 
-    # Girls studios queries (general)
     if re.search(r"\b(?:girls\s+studio|girls\s+studios|gs)\b", clean_q):
         for r in records:
             if r.id in ("gs-11", "gs-12"):
@@ -539,8 +530,7 @@ def find_structured_matches(query: str, records: list[Record]) -> list[Record]:
         if matches:
             return matches
 
-    # Boys hostels & studios queries (general)
-    if re.search(r"\b(?:boys\s+residential\s+area|boys\s+hostel|boys\s+hostels|boys\s+studio|boys\s+studios|boys\s+apartment|boys\s+apartments)\b", clean_q):
+    if re.search(r"\b(?:boys\s+residential\s+area|boys\s+hoste[l]{1,2}|boys\s+hoste[l]{1,2}s|boys\s+studio|boys\s+studios|boys\s+apartment|boys\s+apartments)\b", clean_q):
         for r in records:
             if r.id == "residential-area":
                 add(r)
@@ -550,8 +540,7 @@ def find_structured_matches(query: str, records: list[Record]) -> list[Record]:
         if matches:
             return matches
 
-    # General campus accommodation queries
-    if re.search(r"\b(?:residential\s+area|residential|hostels|hostel|where\s+to\s+stay|student\s+housing)\b", clean_q):
+    if re.search(r"\b(?:residential\s+area|residential|hoste[l]{1,2}s|hoste[l]{1,2}|where\s+to\s+stay|student\s+housing)\b", clean_q):
         for r in records:
             if r.id in ("girls-residential-area", "residential-area"):
                 add(r)
@@ -564,22 +553,167 @@ def find_structured_matches(query: str, records: list[Record]) -> list[Record]:
     return matches
 
 
+def has_explicit_target(question: str, records: List[Record]) -> bool:
+    """Detect if the query explicitly names a specific location, block, person, UID, or department."""
+    clean_q = re.sub(r"[^\w\s\-\/]", " ", question.lower()).strip()
+
+    if find_structured_matches(question, records):
+        return True
+
+    if re.search(r"\b(?:block|b)[\s-]*\d{1,2}\b", clean_q, re.I):
+        return True
+
+    known_landmarks = [
+        "library", "central library", "unimall", "uni mall", "health center",
+        "hospital", "dispensary", "food court", "main gate", "gate 1", "gate 2",
+        "gate 3", "gate 4", "bh1", "bh-1", "bh 1", "bh2", "bh-2", "bh 2", "bh3", "bh-3", "bh 3",
+        "bh4", "bh-4", "bh5", "bh-5", "bh 5", "bh6", "bh-6", "bh 6",
+        "bs11", "bs-11", "bs 11", "bs12", "bs-12", "bs 12", "bs13", "bs-13", "bs 13",
+        "gh1", "gh-1", "gh 1", "gh2", "gh-2", "gh 2", "gh3", "gh-3", "gh 3", "gh4", "gh-4", "gh 4",
+        "gs11", "gs-11", "gs 11", "gs12", "gs-12", "gs 12",
+        "boys apartment", "apartment ab", "apartment cd", "residential area",
+        "girls residential area", "boys residential area", "girls hostel", "girls hostels",
+        "girls studio", "girls studios", "boys hostel", "boys studio", "gh", "gs",
+        "swimming pool", "stadium", "auditorium", "shanti devi mittal", "baldev raj mittal",
+        "unipolis", "unimall", "uni mall", "mall", "sports complex", "indoor sports",
+        "block 29", "block-29", "division of admissions", "admissions", "admission queries", "admission office",
+        "stationery", "tuck shop", "tuck shops", "stationery shop", "pens", "notebooks",
+        "mittal school of business", "school of business", "business school", "msb",
+        "dsr", "dsw", "division of student relationship", "division of student welfare",
+        "student relationship", "student welfare"
+    ]
+    for kw in known_landmarks:
+        if re.search(r"\b" + re.escape(kw) + r"\b", clean_q, re.I):
+            return True
+
+    return False
+
+
+def is_followup_query(question: str) -> bool:
+    """Detect if a user query is an anaphoric or elliptical follow-up."""
+    clean_q = re.sub(r"[^\w\s\-\/]", " ", question.lower()).strip()
+    words = clean_q.split()
+
+    pronouns = {"it", "its", "there", "his", "her", "their", "that", "this"}
+    if any(w in pronouns for w in words):
+        return True
+
+    followup_patterns = [
+        r"\b(?:opening|closing)?\s*(?:hours|timings|time)\b",
+        r"\b(?:when|is it)\s*(?:open|closed)\b",
+        r"\b(?:show|view|take me|locate)\s*(?:it\s*)?(?:on\s*(?:the\s*)?map)?\b",
+        r"\b(?:directions|route|path|how to reach|how to go|how do i get there)\b",
+        r"\b(?:what\s*)?(?:facilities|amenities|services)\b",
+        r"\bwho\s*(?:sits|works|is)\s*(?:there|inside|in there)\b",
+        r"\b(?:contact|phone|phone number|call)\b",
+        r"\b(?:which|what)\s*(?:floor|room|cabin)\b",
+        r"\b(?:tell me more|more details|more info)\b",
+    ]
+    for pattern in followup_patterns:
+        if re.search(pattern, clean_q, re.I):
+            return True
+
+    if len(words) <= 4 and any(w in words for w in ["hours", "timings", "map", "directions", "reach", "floor", "cabin", "room"]):
+        return True
+
+    return False
+
+
+def find_last_entity_record(
+    last_entity: Optional[Any],
+    history: Optional[List[Any]],
+    records: List[Record],
+) -> Optional[Record]:
+    """Find the verified Record corresponding to the last confirmed entity or previous conversation topic."""
+    if last_entity:
+        last_id = getattr(last_entity, "id", None) or (last_entity.get("id") if isinstance(last_entity, dict) else None)
+        last_name = getattr(last_entity, "name", None) or getattr(last_entity, "title", None) or (last_entity.get("name") or last_entity.get("title") if isinstance(last_entity, dict) else None)
+
+        if last_id:
+            for r in records:
+                if r.id == last_id:
+                    return r
+        if last_name:
+            target_name = str(last_name).lower().strip()
+            for r in records:
+                if r.name and r.name.lower().strip() == target_name:
+                    return r
+            for r in records:
+                if r.name and target_name in r.name.lower():
+                    return r
+
+    if history:
+        for msg in reversed(history):
+            content = getattr(msg, "content", None) or (msg.get("content") if isinstance(msg, dict) else "")
+            if not content:
+                continue
+            matches = find_structured_matches(content, records)
+            if matches:
+                return matches[0]
+            b_m = re.search(r"\b(?:block|b)[\s-]*(\d{1,2})\b", content, re.I)
+            if b_m:
+                b_num = b_m.group(1)
+                for r in records:
+                    if r.block == b_num and not r.uid:
+                        return r
+                    if r.block == b_num:
+                        return r
+            for r in records:
+                if r.name and len(r.name) > 3 and r.name.lower() in content.lower():
+                    return r
+
+    return None
+
+
+def resolve_contextual_query(
+    question: str,
+    history: Optional[List[Any]],
+    last_entity: Optional[Any],
+    records: List[Record],
+) -> Tuple[str, Optional[Record]]:
+    """Resolve query taking conversational context into account."""
+    if has_explicit_target(question, records):
+        return question, None
+
+    if is_followup_query(question):
+        prev_record = find_last_entity_record(last_entity, history, records)
+        if prev_record:
+            entity_name = prev_record.name
+            q_clean = question.lower().strip()
+
+            if any(w in q_clean for w in ["hour", "timing", "open", "close"]):
+                resolved = f"What are the opening hours and timings of {entity_name}?"
+            elif any(w in q_clean for w in ["map", "where", "locate", "direction", "reach", "route", "take me"]):
+                resolved = f"Where is {entity_name} on campus map and directions?"
+            elif any(w in q_clean for w in ["cabin", "office", "sit", "room", "floor"]):
+                resolved = f"Where is the cabin, room, and floor for {entity_name}?"
+            elif any(w in q_clean for w in ["facility", "facilities", "amenity", "amenities", "inside"]):
+                resolved = f"What facilities and services are inside {entity_name}?"
+            elif any(w in q_clean for w in ["contact", "phone", "call"]):
+                resolved = f"What is the contact information for {entity_name}?"
+            else:
+                resolved = f"{question} for {entity_name}"
+
+            return resolved, prev_record
+
+    return question, None
+
+
 class Retriever:
-    def __init__(self, records: list[Record], embeddings: list[list[float]]):
+    def __init__(self, records: List[Record], embeddings: List[List[float]]):
         assert len(records) == len(embeddings), "records/embeddings length mismatch"
         self.records = records
         matrix = np.array(embeddings, dtype=np.float32)
-        # Pre-normalize so similarity is a plain dot product.
         norms = np.linalg.norm(matrix, axis=1, keepdims=True)
         norms[norms == 0] = 1e-8
         self._normed = matrix / norms
 
     def rank(
         self,
-        query_embedding: list[float],
+        query_embedding: List[float],
         query_text: str = "",
         top_k: int = TOP_K,
-    ) -> list[tuple[Record, float]]:
+    ) -> List[Tuple[Record, float]]:
         structured_matches = []
         if query_text:
             structured_matches = find_structured_matches(query_text, self.records)
@@ -593,18 +727,17 @@ class Retriever:
         if len(q) != self._normed.shape[1]:
             scores = np.zeros(len(self.records), dtype=np.float32)
         else:
-            scores = self._normed @ q  # cosine similarity for every record
+            scores = self._normed @ q
+
         order = np.argsort(-scores)
 
-        results: list[tuple[Record, float]] = []
+        results: List[Tuple[Record, float]] = []
         seen_ids = set()
 
-        # Prioritize structured matches with 1.0 confidence score
         for r in structured_matches:
             seen_ids.add(r.id)
             results.append((r, 1.0))
 
-        # Fill with semantic ranking up to top_k
         for idx in order:
             rec = self.records[idx]
             if rec.id not in seen_ids:
@@ -617,10 +750,9 @@ class Retriever:
 
 
 def classify_match(top_score: float) -> str:
-    """Return "confident" | "weak" | "none" based on the top similarity score."""
+    """Return 'confident' | 'weak' | 'none' based on the top similarity score."""
     if top_score >= CONFIDENT_THRESHOLD:
         return "confident"
     if top_score >= WEAK_THRESHOLD:
         return "weak"
     return "none"
-

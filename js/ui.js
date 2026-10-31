@@ -1231,8 +1231,8 @@ class UIController {
     if (overlay) overlay.style.display = "none";
   }
 
-  triggerShowOnMap(locationId, targetTitle = null) {
-    let destName = targetTitle || locationId;
+  triggerShowOnMap(locationId, originName = null, stops = []) {
+    let destName = locationId;
 
     if (locationId) {
       const allLocs = (typeof getAllCampusLocations === "function") ? getAllCampusLocations() : (window.CAMPUS_LOCATIONS || []);
@@ -1257,22 +1257,38 @@ class UIController {
       destName = "Block 25 (CSE)";
     }
 
-
     // 1. Hide assistant panel if open so the user can see the route clearly
     this.toggleAssistant(false);
 
-    // 2. Request user location in background if available
-    if (window.CampusMap && !window.CampusMap.currentUserCoords && navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((pos) => {
-        if (window.CampusMap) {
-          window.CampusMap.currentUserCoords = [pos.coords.latitude, pos.coords.longitude];
-        }
-      }, () => {}, { enableHighAccuracy: true, timeout: 4000 });
+    // 2. Determine origin (use provided origin if specified; only use GPS/current location if origin is absent)
+    let origin = originName;
+    const isGpsOrigin = !origin || origin === "Your location" || origin === "Your Location" || origin === "Your Current Location";
+
+    if (isGpsOrigin) {
+      origin = "Your Current Location";
+      if (window.CampusMap && !window.CampusMap.currentUserCoords && navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((pos) => {
+          if (window.CampusMap) {
+            window.CampusMap.currentUserCoords = [pos.coords.latitude, pos.coords.longitude];
+          }
+        }, () => {}, { enableHighAccuracy: true, timeout: 4000 });
+      }
     }
 
-    // 3. Open directions view with "Your Current Location" as origin (which calculates route & displays preview)
-    const origin = "Your Current Location";
-    this.switchView("directions", origin, destName);
+    // 3. Set intermediate stops if provided
+    if (window.Directions) {
+      if (Array.isArray(stops) && stops.length > 0) {
+        window.Directions.currentStops = [...stops];
+        if (typeof window.Directions.renderStopInputs === "function") {
+          window.Directions.renderStopInputs();
+        }
+      } else {
+        window.Directions.currentStops = [];
+      }
+      window.Directions.showDirections(origin, destName);
+    } else {
+      this.switchView("directions", origin, destName);
+    }
   }
 
   /* ==========================================================================

@@ -33,7 +33,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-
+from api.blocks import router as blocks_router
+from api.agent import router as agent_router
+from api.data_loader import get_campus_data_loader
 from api.rag import (
     init_rag,
     router as rag_router,
@@ -42,14 +44,17 @@ from api.rag import (
     embed_query,
     generate_reply,
 )
-from api.blocks import router as blocks_router
 
+
+import threading
+import urllib.request
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Initialize Canonical Campus Property Knowledge Graph
+    get_campus_data_loader()
     init_rag()
     yield
-    shutdown_rag()
 
 
 app = FastAPI(title="LPUNavix Live Tracking & Campus Navigation", lifespan=lifespan)
@@ -105,9 +110,10 @@ def health_check():
     return {"status": "ok"}
 
 
-# Mount the Campus Assistant RAG router
-app.include_router(rag_router)
+# Mount the Autonomous Campus Agent router (Google Gemini)
+app.include_router(agent_router)
 # Mount the Road Blocks & Admin router
+app.include_router(rag_router)
 app.include_router(blocks_router)
 
 
